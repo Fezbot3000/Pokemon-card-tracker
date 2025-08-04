@@ -49,12 +49,34 @@ const CardDetailsModal = ({
   const [showEnlargedImage, setShowEnlargedImage] = useState(false);
   const [isConfirmingSold, setIsConfirmingSold] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [savedValue, setSavedValue] = useState(null); // Track what value we just saved
   const [errors, setErrors] = useState({});
   const [animClass, setAnimClass] = useState('fade-in');
   const [contentLoaded, setContentLoaded] = useState(false); // Track if content has been loaded
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isPsaSearching, setIsPsaSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Track when the card prop changes to see if something is overriding our values
+    useEffect(() => {
+
+    
+    // Smart spinner logic: If we're saving, check if we've received the expected value
+    if (isSaving && savedValue !== null && card?.id) {
+      const currentDisplayValue = card?.originalCurrentValueAmount || card?.currentValueAUD;
+      
+      // If the displayed value matches what we saved, and it's not empty/null, we're done
+      if (currentDisplayValue === savedValue && currentDisplayValue !== null && currentDisplayValue !== undefined) {
+
+        
+        // Extended delay to ensure UI stability and cover value transitions
+        setTimeout(() => {
+          setIsSaving(false);
+          setSavedValue(null);
+        }, 1200); // Extended delay to fully cover the "disappearing then reappearing" phase
+      }
+    }
+  }, [card?.currentValueAUD, card?.originalCurrentValueAmount, card?.id, isSaving, savedValue]);
   const [isPriceChartingSearching, setIsPriceChartingSearching] = useState(false);
   const [priceChartingModalOpen, setPriceChartingModalOpen] = useState(false);
 
@@ -341,11 +363,11 @@ const CardDetailsModal = ({
       missingFields.push('Card Name');
     }
 
-    if (!trimmedCard.investmentAUD) {
-      newErrors.investmentAUD = 'Investment amount is required';
+    if (!trimmedCard.originalInvestmentAmount) {
+      newErrors.originalInvestmentAmount = 'Investment amount is required';
       missingFields.push('Investment Amount');
-    } else if (isNaN(parseFloat(trimmedCard.investmentAUD))) {
-      newErrors.investmentAUD = 'Must be a valid number';
+    } else if (isNaN(parseFloat(trimmedCard.originalInvestmentAmount))) {
+      newErrors.originalInvestmentAmount = 'Must be a valid number';
       missingFields.push('Investment Amount (invalid format)');
     }
 
@@ -356,10 +378,10 @@ const CardDetailsModal = ({
 
     // Optional field validations - only validate format if value is provided
     if (
-      trimmedCard.currentValueAUD &&
-      isNaN(parseFloat(trimmedCard.currentValueAUD))
+      trimmedCard.originalCurrentValueAmount &&
+      isNaN(parseFloat(trimmedCard.originalCurrentValueAmount))
     ) {
-      newErrors.currentValueAUD = 'Must be a valid number';
+      newErrors.originalCurrentValueAmount = 'Must be a valid number';
       missingFields.push('Current Value (invalid format)');
     }
 
@@ -399,6 +421,8 @@ const CardDetailsModal = ({
         const originalCurrentValueCurrency =
           card.originalCurrentValueCurrency || 'AUD';
 
+
+
         // Format the card data before saving
         const formattedCard = {
           ...trimmedCard,
@@ -407,11 +431,11 @@ const CardDetailsModal = ({
             ? formatDate(trimmedCard.datePurchased)
             : '',
           // Convert numeric fields to numbers
-          investmentAUD: trimmedCard.investmentAUD
-            ? parseFloat(trimmedCard.investmentAUD)
+          investmentAUD: trimmedCard.originalInvestmentAmount
+            ? parseFloat(trimmedCard.originalInvestmentAmount)
             : 0,
-          currentValueAUD: trimmedCard.currentValueAUD
-            ? parseFloat(trimmedCard.currentValueAUD)
+          currentValueAUD: trimmedCard.originalCurrentValueAmount
+            ? parseFloat(trimmedCard.originalCurrentValueAmount)
             : 0,
           quantity: trimmedCard.quantity
             ? parseInt(trimmedCard.quantity, 10)
@@ -428,22 +452,40 @@ const CardDetailsModal = ({
           originalCurrentValueCurrency: originalCurrentValueCurrency,
         };
 
-        try {
-          // Call onSave and wait for it to complete
-          await onSave(formattedCard);
+              try {
+        // Set saving state to show loading spinner
+        setIsSaving(true);
+        
+        // Track what value we're about to save for smart spinner logic
+        setSavedValue(formattedCard?.currentValueAUD);
+        
+
+        
+        // Call onSave and wait for it to complete
+        await onSave(formattedCard);
+        
+        // Note: Spinner will be hidden by smart logic in useEffect when final value is received
+          
+          
 
           // Clear any unsaved changes state
           setErrors({});
-          setSaveMessage('');
+          setSaveMessage('Card saved successfully!');
 
           // Reset all form elements to prevent unsaved changes dialog
           const forms = document.querySelectorAll('form');
           forms.forEach(form => form.reset());
 
-          // Close the modal with success flag
-          onClose(true);
+          // DON'T close the modal - keep it open after save
+          // User can manually close when they're done
+          // onClose(true);
         } catch (saveError) {
           LoggingService.error('Error in onSave:', saveError);
+          
+          // Reset saving state on error
+          setIsSaving(false);
+          setSavedValue(null);
+          
           // Check if it's a connection error
           if (
             saveError.code === 'failed-precondition' ||
@@ -462,9 +504,10 @@ const CardDetailsModal = ({
       } catch (error) {
         LoggingService.error('Error saving card:', error);
         toast.error(`Failed to save card: ${error.message}`);
-      } finally {
-        // Reset saving state
+        
+        // Reset saving state on error
         setIsSaving(false);
+        setSavedValue(null);
       }
     }
   };
@@ -479,7 +522,7 @@ const CardDetailsModal = ({
           onClick={handleCloseAttempt}
           disabled={isPsaLoading || isSaving}
         >
-          Cancel
+          Close
         </ModalButton>
         {onMarkAsSold && (
           <ModalButton
@@ -497,7 +540,7 @@ const CardDetailsModal = ({
         <ModalButton
           variant="primary"
           onClick={handleSave}
-          disabled={isPsaLoading || isSaving}
+          disabled={isPsaLoading || isSaving || !hasUnsavedChanges}
         >
           {isSaving ? (
             <>
@@ -567,6 +610,18 @@ const CardDetailsModal = ({
                     <div className="mb-2 inline-block size-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                     <p className="text-gray-600 dark:text-gray-400">
                       Looking up PSA information...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Save Loading Overlay */}
+              {isSaving && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm dark:bg-black/90">
+                  <div className="text-center">
+                    <div className="mb-2 inline-block size-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Saving card...
                     </p>
                   </div>
                 </div>

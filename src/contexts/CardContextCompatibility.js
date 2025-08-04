@@ -31,6 +31,8 @@ const useCardDataCompatible = () => {
   // and two param (CardContext style) calling patterns
   const updateCard = useCallback(async (cardIdOrCard, data) => {
     try {
+
+      
       if (typeof cardIdOrCard === 'object' && !data) {
         // Single parameter mode (useCardData style)
         // updateCard(cardObject)
@@ -42,14 +44,22 @@ const useCardDataCompatible = () => {
           throw new Error('Failed to update card: Invalid data.');
         }
 
+
         // Call CardContext updateCard with two parameters
         await cardContextData.updateCard(cardId, updatedCard);
+
       } else {
         // Two parameter mode (CardContext style) 
         // updateCard(cardId, data)
+
         await cardContextData.updateCard(cardIdOrCard, data);
+
       }
+      
+
+      
     } catch (err) {
+
       LoggingService.error(`[CardContextCompatible] Error updating card:`, err);
       throw err;
     }

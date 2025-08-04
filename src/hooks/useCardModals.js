@@ -24,8 +24,26 @@ export const useCardModals = () => {
   }, []);
 
   const closeCardDetails = useCallback(() => {
+    const scrollBeforeHookClose = window.scrollY;
+
+    
     setSelectedCard(null);
     setInitialCardCollection(null);
+    
+    // Check scroll position after state changes
+    setTimeout(() => {
+      const scrollAfterHookClose = window.scrollY;
+      if (scrollBeforeHookClose !== scrollAfterHookClose) {
+
+      } else {
+
+      }
+    }, 50);
+  }, []);
+
+  const updateSelectedCard = useCallback((updatedCard) => {
+
+    setSelectedCard(updatedCard);
   }, []);
 
   return {
@@ -39,6 +57,7 @@ export const useCardModals = () => {
     closeNewCardForm,
     openCardDetails,
     closeCardDetails,
+    updateSelectedCard,
 
     // Direct setters (for compatibility)
     setShowNewCardForm,

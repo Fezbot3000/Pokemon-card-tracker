@@ -443,7 +443,7 @@ const MessageModal = ({
       footer={
         <div className="flex w-full items-center justify-between">
           <ModalButton variant="secondary" onClick={onClose}>
-            Cancel
+            Close
           </ModalButton>
           <ModalButton
             variant="primary"

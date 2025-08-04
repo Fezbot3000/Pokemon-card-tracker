@@ -369,7 +369,7 @@ const PSADetailModal = ({
                     onClose();
                   }}
                 >
-                  Cancel
+                  Close
                 </Button>
                 <Button
                   variant="primary"

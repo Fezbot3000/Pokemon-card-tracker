@@ -275,6 +275,9 @@ export function CardProvider({ children }) {
         } else {
           // Subscribe to all cards when "All Cards" is selected
           unsubscribe = repository.subscribeToAllCards(updatedCards => {
+            const scrollBeforeFirestore = window.scrollY;
+
+
             let filteredCards = verifyCardsAgainstSoldList(updatedCards);
 
             // Secondary filter from localStorage/sessionStorage for redundancy
@@ -305,9 +308,21 @@ export function CardProvider({ children }) {
               );
             }
 
+
+
             // Always update cards immediately
             setCards(filteredCards);
             setSyncStatus('synced');
+
+            // Check scroll position after setCards
+            setTimeout(() => {
+              const scrollAfterFirestore = window.scrollY;
+              if (scrollBeforeFirestore !== scrollAfterFirestore) {
+
+              } else {
+
+              }
+            }, 50);
           });
         }
       } catch (error) {

@@ -254,7 +254,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
         title="Delete Listing"
         message="Are you sure you want to delete this listing? This action cannot be undone."
         confirmText={isDeleting ? 'Deleting...' : 'Delete'}
-        cancelText="Cancel"
+                    cancelText="Close"
         variant="danger"
         loading={isDeleting}
         zIndex="70000"
@@ -274,7 +274,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
               onClick={onClose}
               disabled={isSubmitting}
             >
-              Cancel
+              Close
             </ModalButton>
             <div className="flex items-center space-x-3">
               <ModalButton

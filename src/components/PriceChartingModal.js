@@ -124,7 +124,7 @@ const PriceChartingModal = ({
   const modalFooter = !isLoading && (
     <div className="flex w-full items-center justify-between">
       <ModalButton variant="secondary" onClick={onClose}>
-        Cancel
+                  Close
       </ModalButton>
       
       {selectedProduct && getBestPriceForProduct(selectedProduct) > 0 && (

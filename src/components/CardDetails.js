@@ -45,11 +45,12 @@ const CardDetails = memo(
     const [imageLoadingState, setImageLoadingState] = useState('loading');
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
+    const [justSaved, setJustSaved] = useState(false);
     const messageTimeoutRef = useRef(null);
 
     // Effect to update editedCard when card or initialCollectionName changes
     useEffect(() => {
-      if (card) {
+      if (card && !justSaved) {
         // Create a complete copy of the card with all necessary fields
         const completeCard = {
           ...card,
@@ -93,7 +94,7 @@ const CardDetails = memo(
         // Handle case where card is null (e.g., adding new card - though this component might not be used for that)
         setEditedCard({});
       }
-    }, [card, initialCollectionName]); // Rerun when card or initialCollectionName changes
+    }, [card, initialCollectionName, justSaved]); // Rerun when card or initialCollectionName changes
 
 
 
@@ -127,9 +128,19 @@ const CardDetails = memo(
               logger.warn('Failed to revoke existing cardImage blob URL:', e);
             }
           }
-          const blobUrl = URL.createObjectURL(imageBlob);
-          setCardImage(blobUrl);
-          setImageLoadingState('loaded');
+          if (imageBlob && (imageBlob instanceof Blob || imageBlob instanceof File)) {
+            const blobUrl = URL.createObjectURL(imageBlob);
+            setCardImage(blobUrl);
+            setImageLoadingState('loaded');
+          } else if (typeof imageBlob === 'string' && imageBlob.startsWith('http')) {
+            // It's already a URL string, use it directly
+            setCardImage(imageBlob);
+            setImageLoadingState('loaded');
+          } else {
+            logger.warn('Invalid imageBlob received:', imageBlob);
+            setCardImage(null);
+            setImageLoadingState('error');
+          }
         } else {
           setCardImage(null);
           setImageLoadingState('error');
@@ -150,6 +161,9 @@ const CardDetails = memo(
 
     // Function to actually close the modal (extracted for reuse)
     const performActualClose = useCallback(() => {
+      const scrollBeforeClose = window.scrollY;
+  
+      
       // Clean up any blob URLs before closing
       if (
         editedCard &&
@@ -175,11 +189,18 @@ const CardDetails = memo(
       }
 
       // Close the modal
+
       setIsOpen(false);
 
       // Execute onClose callback after a short delay to allow animations
       setTimeout(() => {
+        const scrollBeforeOnClose = window.scrollY;
+
         onClose();
+        setTimeout(() => {
+          const scrollAfterOnClose = window.scrollY;
+
+        }, 50);
       }, 100);
     }, [editedCard, cardImage, onClose]);
 
@@ -446,12 +467,12 @@ const CardDetails = memo(
           currentValueUSD: finalCardData.currentValueUSD
             ? parseFloat(finalCardData.currentValueUSD)
             : 0,
-          investmentAUD: finalCardData.investmentAUD
-            ? parseFloat(finalCardData.investmentAUD)
-            : 0,
-          currentValueAUD: finalCardData.currentValueAUD
-            ? parseFloat(finalCardData.currentValueAUD)
-            : 0,
+          investmentAUD: finalCardData.originalInvestmentAmount
+            ? parseFloat(finalCardData.originalInvestmentAmount)
+            : (finalCardData.investmentAUD ? parseFloat(finalCardData.investmentAUD) : 0),
+          currentValueAUD: finalCardData.originalCurrentValueAmount
+            ? parseFloat(finalCardData.originalCurrentValueAmount)
+            : (finalCardData.currentValueAUD ? parseFloat(finalCardData.currentValueAUD) : 0),
           datePurchased: processedDate, // Use the processed date
           // Ensure both collection properties are set for compatibility
           collection:
@@ -488,10 +509,50 @@ const CardDetails = memo(
         }
 
         // Pass the processed card to the parent component's update function
+
         await onUpdateCard(processedCard);
 
-        // Now update the editedCard state to match what we saved
-        setEditedCard(finalCardData);
+
+        // Now update the editedCard state to match what was actually saved
+        // Use processedCard instead of finalCardData to preserve user edits
+        const cleanedProcessedCard = { ...processedCard };
+        
+        // Remove debugging and internal fields that shouldn't be in the form
+        delete cleanedProcessedCard._saveDebug;
+        delete cleanedProcessedCard._pendingImageFile;
+        delete cleanedProcessedCard._blobUrl;
+        
+        // Convert numeric fields back to strings for form compatibility
+        if (cleanedProcessedCard.year !== null && cleanedProcessedCard.year !== undefined) {
+          cleanedProcessedCard.year = String(cleanedProcessedCard.year);
+        }
+        if (cleanedProcessedCard.investmentAUD !== null && cleanedProcessedCard.investmentAUD !== undefined) {
+          cleanedProcessedCard.investmentAUD = String(cleanedProcessedCard.investmentAUD);
+        }
+        if (cleanedProcessedCard.currentValueAUD !== null && cleanedProcessedCard.currentValueAUD !== undefined) {
+          cleanedProcessedCard.currentValueAUD = String(cleanedProcessedCard.currentValueAUD);
+        }
+        if (cleanedProcessedCard.investmentUSD !== null && cleanedProcessedCard.investmentUSD !== undefined) {
+          cleanedProcessedCard.investmentUSD = String(cleanedProcessedCard.investmentUSD);
+        }
+        if (cleanedProcessedCard.currentValueUSD !== null && cleanedProcessedCard.currentValueUSD !== undefined) {
+          cleanedProcessedCard.currentValueUSD = String(cleanedProcessedCard.currentValueUSD);
+        }
+        
+        // Update the modal state with the actual saved data
+
+        setEditedCard(cleanedProcessedCard);
+        
+        // Set flag to prevent useEffect from overwriting our saved state
+        setJustSaved(true);
+        
+        // Reset the flag after a short delay to allow external updates again
+        setTimeout(() => {
+          setJustSaved(false);
+        }, 1000);
+        
+        // Track what editedCard becomes after the setState
+
 
         // Reset unsaved changes flag
         setHasUnsavedChanges(false);
@@ -499,8 +560,9 @@ const CardDetails = memo(
         // Show success message
         toast.success('Card saved successfully!');
 
-        // Close the modal with success flag
-        handleClose(true);
+        // DON'T close the modal - keep it open after save
+        // User can manually close when they're done
+        // handleClose(true);
       } catch (error) {
         logger.error('=========== CARD SAVE ERROR ===========');
         logger.error('Error saving card:', error);

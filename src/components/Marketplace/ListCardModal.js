@@ -334,7 +334,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            Close
           </Button>
           <Button
             variant="primary"

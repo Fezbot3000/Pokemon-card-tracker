@@ -168,7 +168,7 @@ const SellerReviewModal = ({
               onClick={handleClose}
               className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
             >
-              Cancel
+              Close
             </button>
             <button
               onClick={handleSubmit}

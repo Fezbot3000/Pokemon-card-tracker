@@ -515,6 +515,9 @@ const CardList = ({
       !isLoadingMore &&
       paginatedCards.length < filteredCards.length
     ) {
+      const scrollBeforeLazyLoad = window.scrollY;
+
+
       setIsLoadingMore(true);
       // Simulate loading delay for better UX
       setTimeout(() => {
@@ -531,8 +534,22 @@ const CardList = ({
                     ? 6
                     : 7; // lg and xl
 
+          const newCount = prevCount + cardsPerRow * 2;
+          
+
+
+          // Check scroll position after loading
+          setTimeout(() => {
+            const scrollAfterLazyLoad = window.scrollY;
+            if (scrollBeforeLazyLoad !== scrollAfterLazyLoad) {
+
+            } else {
+
+            }
+          }, 50);
+
           // Load 2 more rows of cards
-          return prevCount + cardsPerRow * 2;
+          return newCount;
         });
         setIsLoadingMore(false);
       }, 300);

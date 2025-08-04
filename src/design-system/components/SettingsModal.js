@@ -72,6 +72,13 @@ const SettingsModal = ({
     address: '',
     companyName: '',
   });
+  const [originalProfile, setOriginalProfile] = useState({
+    firstName: '',
+    lastName: '',
+    mobileNumber: '',
+    address: '',
+    companyName: '',
+  });
   const [collectionToRename, setCollectionToRename] = useState('');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState('');
@@ -108,7 +115,9 @@ const SettingsModal = ({
       const profileRef = doc(firestoreDb, 'users', user.uid);
       getDoc(profileRef).then(doc => {
         if (doc.exists()) {
-          setProfile(doc.data());
+          const profileData = doc.data();
+          setProfile(profileData);
+          setOriginalProfile(profileData); // Store original for change detection
         }
       });
     }
@@ -123,6 +132,13 @@ const SettingsModal = ({
     }));
   };
 
+  // Check if profile has changes
+  const hasProfileChanges = () => {
+    return Object.keys(profile).some(key => 
+      (profile[key] || '') !== (originalProfile[key] || '')
+    );
+  };
+
   // Save profile to Firestore and IndexedDB
   const handleProfileSave = async () => {
     try {
@@ -133,6 +149,9 @@ const SettingsModal = ({
 
         // Save to IndexedDB for local access
         await db.saveProfile(profile);
+
+        // Update originalProfile so the Save button becomes disabled again
+        setOriginalProfile({ ...profile });
 
         toastService.success('Profile saved successfully');
       }
@@ -649,7 +668,11 @@ const SettingsModal = ({
                     </div>
                   </div>
                   <div className="mt-4 flex justify-end">
-                    <Button variant="primary" onClick={handleProfileSave}>
+                    <Button 
+                      variant="primary" 
+                      onClick={handleProfileSave}
+                      disabled={!hasProfileChanges()}
+                    >
                       Save Profile
                     </Button>
                   </div>
@@ -845,7 +868,7 @@ const SettingsModal = ({
           />
           <div className="flex justify-end space-x-3 pt-4">
             <Button variant="outline" onClick={() => setIsRenaming(false)}>
-              Cancel
+              Close
             </Button>
             <Button
               variant="primary"

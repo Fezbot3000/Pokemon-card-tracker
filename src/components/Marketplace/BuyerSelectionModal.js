@@ -206,7 +206,7 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
       footer={
         <div className="flex space-x-3">
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            Close
           </Button>
           <Button
             variant="primary"

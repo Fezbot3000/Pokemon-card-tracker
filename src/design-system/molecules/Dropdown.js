@@ -143,7 +143,7 @@ const Dropdown = ({
               onClick={() => handleOpenChange(false)}
               className="mt-3 block w-full rounded-lg border border-gray-700 bg-[#000000] px-4 py-3 text-center text-sm font-semibold text-gray-300 hover:opacity-90"
             >
-              Cancel
+              Close
             </button>
           </div>
         </BottomSheet>

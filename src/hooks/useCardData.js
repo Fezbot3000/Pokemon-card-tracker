@@ -185,6 +185,8 @@ const useCardData = () => {
       // Make async
       // Check for either id or slabSerial as the card identifier
       const cardId = updatedCard?.id || updatedCard?.slabSerial;
+      
+      // '🔄 USECARDDATA: updateCard called', { cardId, cardName: updatedCard?.cardName });
 
       if (!updatedCard || !cardId) {
         logger.error(
@@ -220,12 +222,36 @@ const useCardData = () => {
             normalizedCard.slabSerial = updatedCard.slabSerial;
           }
 
+          // '🔄 USECARDDATA: Calling repository.updateCard');
           await repository.updateCard(normalizedCard);
+          // '✅ USECARDDATA: repository.updateCard completed');
           
-          // FORCE IMMEDIATE REFRESH FROM FIREBASE - bypass broken listeners
-          logger.debug('Refreshing all cards from Firebase after update');
-          const freshCards = await repository.getAllCards();
-          setCards(freshCards);
+          // Update the card in local state immediately (optimistic update)
+          // The Firestore listener will handle the real-time sync
+          // '🔄 USECARDDATA: Updating local state (optimistic update)');
+          setCards(prevCards =>
+            prevCards.map(card =>
+              card.id === cardId || card.slabSerial === cardId
+                ? normalizedCard
+                : card
+            )
+          );
+          // '✅ USECARDDATA: Local state updated');
+          
+          // Track scroll position before and after state update
+          const scrollBefore = window.scrollY;
+          setTimeout(() => {
+            const scrollAfter = window.scrollY;
+            if (scrollBefore !== scrollAfter) {
+              // '📜 SCROLL POSITION CHANGED!', { 
+                before: scrollBefore, 
+                after: scrollAfter, 
+                diff: scrollAfter - scrollBefore 
+              });
+            } else {
+              // '📜 Scroll position preserved', { position: scrollAfter });
+            }
+          }, 100);
         } else {
           // Fallback for offline mode
           setCards(prevCards =>

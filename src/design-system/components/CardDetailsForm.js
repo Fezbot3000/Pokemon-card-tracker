@@ -460,6 +460,8 @@ const CardDetailsForm = ({
 
   const handleCurrentValueInputChange = e => {
     const inputValue = e.target.value;
+
+    
     setDisplayCurrentValue(inputValue);
 
     const numericValue = parseFloat(inputValue) || 0;
@@ -476,11 +478,15 @@ const CardDetailsForm = ({
       newOriginalAmount = numericValue;
     }
 
-    onChange({
+    const updatedCard = {
       ...card,
       originalCurrentValueAmount: newOriginalAmount,
       originalCurrentValueCurrency: newOriginalCurrency,
-    });
+    };
+    
+
+    
+    onChange(updatedCard);
   };
 
   const handleCompanyChange = (company) => {

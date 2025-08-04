@@ -100,6 +100,25 @@ const AddCardModal = ({
   // Subscription check
   const { hasFeature } = useSubscription();
 
+  // Check if form has meaningful changes (any field filled)
+  const hasFormChanges = () => {
+    const emptyCard = getEmptyCard();
+    
+    // Check if any text fields have been modified from empty state
+    const hasTextChanges = Object.keys(emptyCard).some(key => {
+      if (key === 'datePurchased' || key === 'quantity') return false; // Skip date and quantity as they have defaults
+      return newCard[key] && newCard[key] !== emptyCard[key] && newCard[key].toString().trim() !== '';
+    });
+    
+    // Check if image has been added
+    const hasImageChanges = cardImage !== null || imageFile !== null;
+    
+    // Check if collection has been changed from default
+    const hasCollectionChanges = selectedCollection && selectedCollection !== (collections.filter(c => c.toLowerCase() !== 'sold')[0] || '');
+    
+    return hasTextChanges || hasImageChanges || hasCollectionChanges;
+  };
+
   // Set animation class when open state changes
   useEffect(() => {
     if (isOpen) {
@@ -407,7 +426,7 @@ const AddCardModal = ({
       {/* Cancel button - left aligned */}
       <div>
         <ModalButton variant="secondary" onClick={onClose}>
-          Cancel
+          Close
         </ModalButton>
       </div>
 
@@ -417,7 +436,7 @@ const AddCardModal = ({
         <ModalButton 
           variant="primary" 
           onClick={handleSave} 
-          disabled={isSaving}
+          disabled={isSaving || !hasFormChanges()}
           leftIcon={isSaving ? <Icon name="sync" className="animate-spin" /> : null}
         >
           {isSaving ? 'Saving...' : 'Add Card'}

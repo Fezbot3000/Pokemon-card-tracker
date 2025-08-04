@@ -29,6 +29,29 @@ const CreateInvoiceModal = ({
   const lastEditingInvoiceId = useRef(null);
   const lastPreSelectedCardsLength = useRef(0);
 
+  // Check if form has changes
+  const hasFormChanges = () => {
+    if (editingInvoice) {
+      // For editing mode, compare current values with original invoice
+      return (
+        seller !== (editingInvoice.seller || '') ||
+        date !== (editingInvoice.date || '') ||
+        invoiceNumber !== (editingInvoice.invoiceNumber || '') ||
+        notes !== (editingInvoice.notes || '') ||
+        JSON.stringify(selectedCards) !== JSON.stringify(editingInvoice.cards || [])
+      );
+    } else {
+      // For creation mode, check if any fields have meaningful values
+      return (
+        seller.trim() !== '' ||
+        invoiceNumber.trim() !== '' ||
+        notes.trim() !== '' ||
+        selectedCards.length > 0 ||
+        date !== new Date().toISOString().split('T')[0] // Date changed from today
+      );
+    }
+  };
+
   // Memoize the key values to prevent infinite loops
   const editingInvoiceKey = useMemo(() => {
     if (!editingInvoice) return null;
@@ -253,11 +276,12 @@ const CreateInvoiceModal = ({
         footer={
           <div className="flex w-full items-center justify-between">
             <ModalButton variant="secondary" onClick={handleClose}>
-              Cancel
+              Close
             </ModalButton>
             <ModalButton
               variant="primary"
               onClick={handleSubmit}
+              disabled={!hasFormChanges()}
               leftIcon={<Icon name="receipt" />}
             >
               {editingInvoice ? 'Save Changes' : 'Create Invoice'}

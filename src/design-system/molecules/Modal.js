@@ -74,24 +74,30 @@ const Modal = ({
         y: window.scrollY,
       };
 
+
+
       // Use requestAnimationFrame to delay DOM modifications until after the current frame
       requestAnimationFrame(() => {
         // Set the top offset to maintain scroll position when body becomes fixed
         document.body.style.top = `-${scrollPosRef.current.y}px`;
         // Add modal-open class which applies position: fixed via CSS
         document.body.classList.add('modal-open');
+
       });
 
       // Cleanup function
       return () => {
         // Get the scroll position from the negative top value
         const scrollY = parseInt(document.body.style.top || '0') * -1;
+
+        
         // Remove modal-open class to restore normal scrolling
         document.body.classList.remove('modal-open');
         // Clear the top style
         document.body.style.top = '';
         // Restore scroll position
         window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
+
       };
     } else if (!isOpen) {
       // If modal was just closed, make sure to clean up

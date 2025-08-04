@@ -61,7 +61,7 @@ const MoveCardsModal = ({
       footer={
         <div className="flex w-full items-center justify-between">
           <ModalButton variant="secondary" onClick={onClose} disabled={isMoving}>
-            Cancel
+            Close
           </ModalButton>
           <ModalButton
             variant="primary"

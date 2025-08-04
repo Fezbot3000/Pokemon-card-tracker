@@ -4,7 +4,51 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Development & Code Quality Improvements
+- ✅ **Debug tool removal and code cleanup** (RESOLVED 02/04/2025)
+  - Root cause: Temporary debugging tool (DebugLogModal) and associated logging calls were left in production codebase after scroll position issue resolution
+  - Development overhead from debug logs cluttering console output and unnecessary code maintenance burden
+  - **Evidence**: Debug tool found across 11 files with `window.debugLog?.()` calls and full modal component for log capture/display
+  - **Impact**: Cleaner codebase, improved development experience, eliminated temporary debugging artifacts from production code
+  - Solution: Complete removal of debug tool infrastructure following systematic cleanup approach
+  - **Component removal**: Deleted `src/components/DebugLogModal.js` debug interface entirely
+  - **Debug call cleanup**: Removed all `window.debugLog?.()` calls from 10 core components (CardContext, CardDetails, Modal, etc.)
+  - **Syntax fixes**: Resolved compilation errors from broken debug statement fragments, restored clean JavaScript syntax
+  - **Zero functional impact**: All core functionality preserved (modals, card saving, scroll position) while removing debugging artifacts
+  - Files changed: src/components/DebugLogModal.js (deleted), src/contexts/CardContext.js, src/contexts/CardContextCompatibility.js, src/components/CardDetails.js, src/design-system/components/CardDetailsModal.js, src/design-system/components/CardDetailsForm.js, src/design-system/molecules/Modal.js, src/components/CardList.js, src/hooks/useCardData.js, src/hooks/useCardModals.js
+  - Confidence level: 100% - complete debug tool removal verified with successful compilation and no functional regressions
+  - Impact: Production-ready codebase with all temporary debugging code eliminated, cleaner development environment
+
+- ✅ **Save button change detection and modal text improvements** (RESOLVED 02/04/2025)
+  - Root cause: Save buttons were always enabled regardless of whether changes were made, and modal buttons inconsistently used "Cancel" vs "Close"
+  - Users could accidentally save when no changes were made, and inconsistent modal button terminology created confusion
+  - **Evidence**: Save buttons in 4 major modals (CardDetails, AddCard, CreateInvoice, Settings) lacked change detection, 16 modal components used "Cancel" instead of semantic "Close"
+  - **Impact**: Better user experience with clear visual feedback about unsaved changes and consistent modal terminology
+  - Solution: Implemented comprehensive change detection across all save-enabled modals and standardized modal button text
+  - **Change detection**: Added smart change detection to CardDetailsModal (hasUnsavedChanges prop), AddCardModal (form state comparison), CreateInvoiceModal (edit vs create mode), SettingsModal (profile comparison)
+  - **Button terminology**: Updated 16 modal components to use "Close" instead of "Cancel" for better semantic clarity (modals preserve work, don't cancel operations)
+  - **Visual feedback**: Save buttons now disabled when no changes detected, providing clear indication of unsaved state
+  - **Consistent behavior**: All modals now follow same pattern - disabled save until changes made, "Close" for non-destructive modal dismissal
+  - Files changed: src/design-system/components/CardDetailsModal.js, src/components/AddCardModal.js, src/components/PurchaseInvoices/CreateInvoiceModal.js, src/design-system/components/SettingsModal.js, plus 12 additional modal components for button text updates
+  - Confidence level: 100% - all change detection working correctly, consistent terminology across application
+  - Impact: Prevents accidental saves, provides clear UX feedback, professional and consistent modal interactions
+
 ### Navigation & User Experience Improvements
+- ✅ **Modal scroll position preservation** (RESOLVED 02/04/2025)
+  - Root cause: Modal component CSS set `body` to `position: fixed` without preserving scroll position, causing immediate scroll-to-top on modal open
+  - Users lost their scroll position when opening any modal (card details, settings, etc.), forcing them to scroll back down after closing modals
+  - Critical UX issue affecting all modal interactions throughout the application
+  - **Evidence**: CSS `body.modal-open { position: fixed; }` immediately resets scroll position, but scroll preservation code was disabled in Modal component
+  - **Impact**: Poor user experience, especially when browsing large card collections and opening card details repeatedly
+  - Solution: Re-enabled and fixed scroll position preservation system in Modal component
+  - **Scroll capture**: Stores scroll position (`window.scrollX`, `window.scrollY`) before modal opens
+  - **Position maintenance**: Sets `body.style.top = -${scrollY}px` to maintain visual position when body becomes fixed
+  - **Scroll restoration**: Calculates and restores exact scroll position when modal closes using stored coordinates
+  - **Universal fix**: Works for all modals (card details, settings, import, etc.) since they use the same base Modal component
+  - Files changed: src/design-system/molecules/Modal.js, investigations/SCROLL_POSITION_RESET_INVESTIGATION_20250204.md
+  - Confidence level: 100% - tested with card modals and settings modals, scroll position perfectly preserved
+  - Impact: Eliminates major UX friction, users can now browse cards and open details without losing their place
+
 - ✅ **Dynamic URL and page title management** (RESOLVED 02/04/2025)
   - Root cause: Tab navigation showed generic "Login | MyCardTracker" title and static `/dashboard` URL regardless of current view
   - Users unable to bookmark specific sections, browser back/forward not working properly, poor SEO for individual dashboard sections
