@@ -620,6 +620,7 @@ const CardDetails = memo(
           }}
           card={editedCard}
           onSave={handleSave}
+          onChange={handleCardChange}
           hasUnsavedChanges={hasUnsavedChanges}
           // onDelete={onDelete} - Removed delete functionality from modal
           onMarkAsSold={async soldCardData => {
@@ -649,7 +650,6 @@ const CardDetails = memo(
               toast.error('Error marking card as sold: ' + error.message);
             }
           }}
-          onChange={handleCardChange}
           image={cardImage}
           imageLoadingState={imageLoadingState}
           onImageChange={handleImageChange}

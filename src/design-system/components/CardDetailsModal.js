@@ -46,6 +46,7 @@ const CardDetailsModal = ({
   isPsaLoading = false,
   hasUnsavedChanges = false, // New prop to track unsaved changes
 }) => {
+  const [localCard, setLocalCard] = useState(card || {}); // Local card state for form changes
   const [cardImage, setCardImage] = useState(null); // Start with null to implement lazy loading
   const [localImageLoadingState] = useState('idle');
   const [showEnlargedImage, setShowEnlargedImage] = useState(false);
@@ -115,6 +116,14 @@ const CardDetailsModal = ({
       proceedToClose();
     }
   };
+  
+  // Handle local card changes - update local state and notify parent
+  const handleLocalCardChange = useCallback((updatedCard) => {
+    setLocalCard(updatedCard);
+    if (onChange) {
+      onChange(updatedCard);
+    }
+  }, [onChange]);
   
   // Local state for unsaved changes dialog to avoid calling onClose
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
@@ -250,22 +259,22 @@ const CardDetailsModal = ({
 
       // Update card data with PSA information
       const updatedCard = {
-        ...card,
+        ...localCard,
         ...parsedData,
         slabSerial: serialNumber,
         condition: `PSA ${parsedData.grade}`,
         gradeCompany: 'PSA',
         psaUrl: `https://www.psacard.com/cert/${serialNumber}`,
-        player: parsedData.player || card.player,
-        cardName: parsedData.cardName || card.cardName,
-        population: parsedData.population || card.population,
-        category: parsedData.category || card.category,
-        set: parsedData.set || card.set,
-        year: parsedData.year || card.year,
+        player: parsedData.player || localCard.player,
+        cardName: parsedData.cardName || localCard.cardName,
+        population: parsedData.population || localCard.population,
+        category: parsedData.category || localCard.category,
+        set: parsedData.set || localCard.set,
+        year: parsedData.year || localCard.year,
       };
 
-      // Call onChange with the updated card data
-      onChange(updatedCard);
+      // Update local state and notify parent
+      handleLocalCardChange(updatedCard);
       toast.success('PSA data successfully loaded');
       setSaveMessage('PSA data successfully loaded');
     } catch (error) {
@@ -310,22 +319,31 @@ const CardDetailsModal = ({
 
     // Update the card with the new price data
     const updatedCard = {
-      ...card,
+      ...localCard,
       originalCurrentValueAmount: priceData.priceInUSD,
       originalCurrentValueCurrency: 'USD',
       priceChartingData: priceData,
       priceChartingLastUpdated: new Date().toISOString(),
     };
 
-    // Call onChange with the updated card data
-    onChange(updatedCard);
+    // Update local state and notify parent
+    handleLocalCardChange(updatedCard);
     toast.success('Price Charting data applied successfully!');
     setSaveMessage('Price Charting data applied successfully!');
   };
 
-  // Update local state when props change or modal opens
+  // Track if this is the initial load to avoid resetting localCard on subsequent prop updates
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Update local state when modal opens (initial load only)
   useEffect(() => {
     if (isOpen) {
+      // Only reset localCard on initial load, not on subsequent prop updates
+      if (isInitialLoad) {
+        setLocalCard(card || {});
+        setIsInitialLoad(false);
+      }
+      
       // On mobile, only load content when the modal opens
       if (isMobile) {
         // Set a short delay to allow the modal animation to complete
@@ -352,18 +370,11 @@ const CardDetailsModal = ({
       // Reset animation class and content loaded state when modal closes
       setAnimClass('fade-out');
       setContentLoaded(false); // Reset content loaded state
+      // Reset initial load flag when modal closes
+      setIsInitialLoad(true);
     }
-    // Dependencies that should trigger this effect. 'image' and 'isMobile' are for content loading.
-    // 'card', 'card.collectionId', 'card.set', 'card.card' are critical for resetting form/error state.
-  }, [
-    isOpen,
-    card,
-    image,
-    isMobile,
-    card?.collectionId,
-    card?.set,
-    card?.card,
-  ]);
+    // Only depend on isOpen, image, and isMobile - not on card prop to avoid resetting localCard
+  }, [isOpen, image, isMobile, isInitialLoad]);
 
   // Handle image changes (passed down to form)
   const handleImageChange = file => {
@@ -382,7 +393,7 @@ const CardDetailsModal = ({
   // SaleModal integration for single card
   const handleSaleConfirm = saleData => {
     if (onMarkAsSold) {
-      onMarkAsSold({ ...card, ...saleData });
+      onMarkAsSold({ ...localCard, ...saleData });
     }
     setIsConfirmingSold(false);
   };
@@ -682,14 +693,14 @@ const CardDetailsModal = ({
               )}
 
               <CardDetailsForm
-                card={card}
+                card={localCard}
                 cardImage={
                   localImageLoadingState === 'loading'
                     ? null
                     : cardImage || image
                 }
                 imageLoadingState={localImageLoadingState}
-                onChange={onChange}
+                onChange={handleLocalCardChange}
                 onImageChange={handleImageChange}
                 onImageRetry={onImageRetry}
                 onImageClick={() => setShowEnlargedImage(true)}

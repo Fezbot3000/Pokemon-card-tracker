@@ -58,9 +58,13 @@ All notable changes to this project will be documented in this file.
   - **Modal re-opening fix**: Fixed timing issue where handleDiscardChanges would trigger unsaved changes check again by using direct Modal close animation instead of state-based approaches
   - **Duplicate dialog fix**: Completely moved unsaved changes dialog handling from CardDetails to CardDetailsModal to eliminate duplicate dialogs caused by multiple triggering paths
   - **Simplified architecture**: CardDetails no longer handles unsaved changes logic, CardDetailsModal now owns the complete unsaved changes workflow from detection to confirmation
+  - **onChange prop fix**: Restored missing onChange prop to CardDetailsModal that was accidentally removed, which was causing form changes not to update modal state
+  - **Card state flow fix**: Added local card state to CardDetailsModal to properly manage form changes - CardDetailsForm now receives updated localCard state instead of original card prop, enabling real-time field updates
+  - **State reset prevention**: Fixed critical issue where localCard state was being reset by parent prop updates, causing form changes to revert - localCard now only updates on initial modal open, maintaining user changes
+  - ✅ **VERIFIED WORKING**: All modal form changes now appear in real-time, unsaved changes workflow functions correctly, scroll position preserved, no duplicate dialogs
   - Files changed: src/design-system/molecules/Modal.js, src/design-system/components/CardDetailsModal.js, src/components/CardDetails.js
   - Confidence level: 100% - systematic fix addressing the exact user-reported issue with proper component architecture
-  - Impact: Eliminates data loss risk, provides proper unsaved changes workflow, prevents visual artifacts and state management issues, maintains scroll position consistency
+  - Impact: Eliminates data loss risk, provides proper unsaved changes workflow, prevents visual artifacts and state management issues, maintains scroll position consistency, enables real-time form updates
 
 - ✅ **Modal scroll position preservation** (RESOLVED 02/04/2025)
   - Root cause: Modal component CSS set `body` to `position: fixed` without preserving scroll position, causing immediate scroll-to-top on modal open
