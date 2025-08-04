@@ -69,6 +69,9 @@ const Modal = ({
         setAnimationClass('animate-modal-scale-in');
       }
 
+      // Check if scroll position is already being managed by another modal
+      const isScrollAlreadyManaged = document.body.classList.contains('modal-open');
+
       // Store current scroll position when modal opens
       scrollPosRef.current = {
         x: window.scrollX,
@@ -79,34 +82,49 @@ const Modal = ({
 
       // Use requestAnimationFrame to delay DOM modifications until after the current frame
       requestAnimationFrame(() => {
-        // Set the top offset to maintain scroll position when body becomes fixed
-        document.body.style.top = `-${scrollPosRef.current.y}px`;
-        // Add modal-open class which applies position: fixed via CSS
-        document.body.classList.add('modal-open');
+        // Only manage scroll position if it's not already being managed
+        if (!isScrollAlreadyManaged) {
+          // Set the top offset to maintain scroll position when body becomes fixed
+          document.body.style.top = `-${scrollPosRef.current.y}px`;
+          // Add modal-open class which applies position: fixed via CSS
+          document.body.classList.add('modal-open');
+        }
 
       });
 
       // Cleanup function
       return () => {
-        // Get the scroll position from the negative top value
-        const scrollY = parseInt(document.body.style.top || '0') * -1;
+        // Only restore scroll position if this modal was managing it
+        if (!isScrollAlreadyManaged) {
+          // Check if there are still other modals open after this one closes
+          const remainingModals = document.querySelectorAll('[role="dialog"]');
+          const isLastModal = remainingModals.length <= 1; // <= 1 because this modal is still in DOM
 
-        
-        // Remove modal-open class to restore normal scrolling
-        document.body.classList.remove('modal-open');
-        // Clear the top style
-        document.body.style.top = '';
-        // Restore scroll position
-        window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
+          if (isLastModal) {
+            // Get the scroll position from the negative top value
+            const scrollY = parseInt(document.body.style.top || '0') * -1;
+
+            
+            // Remove modal-open class to restore normal scrolling
+            document.body.classList.remove('modal-open');
+            // Clear the top style
+            document.body.style.top = '';
+            // Restore scroll position
+            window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
+          }
+        }
 
       };
     } else if (!isOpen) {
-      // If modal was just closed, make sure to clean up
-      const scrollY = parseInt(document.body.style.top || '0') * -1;
-      document.body.classList.remove('modal-open');
-      document.body.style.top = '';
-      if (scrollPosRef.current) {
-        window.scrollTo(0, scrollY || scrollPosRef.current.y || 0);
+      // If modal was just closed, make sure to clean up only if no other modals are open
+      const otherModals = document.querySelectorAll('[role="dialog"]');
+      if (otherModals.length === 0) {
+        const scrollY = parseInt(document.body.style.top || '0') * -1;
+        document.body.classList.remove('modal-open');
+        document.body.style.top = '';
+        if (scrollPosRef.current) {
+          window.scrollTo(0, scrollY || scrollPosRef.current.y || 0);
+        }
       }
     }
   }, [isOpen, position, showAsStatic]);

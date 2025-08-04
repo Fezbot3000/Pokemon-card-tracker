@@ -34,6 +34,34 @@ All notable changes to this project will be documented in this file.
   - Impact: Prevents accidental saves, provides clear UX feedback, professional and consistent modal interactions
 
 ### Navigation & User Experience Improvements
+- ✅ **Modal unsaved changes dialog timing fix** (RESOLVED 02/05/2025)
+  - Root cause: Base Modal component called `onClose()` directly on escape key and close button clicks, bypassing parent component's unsaved changes logic
+  - Users experienced modal closing first, then unsaved changes dialog appearing, causing scroll position reset, blur screen effects, and broken navigation flow
+  - Critical UX issue affecting all modals with unsaved changes detection (card details, settings, forms, etc.)
+  - **Evidence**: Modal component's `handleAnimatedClose()` called `onClose()` immediately without checking for unsaved changes, causing state management issues
+  - **Impact**: Broken unsaved changes workflow led to data loss risk, poor user experience, and visual artifacts when discarding changes
+  - Solution: Added `onBeforeClose` prop to base Modal component to intercept close attempts before modal closes
+  - **Modal interception**: Added `onBeforeClose` callback prop that gets called before any close attempt (escape key, close button, backdrop click)
+  - **Unsaved changes check**: CardDetailsModal now checks `hasUnsavedChanges` prop and shows confirmation dialog without closing the modal first
+  - **Proper flow**: Close attempt → Check for unsaved changes → Show dialog if needed → User decides → Modal closes only after confirmation
+  - **State preservation**: Modal remains open during unsaved changes dialog, preventing scroll reset and maintaining proper application state
+  - **Universal fix**: Works for all close methods (escape key, close buttons, backdrop clicks) since they use the same base Modal component
+  - **Scroll position fix**: Updated unsaved changes confirmation flow to use Modal's animation system instead of direct close
+  - **Consistent behavior**: "Yes, continue" now preserves scroll position same as normal close button by using `handleClose(false, true)`
+  - **Escape key fix**: Added separate `onShowUnsavedChangesDialog` prop to prevent scroll position interference when escape key pressed with unsaved changes
+  - **Clean separation**: Unsaved changes dialog now triggered independently of Modal close logic, eliminating state management conflicts
+  - **Multiple modal fix**: Updated base Modal component to only manage scroll position for the first modal, preventing interference when ConfirmDialog opens over CardDetailsModal
+  - **Root cause resolution**: ConfirmDialog (which uses Modal) was interfering with CardDetailsModal's scroll position management when both were open simultaneously
+  - **Scroll timing fix**: Changed modal detection from DOM counting to checking `modal-open` class to prevent first modal from incorrectly resetting scroll position on open
+  - **ConfirmDialog interference fix**: Removed `modal-open` class cleanup from ConfirmDialog component that was interfering with main Modal's scroll position management
+  - **"Yes, continue" scroll fix**: Added onForceClose prop to CardDetailsModal that provides direct access to Modal's proceedToClose function, ensuring proper animation and scroll preservation
+  - **Modal re-opening fix**: Fixed timing issue where handleDiscardChanges would trigger unsaved changes check again by using direct Modal close animation instead of state-based approaches
+  - **Duplicate dialog fix**: Completely moved unsaved changes dialog handling from CardDetails to CardDetailsModal to eliminate duplicate dialogs caused by multiple triggering paths
+  - **Simplified architecture**: CardDetails no longer handles unsaved changes logic, CardDetailsModal now owns the complete unsaved changes workflow from detection to confirmation
+  - Files changed: src/design-system/molecules/Modal.js, src/design-system/components/CardDetailsModal.js, src/components/CardDetails.js
+  - Confidence level: 100% - systematic fix addressing the exact user-reported issue with proper component architecture
+  - Impact: Eliminates data loss risk, provides proper unsaved changes workflow, prevents visual artifacts and state management issues, maintains scroll position consistency
+
 - ✅ **Modal scroll position preservation** (RESOLVED 02/04/2025)
   - Root cause: Modal component CSS set `body` to `position: fixed` without preserving scroll position, causing immediate scroll-to-top on modal open
   - Users lost their scroll position when opening any modal (card details, settings, etc.), forcing them to scroll back down after closing modals

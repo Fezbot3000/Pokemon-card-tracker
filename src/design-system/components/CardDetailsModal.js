@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../molecules/Modal';
+import ConfirmDialog from '../molecules/ConfirmDialog';
 import Icon from '../atoms/Icon';
 import ModalButton from '../atoms/ModalButton';
 import CardDetailsForm from './CardDetailsForm';
@@ -29,6 +30,7 @@ const formatDate = dateString => {
 const CardDetailsModal = ({
   isOpen,
   onClose,
+  onForceClose, // New prop to force close with proper animation
   card = null,
   onSave,
   onMarkAsSold,
@@ -94,17 +96,56 @@ const CardDetailsModal = ({
     onClose();
   };
 
+  // Store reference to the Modal's close function for forced close
+  const modalCloseRef = useRef(null);
+  
   // Handle before close to check for unsaved changes
   const handleBeforeClose = (proceedToClose) => {
+    // Store the proceedToClose function so we can call it from onForceClose
+    modalCloseRef.current = proceedToClose;
+    
     if (hasUnsavedChanges) {
-      // If there are unsaved changes, call the parent's close handler
-      // which will show the unsaved changes dialog
-      onClose();
+      // If there are unsaved changes, prevent the modal from closing
+      // and manually trigger the unsaved changes dialog
+      setShowUnsavedChangesDialog(true);
+      // Explicitly do NOT call proceedToClose() to prevent the modal from closing
+      return;
     } else {
-      // No unsaved changes, proceed with normal close
+      // No unsaved changes, proceed with normal close using Modal's animation system
       proceedToClose();
     }
   };
+  
+  // Local state for unsaved changes dialog to avoid calling onClose
+  const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
+  
+  // Handle unsaved changes dialog responses
+  const handleDiscardChanges = useCallback(() => {
+    setShowUnsavedChangesDialog(false);
+    // Use the force close function to trigger Modal's proper animation
+    if (modalCloseRef.current) {
+      modalCloseRef.current();
+    }
+  }, []);
+  
+  const handleKeepEditing = useCallback(() => {
+    setShowUnsavedChangesDialog(false);
+    // Main modal stays open, no other action needed
+  }, []);
+  
+  // Handle forced close with proper animation
+  const handleForceClose = useCallback(() => {
+    if (modalCloseRef.current) {
+      modalCloseRef.current();
+    }
+  }, []);
+  
+  // Effect to expose force close function to parent
+  useEffect(() => {
+    if (onForceClose) {
+      onForceClose(handleForceClose);
+    }
+  }, [onForceClose, handleForceClose]);
 
   // PriceCharting functionality removed
 
@@ -757,6 +798,19 @@ const CardDetailsModal = ({
         onClose={() => setPriceChartingModalOpen(false)}
         currentCardData={card}
         onApplyPrice={handleApplyPriceChartingPrice}
+      />
+      
+      {/* Unsaved Changes Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={showUnsavedChangesDialog}
+        onClose={handleKeepEditing}
+        onConfirm={handleDiscardChanges}
+        title="Unsaved Changes"
+        message="You have unsaved changes that will be lost. Are you sure you want to continue?"
+        confirmText="Yes, continue"
+        cancelText="No, go back"
+        variant="danger"
+        zIndex="60000"
       />
     </>
   );

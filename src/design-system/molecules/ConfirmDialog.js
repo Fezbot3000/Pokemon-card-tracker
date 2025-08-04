@@ -26,9 +26,9 @@ const ConfirmDialog = ({
   useEffect(() => {
     // Cleanup function to ensure UI is unlocked if dialog is unmounted
     return () => {
-      // Remove any lingering focus traps or body classes
-      document.body.classList.remove('modal-open');
-
+      // Note: Don't remove 'modal-open' class here as other modals might still be open
+      // The base Modal component handles scroll position and modal-open class properly
+      
       // Ensure any "blocked" UI elements are re-enabled
       const blockers = document.querySelectorAll(
         '.modal-backdrop, .modal-overlay'
@@ -53,8 +53,10 @@ const ConfirmDialog = ({
 
   // Centralized close handler to ensure proper cleanup
   const handleClose = () => {
-    // Explicitly remove any overlay classes or elements that might be blocking UI
-    document.body.classList.remove('modal-open');
+    // Note: Don't remove 'modal-open' class here as other modals might still be open
+    // The base Modal component handles scroll position management properly
+    
+    // Remove any stray modal overlay elements (but not modal-open class)
     const overlays = document.querySelectorAll(
       '.modal-backdrop, .modal-overlay'
     );

@@ -4,7 +4,7 @@ import db from '../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
 import CardDetailsModal from '../design-system/components/CardDetailsModal';
-import ConfirmDialog from '../design-system/molecules/ConfirmDialog';
+
 import logger from '../services/LoggingService';
 
 const CardDetails = memo(
@@ -44,9 +44,10 @@ const CardDetails = memo(
     const [cardImage, setCardImage] = useState(null);
     const [imageLoadingState, setImageLoadingState] = useState('loading');
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
-    const [justSaved, setJustSaved] = useState(false);
-    const messageTimeoutRef = useRef(null);
+    
+  const [justSaved, setJustSaved] = useState(false);
+  const messageTimeoutRef = useRef(null);
+  const forceCloseModalRef = useRef(null);
 
     // Effect to update editedCard when card or initialCollectionName changes
     useEffect(() => {
@@ -204,29 +205,19 @@ const CardDetails = memo(
       }, 100);
     }, [editedCard, cardImage, onClose]);
 
-    // Handle close action with confirmation for unsaved changes
+    // Handle close action - simplified since unsaved changes are handled in CardDetailsModal
     const handleClose = useCallback((saveSuccess = false, skipConfirmation = false) => {
-      // If save was successful or no unsaved changes, close immediately
-      if (saveSuccess || !hasUnsavedChanges || skipConfirmation) {
+      // Always close immediately since unsaved changes are now handled at the Modal level
+      if (skipConfirmation) {
+        // Directly set the modal to close, this will trigger the Modal's
+        // handleAnimatedClose through the CardDetailsModal's onClose
+        setIsOpen(false);
+      } else {
         performActualClose();
-        return;
       }
-
-      // Show custom confirmation modal instead of window.confirm
-      setShowUnsavedChangesModal(true);
-    }, [hasUnsavedChanges, performActualClose]);
-
-    // Handle confirmation modal responses
-    const handleDiscardChanges = useCallback(() => {
-      setShowUnsavedChangesModal(false);
-      setHasUnsavedChanges(false); // Reset unsaved changes
-      performActualClose(); // Close the main modal
     }, [performActualClose]);
 
-    const handleKeepEditing = useCallback(() => {
-      setShowUnsavedChangesModal(false);
-      // Main modal stays open, no other action needed
-    }, []);
+
 
     // Effect to handle body scroll locking and image loading
     useEffect(() => {
@@ -624,6 +615,9 @@ const CardDetails = memo(
         <CardDetailsModal
           isOpen={isOpen}
           onClose={handleClose}
+          onForceClose={(forceCloseFunction) => {
+            forceCloseModalRef.current = forceCloseFunction;
+          }}
           card={editedCard}
           onSave={handleSave}
           hasUnsavedChanges={hasUnsavedChanges}
@@ -667,18 +661,7 @@ const CardDetails = memo(
           initialCollectionName={initialCollectionName}
         />
 
-        {/* Unsaved Changes Confirmation Modal */}
-        <ConfirmDialog
-          isOpen={showUnsavedChangesModal}
-          onClose={handleKeepEditing}
-          onConfirm={handleDiscardChanges}
-          title="Unsaved Changes"
-          message="You have unsaved changes that will be lost. Are you sure you want to continue?"
-          confirmText="Yes, continue"
-          cancelText="No, go back"
-          variant="danger"
-          zIndex="60000"
-        />
+
       </>
     );
   }
