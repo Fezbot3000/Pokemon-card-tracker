@@ -638,18 +638,8 @@ const CardDetailsModal = ({
     </div>
   );
 
-  // Create custom title with profit/loss display
-  const titleWithProfit = (
-    <div className="flex w-full items-center justify-between">
-      <span className="text-xl font-medium">Card Details</span>
-      <span
-        className={`text-lg font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
-        data-component-name="CardDetailsModal"
-      >
-        {getProfit() >= 0 ? '+' : '-'}{formatPreferredCurrency(Math.abs(getProfit()))}
-      </span>
-    </div>
-  );
+  // Simple title without profit display
+  const modalTitle = "Card Details";
 
   return (
     <>
@@ -657,7 +647,7 @@ const CardDetailsModal = ({
         isOpen={isOpen}
         onClose={handleCloseAttempt}
         onBeforeClose={handleBeforeClose}
-        title={titleWithProfit}
+        title={modalTitle}
         position="right"
         closeOnClickOutside={true}
         size="modal-width-70"
