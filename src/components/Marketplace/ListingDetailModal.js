@@ -736,7 +736,9 @@ function ListingDetailModal({
                       <dt className="text-sm text-gray-600 dark:text-gray-400">
                         Purchase Price
                       </dt>
-                      <dd className="font-medium">${card.purchasePrice}</dd>
+                      <dd className="font-medium">
+                        {formatAmountForDisplay(card.purchasePrice, card.purchaseCurrency || 'AUD')}
+                      </dd>
                     </div>
                   )}
                   {card.currentValue && (
@@ -744,7 +746,9 @@ function ListingDetailModal({
                       <dt className="text-sm text-gray-600 dark:text-gray-400">
                         Current Value
                       </dt>
-                      <dd className="font-medium">${card.currentValue}</dd>
+                      <dd className="font-medium">
+                        {formatAmountForDisplay(card.currentValue, card.currentValueCurrency || 'AUD')}
+                      </dd>
                     </div>
                   )}
                 </dl>
@@ -769,6 +773,7 @@ function ListingDetailModal({
                     location={listing.location}
                     cardName={card.name || card.cardName || 'Pokemon Card'}
                     price={listing.listingPrice}
+                    currency={listing.currency || 'AUD'}
                   />
                 </div>
               )}

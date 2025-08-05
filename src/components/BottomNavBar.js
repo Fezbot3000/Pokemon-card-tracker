@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import logger from '../utils/logger';
 
-const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
+const BottomNavBar = ({ currentView, onViewChange }) => {
   const navigate = useNavigate();
 
   // Helper function to check if current view is in the sold section
@@ -51,22 +51,7 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
     }
   };
 
-  // Safe settings handler
-  const handleSettingsClick = () => {
-    try {
-      setTimeout(() => {
-        if (onSettingsClick && typeof onSettingsClick === 'function') {
-          onSettingsClick();
-        }
-      }, 0);
-    } catch (error) {
-      logger.error('Error handling settings click:', error, { context: { file: 'BottomNavBar', purpose: 'settings' } });
-      // Fallback: try direct navigation
-      if (onSettingsClick && typeof onSettingsClick === 'function') {
-        onSettingsClick();
-      }
-    }
-  };
+
 
   // Don't render the bottom nav bar if we're in an active chat
   if (isInActiveChat()) {
@@ -101,7 +86,7 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
 
       <button
         className={`nav-button ${currentView.startsWith('settings') ? 'active' : ''}`}
-        onClick={handleSettingsClick}
+        onClick={() => handleNavigation('settings')}
       >
         <span className="material-icons nav-icon">settings</span>
         <span className="nav-label">Settings</span>
@@ -113,7 +98,6 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
 BottomNavBar.propTypes = {
   currentView: PropTypes.string.isRequired,
   onViewChange: PropTypes.func.isRequired,
-  onSettingsClick: PropTypes.func,
 };
 
 export default BottomNavBar;

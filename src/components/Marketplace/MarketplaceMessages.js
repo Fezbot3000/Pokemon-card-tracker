@@ -290,11 +290,12 @@ function MarketplaceMessages({ currentView, onViewChange }) {
   }, [activeChat, user]);
 
   // Auto-scroll to bottom when new messages arrive (only when in active chat)
-  useEffect(() => {
-    if (messagesEndRef.current && activeChat && messages.length > 0) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, activeChat]);
+  // DISABLED: Removed auto-scroll behavior that was causing viewport movement
+  // useEffect(() => {
+  //   if (messagesEndRef.current && activeChat && messages.length > 0) {
+  //     messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  //   }
+  // }, [messages, activeChat]);
 
   // Hide header, footer and bottom nav when in active chat
   useEffect(() => {
@@ -440,7 +441,8 @@ function MarketplaceMessages({ currentView, onViewChange }) {
 
       // Scroll to bottom
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        // DISABLED: Removed auto-scroll behavior that was causing viewport movement
+        // messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
 
       // Send email notification
@@ -804,7 +806,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             )}
           </div>
         ) : (
-          <div className="flex min-h-[400px] max-h-[calc(100vh-12rem)] flex-col">
+          <div className="flex h-[calc(100vh-13rem)] flex-col sm:h-[calc(100vh-8rem)]">
             {/* Chat header */}
             <div className="flex items-center justify-between border-b border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-[#0F0F0F]">
               <div className="flex items-center">
@@ -890,7 +892,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             )}
 
             {/* Messages container - Scrollable area */}
-            <div className="hide-scrollbar flex-1 space-y-4 overflow-y-auto p-4">
+            <div className="hide-scrollbar flex-1 space-y-4 overflow-y-auto p-4 pb-20">
               {messages.length === 0 ? (
                 <div className="py-12 text-center">
                   <p className="text-gray-600 dark:text-gray-400">
@@ -965,7 +967,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             ) : (
               <form
                 onSubmit={handleSendMessage}
-                className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
+                className="sticky bottom-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
               >
                 <div className="flex items-center space-x-2">
                   <input

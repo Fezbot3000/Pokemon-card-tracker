@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import LoggingService from '../../services/LoggingService';
 import 'leaflet/dist/leaflet.css';
 
@@ -29,7 +30,8 @@ const customIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
-function MapView({ location, cardName, price }) {
+function MapView({ location, cardName, price, currency = 'AUD' }) {
+  const { formatAmountForDisplay } = useUserPreferences();
   const [coordinates, setCoordinates] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -119,7 +121,7 @@ function MapView({ location, cardName, price }) {
           <Popup>
             <div className="text-center">
               <p className="font-semibold">{cardName}</p>
-              <p className="text-lg font-bold">${price}</p>
+              <p className="text-lg font-bold">{formatAmountForDisplay(price, currency)}</p>
               <p className="text-sm text-gray-600">{location}</p>
             </div>
           </Popup>

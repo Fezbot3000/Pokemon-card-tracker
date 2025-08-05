@@ -14,6 +14,7 @@ import NavigationBar from './NavigationBar';
 import Footer from './Footer';
 import LoginModal from '../design-system/components/LoginModal';
 import ImageModal from '../design-system/atoms/ImageModal'; // Import ImageModal component
+import MarketplaceImageService from '../services/MarketplaceImageService';
 import logger from '../services/LoggingService';
 
 const PublicMarketplace = () => {
@@ -26,132 +27,13 @@ const PublicMarketplace = () => {
   const navigate = useNavigate();
   const { formatAmountForDisplay } = useUserPreferences();
 
-  // Helper function to ensure we have a string URL (same as authenticated marketplace)
-  const ensureStringUrl = imageData => {
-    if (!imageData) return null;
-
-    // If it's already a string, return it
-    if (typeof imageData === 'string') {
-      return imageData;
-    }
-
-    // If it's a File object with a preview URL
-    if (imageData instanceof File && window.URL) {
-      return window.URL.createObjectURL(imageData);
-    }
-
-    // If it's an object with a URL property, use that
-    if (typeof imageData === 'object') {
-      // Check for common URL properties
-      if (imageData.url) return imageData.url;
-      if (imageData.src) return imageData.src;
-      if (imageData.uri) return imageData.uri;
-      if (imageData.href) return imageData.href;
-      if (imageData.downloadURL) return imageData.downloadURL;
-      if (imageData.path && typeof imageData.path === 'string')
-        return imageData.path;
-
-      // If it has a toString method, try that
-      if (typeof imageData.toString === 'function') {
-        const stringValue = imageData.toString();
-        if (stringValue !== '[object Object]') {
-          return stringValue;
-        }
-      }
-    }
-
-    // If it's a Blob with a type
-    if (
-      imageData instanceof Blob &&
-      imageData.type &&
-      imageData.type.startsWith('image/')
-    ) {
-      return window.URL.createObjectURL(imageData);
-    }
-
-    // If we can't extract a URL, return null
-    return null;
-  };
-
-  // Load card images (same logic as authenticated marketplace)
+  // Load card images using centralized service
   const loadCardImages = useCallback(async listingsData => {
     if (!listingsData || listingsData.length === 0) return;
 
-    const newCardImages = {};
-
-    // Process each listing
-    for (const listing of listingsData) {
-      try {
-        const card = listing.card;
-        if (!card) continue;
-
-        const cardId = card.slabSerial || card.id || listing.cardId;
-        if (!cardId) continue;
-
-        // First, check if the card has an imageUrl property
-        if (card.imageUrl) {
-          const url = ensureStringUrl(card.imageUrl);
-          if (url) {
-            newCardImages[cardId] = url;
-            continue;
-          }
-        }
-
-        // Next, check if the card has an image property
-        if (card.image) {
-          const imageUrl = ensureStringUrl(card.image);
-          if (imageUrl) {
-            newCardImages[cardId] = imageUrl;
-            continue;
-          }
-        }
-
-        // Check all other possible image properties
-        const possibleImageProps = [
-          'frontImageUrl',
-          'backImageUrl',
-          'imageData',
-          'cardImageUrl',
-        ];
-        let foundImage = false;
-
-        for (const prop of possibleImageProps) {
-          if (card[prop]) {
-            const url = ensureStringUrl(card[prop]);
-            if (url) {
-              newCardImages[cardId] = url;
-              foundImage = true;
-              break;
-            }
-          }
-        }
-
-        if (foundImage) continue;
-
-        // Check listing-level image properties
-        const listingImageProps = ['cloudImageUrl', 'imageURL', 'imageUrl'];
-        for (const prop of listingImageProps) {
-          if (listing[prop]) {
-            const url = ensureStringUrl(listing[prop]);
-            if (url) {
-              newCardImages[cardId] = url;
-              foundImage = true;
-              break;
-            }
-          }
-        }
-
-        // If we still don't have an image, set to null
-        if (!foundImage) {
-          newCardImages[cardId] = null;
-        }
-      } catch (error) {
-        logger.warn('Error processing image for listing:', listing.id, error);
-      }
-    }
-
+    const newCardImages = await MarketplaceImageService.loadCardImages(listingsData, cardImages);
     setCardImages(newCardImages);
-  }, []);
+  }, [cardImages]);
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -302,7 +184,7 @@ const PublicMarketplace = () => {
                 offers: {
                   '@type': 'Offer',
                   price: listing.price || 0,
-                  priceCurrency: 'AUD',
+                  priceCurrency: listing.currency || 'AUD',
                   availability: 'https://schema.org/InStock',
                   seller: {
                     '@type': 'Person',

@@ -20,7 +20,7 @@ import toast from 'react-hot-toast';
 import ListingDetailModal from './ListingDetailModal';
 import MarketplaceNavigation from './MarketplaceNavigation';
 import SellerProfileModal from './SellerProfileModal';
-import db from '../../services/firestore/dbAdapter'; // Import IndexedDB service for image loading
+import MarketplaceImageService from '../../services/MarketplaceImageService';
 import LoggingService from '../../services/LoggingService';
 
 function DesktopMarketplaceMessages({ currentView, onViewChange }) {
@@ -204,145 +204,15 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
     }
   }, [user, activeChat]);
 
-  // Load card images for listings referenced in conversations
+  // Load card images for listings referenced in conversations using centralized service
   const loadCardImages = useCallback(async conversationsData => {
     if (!conversationsData || conversationsData.length === 0) return;
 
-    // We'll clean up blob URLs when setting the new state
-    // to avoid circular dependency with cardImages in the dependency array
-
-    const newCardImages = {};
-
-    // Helper function to ensure we have a string URL
-    const ensureStringUrl = imageData => {
-      if (!imageData) return null;
-
-      // If it's already a string, return it
-      if (typeof imageData === 'string') {
-        return imageData;
-      }
-
-      // If it's a File object with a preview URL
-      if (imageData instanceof File && window.URL) {
-        return window.URL.createObjectURL(imageData);
-      }
-
-      // If it's an object with a URL property, use that
-      if (typeof imageData === 'object') {
-        // Check for common URL properties
-        if (imageData.url) return imageData.url;
-        if (imageData.src) return imageData.src;
-        if (imageData.uri) return imageData.uri;
-        if (imageData.href) return imageData.href;
-        if (imageData.downloadURL) return imageData.downloadURL;
-        if (imageData.path && typeof imageData.path === 'string')
-          return imageData.path;
-
-        // If it has a toString method, try that
-        if (typeof imageData.toString === 'function') {
-          const stringValue = imageData.toString();
-          if (stringValue !== '[object Object]') {
-            return stringValue;
-          }
-        }
-      }
-
-      // If it's a Blob with a type
-      if (
-        imageData instanceof Blob &&
-        imageData.type &&
-        imageData.type.startsWith('image/')
-      ) {
-        return window.URL.createObjectURL(imageData);
-      }
-
-      // If we can't extract a URL, return null
-      return null;
-    };
-
-    // Process each conversation to extract card data
-    for (const conversation of conversationsData) {
-      try {
-        const card = conversation.card;
-        if (!card) continue;
-
-        const cardId = card.slabSerial || card.id || conversation.cardId;
-        if (!cardId) continue;
-
-        // First, check if the card has an imageUrl property
-        if (card.imageUrl) {
-          const url = ensureStringUrl(card.imageUrl);
-          if (url) {
-            newCardImages[cardId] = url;
-            continue;
-          }
-        }
-
-        // Next, check if the card has an image property
-        if (card.image) {
-          const imageUrl = ensureStringUrl(card.image);
-          if (imageUrl) {
-            newCardImages[cardId] = imageUrl;
-            continue;
-          }
-        }
-
-        // Check all other possible image properties
-        const possibleImageProps = [
-          'frontImageUrl',
-          'backImageUrl',
-          'imageData',
-          'cardImageUrl',
-        ];
-        let foundImage = false;
-
-        for (const prop of possibleImageProps) {
-          if (card[prop]) {
-            const url = ensureStringUrl(card[prop]);
-            if (url) {
-              newCardImages[cardId] = url;
-              foundImage = true;
-              break;
-            }
-          }
-        }
-
-        if (foundImage) continue;
-
-        // If no image in card object, try to load from IndexedDB
-        try {
-          const imageBlob = await db.getImage(cardId);
-          if (imageBlob) {
-            const blobUrl = URL.createObjectURL(imageBlob);
-            newCardImages[cardId] = blobUrl;
-            continue;
-          }
-        } catch (dbError) {
-          // Silently handle IndexedDB errors
-          logger.warn(
-            `Error loading image from IndexedDB for card ${cardId}:`,
-            dbError
-          );
-        }
-
-        // If we still don't have an image, set to null
-        newCardImages[cardId] = null;
-      } catch (error) {
-        logger.warn('Error processing card image:', error);
-      }
-    }
-
+    const newCardImages = await MarketplaceImageService.loadCardImages(conversationsData, cardImages);
+    
     setCardImages(prevImages => {
       // Clean up existing blob URLs before setting new ones
-      Object.values(prevImages).forEach(url => {
-        if (url && typeof url === 'string' && url.startsWith('blob:')) {
-          try {
-            URL.revokeObjectURL(url);
-          } catch (error) {
-            logger.warn('Failed to revoke blob URL:', error);
-          }
-        }
-      });
+      MarketplaceImageService.cleanup(prevImages);
       
       return {
         ...prevImages,
@@ -408,9 +278,10 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
           setMessages(messagesData);
 
           // Scroll to bottom after messages load
-          setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-          }, 100);
+          // DISABLED: Removed auto-scroll behavior that was causing viewport movement
+          // setTimeout(() => {
+          //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          // }, 100);
         } catch (error) {
           logger.error('Error processing messages:', error);
         }
@@ -426,9 +297,10 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   }, [activeChat]);
 
   // Scroll to bottom when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  // DISABLED: Removed auto-scroll behavior that was causing viewport movement
+  // useEffect(() => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // }, [messages]);
 
   // Handle sending a new message
   const handleSendMessage = async e => {
@@ -466,9 +338,10 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
       setSendingMessage(false);
 
       // Scroll to bottom
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      // DISABLED: Removed auto-scroll behavior that was causing viewport movement
+      // setTimeout(() => {
+      //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      // }, 100);
     } catch (error) {
       LoggingService.error('Error sending message:', error);
       setSendingMessage(false);
@@ -660,7 +533,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
         currentView={currentView}
         onViewChange={onViewChange}
       />
-      <div className="-mx-4 flex min-h-[400px] max-h-[calc(100vh-12rem)] overflow-hidden sm:-mx-6">
+      <div className="-mx-4 flex h-[calc(100vh-13rem)] overflow-hidden sm:h-[calc(100vh-8rem)] sm:-mx-6">
         {/* Chat list - 1/3 width on desktop */}
         <div className="flex w-1/3 flex-col overflow-hidden border-r border-gray-200 dark:border-gray-700">
 
@@ -927,7 +800,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
               )}
 
               {/* Messages container */}
-              <div className="hide-scrollbar flex-1 space-y-4 overflow-y-auto p-4">
+              <div className="hide-scrollbar flex-1 space-y-4 overflow-y-auto p-4 pb-20">
                 {messages.length === 0 ? (
                   <div className="py-12 text-center">
                     <p className="text-gray-600 dark:text-gray-400">
@@ -976,7 +849,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
               ) : (
                 <form
                   onSubmit={handleSendMessage}
-                  className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
+                  className="sticky bottom-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
                 >
                   <div className="flex items-center space-x-2">
                     <input
