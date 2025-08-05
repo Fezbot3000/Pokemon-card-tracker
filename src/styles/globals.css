@@ -80,6 +80,8 @@
     width: 100% !important;
     /* Ensure proper box sizing */
     box-sizing: border-box !important;
+    /* Restore padding-right that was removed during calendar icon cleanup */
+    padding-right: 12px !important;
   }
   
   /* iOS-specific date input fixes */
@@ -90,6 +92,39 @@
       max-width: 100% !important;
       width: 100% !important;
       flex-shrink: 1 !important;
+      /* Restore critical iOS appearance fixes */
+      -webkit-appearance: none !important;
+      appearance: none !important;
+      padding-right: 12px !important;
+    }
+  }
+  
+  /* Additional mobile-specific date field fix for iOS horizontal scroll */
+  .date-field-mobile-fix input[type="date"] {
+    /* Ensure date field stays within container bounds on mobile */
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    /* Restore essential properties removed during calendar cleanup */
+    padding-right: 12px !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+  
+  /* Specifically target iOS devices */
+  @supports (-webkit-touch-callout: none) {
+    .date-field-mobile-fix input[type="date"] {
+      /* Override any intrinsic width from iOS date picker */
+      min-width: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      flex-shrink: 1 !important;
+      overflow: hidden !important;
+      /* Essential iOS-specific properties */
+      -webkit-appearance: none !important;
+      appearance: none !important;
+      padding-right: 12px !important;
     }
   }
   

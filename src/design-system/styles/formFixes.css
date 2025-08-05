@@ -25,6 +25,26 @@
   }
 }
 
+/* iOS date field width fix to prevent horizontal scrolling */
+.date-field-mobile-fix input[type="date"] {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Specifically target iOS devices */
+@supports (-webkit-touch-callout: none) {
+  .date-field-mobile-fix input[type="date"] {
+    /* Override any intrinsic width from iOS date picker */
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    flex-shrink: 1 !important;
+    overflow: hidden !important;
+  }
+}
+
 /* Hide scrollbar but maintain scroll functionality */
 .scrollbar-hide {
   -ms-overflow-style: none; /* Internet Explorer and Edge */

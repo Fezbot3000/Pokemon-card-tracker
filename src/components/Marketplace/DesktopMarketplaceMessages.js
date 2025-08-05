@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '../../design-system';
+import { useAuth, Button, Icon, TextField } from '../../design-system';
 import {
   collection,
   query,
@@ -545,9 +545,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
             <div className="flex flex-1 flex-col items-center justify-center px-4">
               {/* Messages Icon */}
               <div className="mb-4 flex size-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                <span className="material-icons text-3xl text-gray-400 dark:text-gray-600">
-                  chat_bubble_outline
-                </span>
+                <Icon name="chat_bubble_outline" className="text-3xl text-gray-400 dark:text-gray-600" />
               </div>
 
               {/* Main Message */}
@@ -561,13 +559,15 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
               </p>
 
               {/* Action Button */}
-              <button
+              <Button
                 onClick={() => onViewChange('marketplace')}
-                className="mt-4 flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"
+                variant="primary"
+                size="sm"
+                className="mt-4 flex items-center gap-2"
               >
-                <span className="material-icons text-sm">storefront</span>
+                <Icon name="storefront" className="text-sm" />
                 Browse Marketplace
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="hide-scrollbar flex-1 overflow-y-auto">
@@ -669,28 +669,34 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                       activeChat.leftBy.buyer) ||
                       (user.uid === activeChat.sellerId &&
                         activeChat.leftBy.seller)) ? (
-                      <button
+                      <Button
                         disabled
-                        className="cursor-not-allowed rounded-md border border-gray-400 px-3 py-1 text-sm text-gray-400 dark:border-gray-500 dark:text-gray-500"
+                        variant="outline"
+                        size="sm"
+                        className="cursor-not-allowed border-gray-400 text-gray-400 dark:border-gray-500 dark:text-gray-500"
                       >
                         Chat Left
-                      </button>
+                      </Button>
                     ) : (
-                      <button
+                      <Button
                         onClick={handleLeaveChat}
-                        className="rounded-md border border-red-600 px-3 py-1 text-sm text-red-600 transition-colors hover:text-red-800 dark:border-red-400 dark:text-red-400 dark:hover:text-red-300"
+                        variant="outline"
+                        size="sm"
+                        className="border-red-600 text-red-600 transition-colors hover:text-red-800 dark:border-red-400 dark:text-red-400 dark:hover:text-red-300"
                       >
                         Leave Chat
-                      </button>
+                      </Button>
                     )}
 
                     {/* Delete Chat button */}
-                    <button
+                    <Button
                       onClick={handleDeleteChat}
-                      className="rounded-md border border-red-600 px-3 py-1 text-sm text-red-600 transition-colors hover:text-red-800 dark:border-red-400 dark:text-red-400 dark:hover:text-red-300"
+                      variant="outline"
+                      size="sm"
+                      className="border-red-600 text-red-600 transition-colors hover:text-red-800 dark:border-red-400 dark:text-red-400 dark:hover:text-red-300"
                     >
                       Delete Chat
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -852,21 +858,21 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                   className="sticky bottom-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
                 >
                   <div className="flex items-center space-x-2">
-                    <input
-                      type="text"
+                    <TextField
                       value={newMessage}
                       onChange={e => setNewMessage(e.target.value)}
                       placeholder="Type a message..."
-                      className="flex-1 rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
+                      className="flex-1"
                       disabled={sendingMessage}
                     />
-                    <button
+                    <Button
                       type="submit"
-                      className={`rounded-md px-4 py-2 ${sendingMessage || !newMessage.trim() ? 'cursor-not-allowed bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                      variant={sendingMessage || !newMessage.trim() ? 'disabled' : 'primary'}
+                      size="md"
                       disabled={sendingMessage || !newMessage.trim()}
                     >
-                      <span className="material-icons">send</span>
-                    </button>
+                      <Icon name="send" />
+                    </Button>
                   </div>
                 </form>
               )}

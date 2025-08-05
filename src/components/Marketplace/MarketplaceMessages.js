@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../design-system';
+import { useAuth, Button, Icon, TextField } from '../../design-system';
 import { useLocation } from 'react-router-dom';
 import {
   collection,
@@ -712,7 +712,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
         />
       )}
 
-      <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-1">
+      <div className="flex min-h-screen flex-col p-4 pt-16 sm:p-6 sm:pt-1">
         <MarketplaceNavigation
           currentView={currentView}
           onViewChange={onViewChange}
@@ -728,9 +728,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
               <div className="flex flex-col items-center justify-center px-4 py-16">
                 {/* Messages Icon */}
                 <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                  <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">
-                    chat_bubble_outline
-                  </span>
+                  <Icon name="chat_bubble_outline" className="text-4xl text-gray-400 dark:text-gray-600" />
                 </div>
 
                 {/* Main Message */}
@@ -745,13 +743,15 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                 </p>
 
                 {/* Action Button */}
-                <button
+                <Button
                   onClick={() => onViewChange('marketplace')}
-                  className="flex items-center gap-2 rounded-lg bg-red-500 px-8 py-3 font-medium text-white shadow-lg transition-colors hover:bg-red-600"
+                  variant="primary"
+                  size="lg"
+                  className="flex items-center gap-2"
                 >
-                  <span className="material-icons text-lg">storefront</span>
+                  <Icon name="storefront" />
                   Browse Marketplace
-                </button>
+                </Button>
 
                 {/* Additional Info */}
                 <div className="mt-8 text-center">
@@ -769,7 +769,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                     onClick={() => setActiveChat(conversation)}
                   >
                     <div className="flex size-12 items-center justify-center rounded-full bg-gray-200 text-gray-500 dark:bg-gray-600 dark:text-gray-400">
-                      <span className="material-icons">person</span>
+                      <Icon name="person" />
                     </div>
                     <div className="ml-4 flex-1">
                       <div className="flex items-start justify-between">
@@ -806,16 +806,18 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             )}
           </div>
         ) : (
-          <div className="flex h-[calc(100vh-13rem)] flex-col sm:h-[calc(100vh-8rem)]">
+          <div className="flex flex-1 flex-col">
             {/* Chat header */}
             <div className="flex items-center justify-between border-b border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-[#0F0F0F]">
               <div className="flex items-center">
-                <button
-                  className="mr-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mr-2"
                   onClick={() => setActiveChat(null)}
                 >
-                  <span className="material-icons">arrow_back</span>
-                </button>
+                  <Icon name="arrow_back" />
+                </Button>
                 <div className="flex items-center">
                   {activeChat?.cardImage &&
                   typeof activeChat.cardImage === 'string' ? (
@@ -846,7 +848,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                         setDetailModalOpen(true);
                       }}
                     >
-                      <span className="material-icons">style</span>
+                      <Icon name="style" />
                     </div>
                   )}
                   <div>
@@ -869,18 +871,22 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <button
-                  className="rounded-md border border-red-600 px-3 py-1 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900 dark:hover:text-red-300"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900 dark:hover:text-red-300"
                   onClick={handleLeaveChat}
                 >
                   Leave Chat
-                </button>
-                <button
-                  className="rounded-md border border-red-600 px-3 py-1 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900 dark:hover:text-red-300"
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900 dark:hover:text-red-300"
                   onClick={handleDeleteChat}
                 >
                   Delete Chat
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -892,7 +898,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             )}
 
             {/* Messages container - Scrollable area */}
-            <div className="hide-scrollbar flex-1 space-y-4 overflow-y-auto p-4 pb-20">
+            <div className="hide-scrollbar flex-1 space-y-4 overflow-y-auto p-4">
               {messages.length === 0 ? (
                 <div className="py-12 text-center">
                   <p className="text-gray-600 dark:text-gray-400">
@@ -917,15 +923,16 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                           message.sellerId &&
                           user?.uid !== message.sellerId && (
                             <div className="mt-3 text-center">
-                              <button
+                              <Button
                                 onClick={() => {
                                   setSellerReviewId(message.sellerId);
                                   setSellerReviewOpen(true);
                                 }}
-                                className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-600"
+                                variant="secondary"
+                                size="sm"
                               >
                                 Write Review
-                              </button>
+                              </Button>
                             </div>
                           )}
                         <div className="mt-2 text-center text-xs text-blue-600 opacity-70 dark:text-blue-300">
@@ -967,24 +974,24 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             ) : (
               <form
                 onSubmit={handleSendMessage}
-                className="sticky bottom-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
+                className="shrink-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
               >
                 <div className="flex items-center space-x-2">
-                  <input
-                    type="text"
+                  <TextField
                     value={newMessage}
                     onChange={e => setNewMessage(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
+                    className="flex-1"
                     disabled={sendingMessage}
                   />
-                  <button
+                  <Button
                     type="submit"
-                    className={`rounded-md px-4 py-2 ${sendingMessage || !newMessage.trim() ? 'cursor-not-allowed bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                    variant={sendingMessage || !newMessage.trim() ? 'disabled' : 'primary'}
+                    size="md"
                     disabled={sendingMessage || !newMessage.trim()}
                   >
-                    <span className="material-icons">send</span>
-                  </button>
+                    <Icon name="send" />
+                  </Button>
                 </div>
               </form>
             )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth, toast } from '../../design-system';
+import { useAuth, toast, Button, Icon } from '../../design-system';
 import {
   collection,
   query,
@@ -370,7 +370,7 @@ function Marketplace({ currentView, onViewChange }) {
         <div className="py-12 text-center">
           <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-900/20">
             <div className="flex items-center">
-              <span className="material-icons mr-2 text-yellow-500">info</span>
+              <Icon name="info" className="mr-2 text-yellow-500" />
               <p className="text-yellow-700 dark:text-yellow-400">
                 The marketplace index is still being built. Some features may be
                 limited until it's ready.
@@ -387,9 +387,7 @@ function Marketplace({ currentView, onViewChange }) {
         <div className="flex flex-col items-center justify-center px-4 py-16">
           {/* Marketplace Icon */}
           <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-            <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">
-              storefront
-            </span>
+            <Icon name="storefront" className="text-4xl text-gray-400 dark:text-gray-600" />
           </div>
 
           {/* Main Message */}
@@ -405,20 +403,24 @@ function Marketplace({ currentView, onViewChange }) {
 
           {/* Action Buttons */}
           <div className="flex w-full max-w-sm flex-col gap-3 sm:flex-row">
-            <button
+            <Button
               onClick={() => onViewChange('cards')}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-500 px-6 py-3 font-medium text-white transition-colors hover:bg-red-600"
+              variant="primary"
+              size="lg"
+              className="flex flex-1 items-center justify-center gap-2"
             >
-              <span className="material-icons text-lg">add_circle</span>
+              <Icon name="add_circle" className="text-lg" />
               List Your Cards
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => window.location.reload()}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-200 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              variant="secondary"
+              size="lg"
+              className="flex flex-1 items-center justify-center gap-2"
             >
-              <span className="material-icons text-lg">refresh</span>
+              <Icon name="refresh" className="text-lg" />
               Refresh
-            </button>
+            </Button>
           </div>
 
           {/* Additional Info */}
@@ -432,9 +434,7 @@ function Marketplace({ currentView, onViewChange }) {
         <div className="flex flex-col items-center justify-center px-4 py-16">
           {/* Search Icon */}
           <div className="mb-6 flex size-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-            <span className="material-icons text-3xl text-gray-400 dark:text-gray-600">
-              search_off
-            </span>
+            <Icon name="search_off" className="text-3xl text-gray-400 dark:text-gray-600" />
           </div>
 
           {/* Main Message */}
@@ -449,7 +449,7 @@ function Marketplace({ currentView, onViewChange }) {
           </p>
 
           {/* Action Button */}
-          <button
+          <Button
             onClick={() =>
               handleFilterChange({
                 search: '',
@@ -458,11 +458,13 @@ function Marketplace({ currentView, onViewChange }) {
                 grade: '',
               })
             }
-            className="flex items-center gap-2 rounded-lg bg-red-500 px-6 py-3 font-medium text-white transition-colors hover:bg-red-600"
+            variant="primary"
+            size="lg"
+            className="flex items-center gap-2"
           >
-            <span className="material-icons text-lg">clear_all</span>
+            <Icon name="clear_all" className="text-lg" />
             Clear All Filters
-          </button>
+          </Button>
         </div>
       ) : (
         <>
@@ -507,9 +509,11 @@ function Marketplace({ currentView, onViewChange }) {
                         {listing.location || 'No location'}
                       </p>
                     </div>
-                    <button
+                    <Button
                       onClick={() => handleContactSeller(listing)}
-                      className={`relative w-full rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                      variant={existingChats[listing.id] ? "primary" : "secondary"}
+                      size="sm"
+                      className={`relative w-full transition-all duration-200 ${
                         existingChats[listing.id]
                           ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
                           : 'border-2 border-transparent bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] bg-clip-border bg-transparent text-white hover:shadow-lg hover:shadow-blue-500/25'
@@ -522,7 +526,7 @@ function Marketplace({ currentView, onViewChange }) {
                       {existingChats[listing.id]
                         ? 'See Chat'
                         : 'Contact Seller'}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
