@@ -14,6 +14,7 @@ import logger from '../../utils/logger';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 
 import MarketplaceImageService from '../../services/MarketplaceImageService';
+import SocialService from '../../services/socialService';
 import MessageModal from './MessageModal'; // Import the MessageModal component
 import ListingDetailModal from './ListingDetailModal'; // Import the ListingDetailModal component
 import EditListingModal from './EditListingModal'; // Import the EditListingModal component
@@ -35,6 +36,7 @@ function Marketplace({ currentView, onViewChange }) {
     category: '',
     gradingCompany: '',
     grade: '',
+    following: false,
   });
   const [loading, setLoading] = useState(true);
   const [cardImages, setCardImages] = useState({});
@@ -64,6 +66,29 @@ function Marketplace({ currentView, onViewChange }) {
   // Report listing state
   const [reportingListing, setReportingListing] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
+
+  // Social following state
+  const [followedSellerIds, setFollowedSellerIds] = useState(new Set());
+
+  // Load followed seller IDs for the current user
+  useEffect(() => {
+    const loadFollowedSellers = async () => {
+      if (!user) {
+        setFollowedSellerIds(new Set());
+        return;
+      }
+
+      try {
+        const followedIds = await SocialService.getFollowedSellerIds(user.uid);
+        setFollowedSellerIds(followedIds);
+      } catch (error) {
+        logger.error('Error loading followed sellers:', error);
+        setFollowedSellerIds(new Set());
+      }
+    };
+
+    loadFollowedSellers();
+  }, [user]);
 
   // Fetch existing chats for the current user
   useEffect(() => {
@@ -154,8 +179,17 @@ function Marketplace({ currentView, onViewChange }) {
               listingsData.push({ id: doc.id, ...doc.data() });
             });
 
-            // Sort manually on the client side
+            // Sort manually on the client side with following priority
             listingsData.sort((a, b) => {
+              // Prioritize followed sellers
+              const aIsFollowed = followedSellerIds.has(a.userId);
+              const bIsFollowed = followedSellerIds.has(b.userId);
+              
+              // Followed sellers first
+              if (aIsFollowed && !bIsFollowed) return -1;
+              if (!aIsFollowed && bIsFollowed) return 1;
+              
+              // Then by timestamp within each group
               const timeA = a.timestampListed?.seconds || a.createdAt?.seconds || 0;
               const timeB = b.timestampListed?.seconds || b.createdAt?.seconds || 0;
               return timeB - timeA; // Descending order
@@ -327,8 +361,18 @@ function Marketplace({ currentView, onViewChange }) {
       );
     }
 
+    // Apply following filter
+    if (filters.following) {
+      if (followedSellerIds.size > 0) {
+        results = results.filter(listing => followedSellerIds.has(listing.userId));
+      } else {
+        // If no sellers are followed, show empty results
+        results = [];
+      }
+    }
+
     setFilteredListings(results);
-  }, [allListings, filters]);
+  }, [allListings, filters, followedSellerIds]);
 
   // Calculate paginated listings
   const totalPages = Math.ceil(filteredListings.length / itemsPerPage);

@@ -110,6 +110,21 @@ service cloud.firestore {
       allow write: if isOwner(userId);
     }
     
+    // --- Social Following System ---
+    // Following relationships - only the owner can manage their following list
+    match /users/{userId}/following/{followedUserId} {
+      // Allow owner to read and write their own following relationships
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Follower relationships - only the owner can read their own followers
+    match /users/{userId}/followers/{followerUserId} {
+      // Allow owner to read their own followers
+      allow read: if isOwner(userId);
+      // Allow writing follower relationships (when someone follows/unfollows this user)
+      allow write: if request.auth != null && request.auth.uid == followerUserId;
+    }
+    
     // --- Marketplace Items ---
     // All users (including unauthenticated) can read marketplace listings for public SEO page
     // Only authenticated users can create/modify listings
@@ -177,8 +192,12 @@ service cloud.firestore {
       // Allow any authenticated user to read marketplace profiles
       allow read: if request.auth != null;
       
-      // Allow users to create/update their own profile
+      // Allow users to write (create/update) their own profile
       allow create, update: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow authenticated users to update follower/following counts only
+      allow update: if request.auth != null && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followerCount', 'followingCount', 'lastActiveDate']);
       
       // Prevent deletion
       allow delete: if false;
@@ -246,23 +265,16 @@ service cloud.firestore {
     // Helper function to check if a card belongs to an active shared collection
     function isCardInActiveSharedCollection(userId, cardData) {
       // Check if there's an active shared collection for this user that includes this card
-      // We need to check multiple possible field names for collection ID
-      let collectionId = cardData.collectionId;
-      if (collectionId == null) {
-        collectionId = cardData.collection;
-      }
-      if (collectionId == null) {
-        collectionId = cardData.collectionName;
-      }
-      
-      // If no collection ID found, this card cannot be shared
-      if (collectionId == null) {
-        return false;
-      }
-      
-      // Check if there's an active shared collection for this specific collection
-      return exists(/databases/$(database)/documents/shared-collections/$(userId + '_' + collectionId)) &&
-             get(/databases/$(database)/documents/shared-collections/$(userId + '_' + collectionId)).data.isActive == true;
+      // Try different possible field names for collection ID
+      return (cardData.collectionId != null && 
+              exists(/databases/$(database)/documents/shared-collections/$(userId + '_' + cardData.collectionId)) &&
+              get(/databases/$(database)/documents/shared-collections/$(userId + '_' + cardData.collectionId)).data.isActive == true) ||
+             (cardData.collection != null && 
+              exists(/databases/$(database)/documents/shared-collections/$(userId + '_' + cardData.collection)) &&
+              get(/databases/$(database)/documents/shared-collections/$(userId + '_' + cardData.collection)).data.isActive == true) ||
+             (cardData.collectionName != null && 
+              exists(/databases/$(database)/documents/shared-collections/$(userId + '_' + cardData.collectionName)) &&
+              get(/databases/$(database)/documents/shared-collections/$(userId + '_' + cardData.collectionName)).data.isActive == true);
     }
   }
 }

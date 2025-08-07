@@ -15,6 +15,8 @@ import logger from '../../utils/logger';
 import MarketplaceImageService from '../../services/MarketplaceImageService';
 import LoggingService from '../../services/LoggingService';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
+import FollowButton from './FollowButton';
+import SocialStats from './SocialStats';
 
 function SellerProfileModal({
   isOpen,
@@ -279,7 +281,7 @@ function SellerProfileModal({
       size="lg"
       title="Seller Profile"
       position="center"
-      className="overflow-hidden rounded-2xl"
+      className="overflow-hidden rounded-2xl w-full max-w-none sm:max-w-[90%] lg:max-w-[60%] lg:ml-auto lg:mr-8"
       closeOnClickOutside={true}
       footer={modalFooter}
     >
@@ -321,34 +323,62 @@ function SellerProfileModal({
                       )}
                     </div>
 
-                    {/* Message Seller Button - Mobile positioned below location */}
-                    {user && user.uid !== sellerId && onContactSeller && (
-                      <div className="mt-4 lg:hidden">
-                        <Button
-                          onClick={handleMessageSeller}
+                    {/* Social Stats */}
+                    <div className="mt-3">
+                      <SocialStats 
+                        userId={sellerId}
+                        compact={true}
+                        textColor="text-white/90"
+                      />
+                    </div>
+
+                    {/* Action Buttons - Mobile positioned below stats */}
+                    {user && user.uid !== sellerId && (
+                      <div className="mt-4 lg:hidden space-y-2">
+                        <FollowButton
+                          sellerId={sellerId}
+                          sellerName={sellerProfile?.displayName}
                           variant="secondary"
                           size="md"
-                          className="bg-white/10 border-white/20 hover:bg-white/20 w-full text-white backdrop-blur-sm transition-all duration-200"
-                        >
-                          <Icon name="message" size="sm" className="mr-2" />
-                          Message Seller
-                        </Button>
+                          fullWidth={true}
+                          forceWhiteText={true}
+                        />
+                        {onContactSeller && (
+                          <Button
+                            onClick={handleMessageSeller}
+                            variant="secondary"
+                            size="md"
+                            className="bg-white/10 border-white/20 hover:bg-white/20 w-full text-white backdrop-blur-sm transition-all duration-200"
+                          >
+                            <Icon name="message" size="sm" className="mr-2" />
+                            Message Seller
+                          </Button>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* Message Seller Button - Desktop positioned on the right */}
-                  {user && user.uid !== sellerId && onContactSeller && (
-                    <div className="hidden lg:block">
-                      <Button
-                        onClick={handleMessageSeller}
+                  {/* Action Buttons - Desktop positioned on the right */}
+                  {user && user.uid !== sellerId && (
+                    <div className="hidden lg:flex lg:flex-col lg:gap-2">
+                      <FollowButton
+                        sellerId={sellerId}
+                        sellerName={sellerProfile?.displayName}
                         variant="secondary"
                         size="md"
-                        className="bg-white/10 border-white/20 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-200"
-                      >
-                        <Icon name="message" size="sm" className="mr-2" />
-                        Message Seller
-                      </Button>
+                        forceWhiteText={true}
+                      />
+                      {onContactSeller && (
+                        <Button
+                          onClick={handleMessageSeller}
+                          variant="secondary"
+                          size="md"
+                          className="bg-white/10 border-white/20 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-200"
+                        >
+                          <Icon name="message" size="sm" className="mr-2" />
+                          Message Seller
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>

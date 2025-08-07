@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Icon, SimpleSearchBar } from '../../design-system';
+import { Icon, SimpleSearchBar, Button } from '../../design-system';
+import { useAuth } from '../../design-system';
 import CustomDropdown from '../../design-system/molecules/CustomDropdown';
 
 // Import the same predefined grading companies and grades used in CardDetailsForm
@@ -108,6 +109,7 @@ function MarketplaceSearchFilters({
   onFilterChange,
   initialFilters,
 }) {
+  const { user } = useAuth();
   // Filter state
   const [filters, setFilters] = useState(
     initialFilters || {
@@ -115,6 +117,7 @@ function MarketplaceSearchFilters({
       category: '',
       gradingCompany: '',
       grade: '',
+      following: false,
     }
   );
 
@@ -183,15 +186,28 @@ function MarketplaceSearchFilters({
 
   // Handle input changes
   const handleChange = e => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+
+    // Handle checkbox inputs
+    const newValue = type === 'checkbox' ? checked : value;
 
     // If changing grading company, reset grade
     const updatedFilters = {
       ...filters,
-      [name]: value,
+      [name]: newValue,
       ...(name === 'gradingCompany' ? { grade: '' } : {}),
     };
 
+    setFilters(updatedFilters);
+    onFilterChange(updatedFilters);
+  };
+
+  // Handle following filter toggle
+  const handleFollowingToggle = () => {
+    const updatedFilters = {
+      ...filters,
+      following: !filters.following,
+    };
     setFilters(updatedFilters);
     onFilterChange(updatedFilters);
   };
@@ -203,6 +219,7 @@ function MarketplaceSearchFilters({
       category: '',
       gradingCompany: '',
       grade: '',
+      following: false,
     };
     setFilters(resetFilters);
     onFilterChange(resetFilters);
@@ -223,6 +240,33 @@ function MarketplaceSearchFilters({
         onSearchChange={handleSearchChange}
         placeholder="Search by card name, brand, category..."
       />
+
+      {/* Following filter toggle - only show if user is authenticated */}
+      {user && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleFollowingToggle}
+              variant={filters.following ? "primary" : "secondary"}
+              size="sm"
+              className={`
+                transition-all duration-200
+                ${filters.following 
+                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white border-purple-500 hover:from-purple-600 hover:to-blue-600' 
+                  : 'bg-white border-purple-300 text-purple-600 hover:bg-purple-50 hover:border-purple-400 dark:bg-gray-800 dark:text-purple-400 dark:border-purple-400 dark:hover:bg-purple-900/20'
+                }
+              `}
+            >
+              <Icon 
+                name={filters.following ? "favorite" : "favorite_border"} 
+                size="xs" 
+                className="mr-1" 
+              />
+              {filters.following ? "Following Only" : "Show Following"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Filter dropdowns */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -266,7 +310,8 @@ function MarketplaceSearchFilters({
       {(filters.search ||
         filters.category ||
         filters.gradingCompany ||
-        filters.grade) && (
+        filters.grade ||
+        filters.following) && (
         <div className="flex justify-end">
           <button
             onClick={clearFilters}
