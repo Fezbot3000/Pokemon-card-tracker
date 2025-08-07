@@ -552,11 +552,11 @@ const SoldItems = () => {
 
   if (isLoading) {
     // Show nothing during loading to prevent empty state flash
-    return <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4"></div>;
+    return <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-8"></div>;
   }
 
   return (
-    <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
+    <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-8">
       {/* Statistics Summary */}
       {soldCards && Array.isArray(soldCards) && soldCards.length > 0 && (
         <div className="mb-6">

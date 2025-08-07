@@ -564,7 +564,7 @@ const PurchaseInvoices = () => {
   };
 
   return (
-    <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
+    <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-8">
       {/* Statistics Summary */}
       {!loading && invoices.length > 0 && (
         <div className="mb-6">

@@ -1016,7 +1016,7 @@ const CardList = ({
   // }, [visibleCardCount]);
 
   return (
-    <div className="w-full px-1 pb-20 sm:px-2">
+    <div className="w-full pb-20">
       {/* Stats Section - Always show, even for empty collections */}
       <StatisticsSummary
         statistics={formatStatisticsForDisplay(

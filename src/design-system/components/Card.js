@@ -128,7 +128,7 @@ const Card = ({
       )}
 
       {/* Card Image */}
-              <div className="relative aspect-[2/3] overflow-hidden bg-white p-2 dark:bg-[#0F0F0F]">
+              <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-white p-2 dark:bg-[#0F0F0F]">
         {cardImage ? (
           <ImageWithAnimation
             src={cardImage}
@@ -294,7 +294,7 @@ const ImageWithAnimation = ({ src, alt }) => {
     <img
       src={src}
       alt={alt}
-      className={`size-full rounded object-contain transition-all duration-500 ${imageLoaded ? 'scale-100 opacity-100' : 'translate-y-4 scale-95 opacity-0'}`}
+      className={`size-full rounded-xl object-cover transition-all duration-500 ${imageLoaded ? 'scale-100 opacity-100' : 'translate-y-4 scale-95 opacity-0'}`}
       onLoad={() => setImageLoaded(true)}
     />
   );
