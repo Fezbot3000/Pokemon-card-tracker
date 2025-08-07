@@ -361,7 +361,8 @@ function Marketplace({ currentView, onViewChange }) {
 
   const handleEditListing = async listing => {
     setSelectedListing(listing);
-    setIsEditModalOpen(true);
+    setIsDetailModalOpen(false); // Close detail modal
+    setIsEditModalOpen(true); // Open edit modal
   };
 
   const handleMarkAsPending = async listing => {
@@ -671,12 +672,17 @@ function Marketplace({ currentView, onViewChange }) {
           listing={selectedListing}
           onClose={() => {
             setIsEditModalOpen(false);
-            setSelectedListing(null);
+            // Re-open the listing detail modal instead of closing completely
+            setIsDetailModalOpen(true);
           }}
           onListingDeleted={(deletedListingId) => {
             // Remove deleted listing from state
             setAllListings(prev => prev.filter(listing => listing.id !== deletedListingId));
             setFilteredListings(prev => prev.filter(listing => listing.id !== deletedListingId));
+            // Close both modals when listing is deleted
+            setIsEditModalOpen(false);
+            setIsDetailModalOpen(false);
+            setSelectedListing(null);
           }}
           onListingUpdated={(listingId, updatedData) => {
             // Update listing in state
@@ -689,6 +695,9 @@ function Marketplace({ currentView, onViewChange }) {
             
             setAllListings(updateListing);
             setFilteredListings(updateListing);
+            // Close edit modal and re-open detail modal with updated data
+            setIsEditModalOpen(false);
+            setIsDetailModalOpen(true);
           }}
         />
       )}

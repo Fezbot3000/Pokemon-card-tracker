@@ -313,12 +313,8 @@ function ListingDetailModal({
 
   const handleEditListing = async () => {
     if (onEditListing) {
-      // Close this modal first to prevent stacking issues
-      onClose();
-      // Small delay to ensure modal closes before opening edit modal
-      setTimeout(() => {
-        onEditListing(listing);
-      }, 100);
+      // Don't close this modal - let the parent handle the modal transition
+      onEditListing(listing);
     } else {
       logger.error('onEditListing prop is not provided');
     }

@@ -281,9 +281,9 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
                 variant="destructive"
                 onClick={() => setShowDeleteConfirmation(true)}
                 disabled={isSubmitting || isDeleting}
-                leftIcon={<Icon name="delete" />}
+                className="p-2 min-w-0"
               >
-                Delete Listing
+                <Icon name="delete" />
               </ModalButton>
               <ModalButton
                 type="submit"
@@ -306,7 +306,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
                 ) : formData.markAsPending ? (
                   'Mark as Pending'
                 ) : (
-                  'Update Listing'
+                  'Save'
                 )}
               </ModalButton>
             </div>

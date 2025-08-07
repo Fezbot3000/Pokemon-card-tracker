@@ -208,7 +208,8 @@ function MarketplaceSelling({ currentView, onViewChange }) {
 
   const handleEditClick = listing => {
     setSelectedListing(listing);
-    setIsEditModalOpen(true);
+    setIsDetailModalOpen(false); // Close detail modal
+    setIsEditModalOpen(true); // Open edit modal
   };
 
   const handleCloseEditModal = () => {
@@ -395,7 +396,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                   <div className="w-full">
                     <Button
                       variant="primary"
-                      onClick={() => handleEditClick(listing)}
+                      onClick={() => handleCardClick(listing)}
                       leftIcon={<Icon name="edit" />}
                       size="sm"
                       className="w-full"
@@ -413,10 +414,25 @@ function MarketplaceSelling({ currentView, onViewChange }) {
       {/* Edit Listing Modal */}
       <EditListingModal
         isOpen={isEditModalOpen}
-        onClose={handleCloseEditModal}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          // Re-open the listing detail modal instead of closing completely
+          setIsDetailModalOpen(true);
+        }}
         listing={selectedListing}
-        onListingDeleted={handleListingDeleted}
-        onListingUpdated={handleListingUpdated}
+        onListingDeleted={(deletedListingId) => {
+          handleListingDeleted(deletedListingId);
+          // Close both modals when listing is deleted
+          setIsEditModalOpen(false);
+          setIsDetailModalOpen(false);
+          setSelectedListing(null);
+        }}
+        onListingUpdated={(listingId, updatedData) => {
+          handleListingUpdated(listingId, updatedData);
+          // Close edit modal and re-open detail modal with updated data
+          setIsEditModalOpen(false);
+          setIsDetailModalOpen(true);
+        }}
       />
 
       {/* Listing Detail Modal */}
