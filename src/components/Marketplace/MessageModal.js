@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import {
   collection,
@@ -32,6 +33,7 @@ const MessageModal = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Generate a chat ID based on listing type (specific item or general chat)
   const chatId =
@@ -256,10 +258,8 @@ const MessageModal = ({
         );
         await addDoc(messagesRef, {
           // Required fields that match security rules
-          sender: user.uid, // This must match request.auth.uid in rules
-          senderId: user.uid, // Additional field for compatibility
-          content: newMessage.trim(),
-          text: newMessage.trim(), // Additional field for compatibility
+          senderId: user.uid, // This must match request.auth.uid in rules
+          text: newMessage.trim(),
           timestamp: serverTimestamp(),
         });
 
@@ -357,10 +357,8 @@ const MessageModal = ({
 
         await addDoc(messagesRef, {
           // Required fields that match security rules
-          sender: user.uid, // This must match request.auth.uid in rules
-          senderId: user.uid, // Additional field for compatibility
-          content: newMessage.trim(),
-          text: newMessage.trim(), // Additional field for compatibility
+          senderId: user.uid, // This must match request.auth.uid in rules
+          text: newMessage.trim(),
           timestamp: serverTimestamp(),
         });
 
@@ -373,44 +371,76 @@ const MessageModal = ({
       setNewMessage('');
       setLoading(false);
 
-      // Success message
-      toast.success('Message sent');
-
       onClose();
 
-      // Navigate to messages tab
-      onViewChange('marketplace-messages');
-
-      // Dispatch custom event to open the specific chat (cross-device compatible)
+      // Navigate to messages tab with URL update (same as MarketplaceNavigation)
+      navigate('/dashboard/marketplace-messages', { replace: true });
+      
+      // Still use state for instant navigation
       setTimeout(() => {
+        if (onViewChange && typeof onViewChange === 'function') {
+          onViewChange('marketplace-messages');
+        }
+      }, 0);
+
+      // Dispatch custom event to open the specific chat with improved timing
+      const attemptOpenChat = (attempts = 0) => {
+        const maxAttempts = 5;
+        const targetChatId = existingChatId || chatId;
+        
         window.dispatchEvent(
           new CustomEvent('openSpecificChat', {
-            detail: { chatId: existingChatId || chatId },
+            detail: { chatId: targetChatId },
           })
         );
-      }, 100);
+        
+        // Retry if chat didn't open and we haven't exceeded max attempts
+        if (attempts < maxAttempts) {
+          setTimeout(() => {
+            attemptOpenChat(attempts + 1);
+          }, 200 * (attempts + 1)); // Increasing delay: 200ms, 400ms, 600ms, etc.
+        }
+      };
+
+      // Initial attempt after 300ms to ensure messages component has loaded
+      setTimeout(() => {
+        attemptOpenChat();
+      }, 300);
 
       toast.success('Message sent! Opening your conversation...');
     } catch (error) {
       logger.error('Error sending message:', error);
 
-      // Detailed error logging
-      if (error.message.includes('Missing or insufficient permissions')) {
-        logger.error('Permission error details:', {
-          userId: user?.uid,
-          listingId: listing?.id,
-          sellerId: listing?.userId,
-          chatId,
-          errorCode: error.code,
-          errorMessage: error.message,
-        });
-      }
+      // Enhanced error logging for debugging
+      logger.error('Message sending error details:', {
+        errorMessage: error.message,
+        errorCode: error.code,
+        userId: user?.uid,
+        listingId: listing?.id,
+        sellerId: listing?.userId,
+        chatId,
+        listingData: {
+          isGeneralChat: listing?.isGeneralChat,
+          priceAUD: listing?.priceAUD,
+          location: listing?.location,
+          currency: listing?.currency
+        }
+      });
 
-      const errorMessage = error.message.includes(
-        'Missing or insufficient permissions'
-      )
-        ? 'Permission denied. Please try again or contact support.'
-        : 'Failed to send message. Please try again.';
+      // Check for specific error types
+      let errorMessage = 'Failed to send message. Please try again.';
+      
+      if (error.message.includes('Missing or insufficient permissions')) {
+        errorMessage = 'Permission denied. You may not have access to contact this seller.';
+      } else if (error.message.includes('Firestore has already been started')) {
+        errorMessage = 'Connection issue. Please refresh and try again.';
+      } else if (error.message.includes('Chat creation failed')) {
+        errorMessage = 'Could not create conversation. Please try again.';
+      } else if (error.code === 'permission-denied') {
+        errorMessage = 'Access denied. Please check your permissions.';
+      } else if (error.code === 'unavailable') {
+        errorMessage = 'Service temporarily unavailable. Please try again.';
+      }
 
       setError(errorMessage);
       toast.error(errorMessage);

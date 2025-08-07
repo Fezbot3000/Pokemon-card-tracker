@@ -128,6 +128,17 @@ function MarketplaceMessages({ currentView, onViewChange }) {
 
             setConversations(filteredChats);
             setLoading(false);
+
+            // Ensure activeChat is cleared if it no longer exists in filtered chats
+            if (activeChat && filteredChats.length > 0) {
+              const activeChatStillExists = filteredChats.find(chat => chat.id === activeChat.id);
+              if (!activeChatStillExists) {
+                setActiveChat(null);
+              }
+            } else if (filteredChats.length === 0) {
+              // No conversations left, ensure activeChat is cleared
+              setActiveChat(null);
+            }
           } catch (error) {
             logger.error('Error processing chats:', error);
             setLoading(false);
@@ -242,12 +253,31 @@ function MarketplaceMessages({ currentView, onViewChange }) {
   useEffect(() => {
     const handleOpenSpecificChat = event => {
       const { chatId } = event.detail;
+      logger.debug('MarketplaceMessages: openSpecificChat event received:', {
+        chatId,
+        conversationsLength: conversations.length,
+        conversationIds: conversations.map(c => c.id)
+      });
+      
       if (chatId && conversations.length > 0) {
         // Find the chat in the current conversations
         const targetChat = conversations.find(chat => chat.id === chatId);
+        logger.debug('Target chat search result:', {
+          targetChatFound: !!targetChat,
+          targetChatId: targetChat?.id
+        });
+        
         if (targetChat) {
           setActiveChat(targetChat);
+          logger.debug('Active chat set to:', targetChat.id);
+        } else {
+          logger.warn('Chat not found in conversations list:', chatId);
         }
+      } else {
+        logger.warn('Invalid conditions for opening chat:', {
+          hasChatId: !!chatId,
+          hasConversations: conversations.length > 0
+        });
       }
     };
 
@@ -300,7 +330,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
   // Hide header, footer and bottom nav when in active chat
   useEffect(() => {
     const body = document.body;
-    const bottomNav = document.querySelector('.fixed.sm\\:hidden.bottom-0');
+    const bottomNav = document.querySelector('.mobile-bottom-nav');
 
     if (activeChat) {
       // Hide header and footer
@@ -806,12 +836,12 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             )}
           </div>
         ) : (
-          <div className="flex flex-1 flex-col">
+          <div className="relative flex flex-1 flex-col">
             {/* Chat header */}
-            <div className="flex items-center justify-between border-b border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-[#0F0F0F]">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-white p-4 -mx-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
               <div className="flex items-center">
                 <Button
-                  variant="ghost"
+                  variant="text"
                   size="sm"
                   className="mr-2"
                   onClick={() => setActiveChat(null)}
@@ -870,22 +900,22 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900 dark:hover:text-red-300"
+                  className="border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900 dark:hover:text-red-300 text-xs px-2"
                   onClick={handleLeaveChat}
                 >
-                  Leave Chat
+                  Leave
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900 dark:hover:text-red-300"
+                  className="border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900 dark:hover:text-red-300 text-xs px-2"
                   onClick={handleDeleteChat}
                 >
-                  Delete Chat
+                  Delete
                 </Button>
               </div>
             </div>
@@ -898,7 +928,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             )}
 
             {/* Messages container - Scrollable area */}
-            <div className="hide-scrollbar flex-1 space-y-4 overflow-y-auto p-4">
+            <div className="hide-scrollbar flex-1 space-y-4 overflow-y-auto p-4 pb-20">
               {messages.length === 0 ? (
                 <div className="py-12 text-center">
                   <p className="text-gray-600 dark:text-gray-400">
@@ -974,10 +1004,11 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             ) : (
               <form
                 onSubmit={handleSendMessage}
-                className="shrink-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
+                className="fixed bottom-0 inset-x-0 z-50 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
               >
                 <div className="flex items-center space-x-2">
                   <TextField
+                    name="message"
                     value={newMessage}
                     onChange={e => setNewMessage(e.target.value)}
                     placeholder="Type a message..."
@@ -986,7 +1017,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                   />
                   <Button
                     type="submit"
-                    variant={sendingMessage || !newMessage.trim() ? 'disabled' : 'primary'}
+                    variant={sendingMessage || !newMessage.trim() ? 'secondary' : 'primary'}
                     size="md"
                     disabled={sendingMessage || !newMessage.trim()}
                   >

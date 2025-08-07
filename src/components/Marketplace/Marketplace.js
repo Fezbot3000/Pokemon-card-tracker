@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth, toast, Button, Icon } from '../../design-system';
+import { useNavigate } from 'react-router-dom';
 import {
   collection,
   query,
@@ -39,6 +40,7 @@ function Marketplace({ currentView, onViewChange }) {
   const [cardImages, setCardImages] = useState({});
   const { user } = useAuth();
   const { formatAmountForDisplay } = useUserPreferences();
+  const navigate = useNavigate();
 
 
   const [indexBuildingError, setIndexBuildingError] = useState(false);
@@ -79,15 +81,29 @@ function Marketplace({ currentView, onViewChange }) {
         const chatsData = {};
         chatsSnapshot.forEach(doc => {
           const chatData = doc.data();
+          
+          // Debug logging for chat detection
+          logger.debug('Processing chat for existing chat detection:', {
+            chatId: doc.id,
+            cardId: chatData.cardId,
+            isHidden: !!(chatData.hiddenBy && chatData.hiddenBy[user.uid]),
+            participants: chatData.participants
+          });
+          
           // Only include chats that haven't been hidden by the current user
           if (
             chatData.cardId &&
             (!chatData.hiddenBy || !chatData.hiddenBy[user.uid])
           ) {
             chatsData[chatData.cardId] = doc.id;
+            logger.debug('Added to existingChats mapping:', {
+              cardId: chatData.cardId,
+              chatId: doc.id
+            });
           }
         });
 
+        logger.debug('Final existingChats mapping:', chatsData);
         setExistingChats(chatsData);
       } catch (error) {
         logger.error('Error fetching existing chats:', error);
@@ -185,11 +201,29 @@ function Marketplace({ currentView, onViewChange }) {
     // Check if there's an existing chat for this listing
     const existingChatId = existingChats[listing.id];
 
+    // Debug logging to help troubleshoot chat navigation
+    logger.debug('handleContactSeller called:', {
+      listingId: listing.id,
+      existingChatId,
+      hasExistingChat: !!existingChatId,
+      totalExistingChats: Object.keys(existingChats).length
+    });
+
     if (existingChatId) {
       // Navigate to Messages tab and open the existing chat
-      onViewChange('marketplace-messages');
+      logger.debug('Navigating to existing chat:', existingChatId);
+      
+      // Update URL while preserving performance system (same as MarketplaceNavigation)
+      navigate('/dashboard/marketplace-messages', { replace: true });
+      
+      // Still use state for instant navigation
+      setTimeout(() => {
+        if (onViewChange && typeof onViewChange === 'function') {
+          onViewChange('marketplace-messages');
+        }
+      }, 0);
 
-      // Set a brief timeout to ensure the Messages component has loaded, then trigger chat selection
+      // Set a timeout to ensure the Messages component has loaded, then trigger chat selection
       setTimeout(() => {
         // Dispatch a custom event that the Messages component can listen for
         window.dispatchEvent(
@@ -197,9 +231,10 @@ function Marketplace({ currentView, onViewChange }) {
             detail: { chatId: existingChatId },
           })
         );
-      }, 100);
+      }, 300);
     } else {
       // No existing chat, open the message modal to start a new conversation
+      logger.debug('Opening message modal for new conversation');
       setSelectedListing(listing);
       setPrefilledMessage(message);
       setIsMessageModalOpen(true);
@@ -509,24 +544,38 @@ function Marketplace({ currentView, onViewChange }) {
                         {listing.location || 'No location'}
                       </p>
                     </div>
-                    <Button
-                      onClick={() => handleContactSeller(listing)}
-                      variant={existingChats[listing.id] ? "primary" : "secondary"}
-                      size="sm"
-                      className={`relative w-full transition-all duration-200 ${
-                        existingChats[listing.id]
-                          ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
-                          : 'border-2 border-transparent bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] bg-clip-border bg-transparent text-white hover:shadow-lg hover:shadow-blue-500/25'
-                      }`}
-                      style={!existingChats[listing.id] ? {
-                        background: 'linear-gradient(#0F0F0F, #0F0F0F) padding-box, linear-gradient(to right, #3b82f6, #1d4ed8) border-box',
-                        border: '2px solid transparent'
-                      } : {}}
-                    >
-                      {existingChats[listing.id]
-                        ? 'See Chat'
-                        : 'Contact Seller'}
-                    </Button>
+                    {user && user.uid === listing.userId ? (
+                      // Own listing - show Edit button
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleCardClick(listing)}
+                        leftIcon={<Icon name="edit" />}
+                        className="w-full"
+                      >
+                        Edit
+                      </Button>
+                    ) : (
+                      // Other user's listing - show Contact Seller
+                      <Button
+                        onClick={() => handleContactSeller(listing)}
+                        variant={existingChats[listing.id] ? "primary" : "secondary"}
+                        size="sm"
+                        className={`relative w-full transition-all duration-200 ${
+                          existingChats[listing.id]
+                            ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
+                            : 'border-2 border-transparent bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] bg-clip-border bg-transparent text-white hover:shadow-lg hover:shadow-blue-500/25'
+                        }`}
+                        style={!existingChats[listing.id] ? {
+                          background: 'linear-gradient(#0F0F0F, #0F0F0F) padding-box, linear-gradient(to right, #3b82f6, #1d4ed8) border-box',
+                          border: '2px solid transparent'
+                        } : {}}
+                      >
+                        {existingChats[listing.id]
+                          ? 'See Chat'
+                          : 'Contact Seller'}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

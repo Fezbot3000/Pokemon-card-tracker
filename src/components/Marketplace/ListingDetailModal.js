@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Modal, Icon, toastService } from '../../design-system';
+import { useNavigate } from 'react-router-dom';
+import { Modal, Icon, toastService, ConfirmDialog } from '../../design-system';
 import ModalButton from '../../design-system/atoms/ModalButton';
 import { useAuth } from '../../design-system';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
@@ -39,6 +40,7 @@ function ListingDetailModal({
 
   const { user } = useAuth();
   const { formatAmountForDisplay } = useUserPreferences();
+  const navigate = useNavigate();
   const [imageIndex, setImageIndex] = useState(0);
   const [sellerProfile, setSellerProfile] = useState(null);
   const [sellerReviews, setSellerReviews] = useState([]);
@@ -49,6 +51,9 @@ function ListingDetailModal({
   const [hasExistingChat, setHasExistingChat] = useState(false);
   const [existingChatId, setExistingChatId] = useState(null);
   const [showBuyerSelectionModal, setShowBuyerSelectionModal] = useState(false);
+  const [showPendingConfirm, setShowPendingConfirm] = useState(false);
+  const [showSoldConfirm, setShowSoldConfirm] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Function to check for existing chats
   const checkForExistingChat = useCallback(async () => {
@@ -264,12 +269,19 @@ function ListingDetailModal({
 
   const handleNavigateToChat = () => {
     if (onViewChange && existingChatId) {
-      // Navigate to Messages tab - the Messages component will auto-select this chat
-      // We'll use a URL parameter to pass the chat ID
-      onViewChange('marketplace-messages');
+      // Navigate to Messages tab with URL update (same as MarketplaceNavigation)
+      navigate('/dashboard/marketplace-messages', { replace: true });
+      
+      // Still use state for instant navigation
+      setTimeout(() => {
+        if (onViewChange && typeof onViewChange === 'function') {
+          onViewChange('marketplace-messages');
+        }
+      }, 0);
+      
       onClose(); // Close the listing modal
 
-      // Set a brief timeout to ensure the Messages component has loaded, then trigger chat selection
+      // Set a timeout to ensure the Messages component has loaded, then trigger chat selection
       setTimeout(() => {
         // Dispatch a custom event that the Messages component can listen for
         window.dispatchEvent(
@@ -277,10 +289,15 @@ function ListingDetailModal({
             detail: { chatId: existingChatId },
           })
         );
-      }, 100);
+      }, 300);
     } else {
       // Fallback: just navigate to messages tab
-      onViewChange('marketplace-messages');
+      navigate('/dashboard/marketplace-messages', { replace: true });
+      setTimeout(() => {
+        if (onViewChange && typeof onViewChange === 'function') {
+          onViewChange('marketplace-messages');
+        }
+      }, 0);
       onClose();
     }
   };
@@ -307,7 +324,18 @@ function ListingDetailModal({
     }
   };
 
+  // Confirmation dialog handlers
+  const handlePendingClick = () => {
+    setShowPendingConfirm(true);
+  };
+
+  const handleSoldClick = () => {
+    setShowSoldConfirm(true);
+  };
+
+  // Actual action handlers (called after confirmation)
   const handleMarkAsPending = async () => {
+    setActionLoading(true);
     try {
       const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
       await updateDoc(listingRef, {
@@ -319,16 +347,20 @@ function ListingDetailModal({
       listing.status = 'pending';
       
       toastService.success('Listing marked as pending');
+      setShowPendingConfirm(false);
       
       // Close modal to let parent refresh with updated data
       onClose();
     } catch (error) {
       logger.error('Error marking listing as pending:', error);
       toastService.error('Failed to mark listing as pending');
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleMarkAsAvailable = async () => {
+    setActionLoading(true);
     try {
       const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
       await updateDoc(listingRef, {
@@ -340,16 +372,20 @@ function ListingDetailModal({
       listing.status = 'available';
       
       toastService.success('Listing marked as available');
+      setShowPendingConfirm(false);
       
       // Close modal to let parent refresh with updated data
       onClose();
     } catch (error) {
       logger.error('Error marking listing as available:', error);
       toastService.error('Failed to mark listing as available');
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleMarkAsSold = async () => {
+    setShowSoldConfirm(false);
     setShowBuyerSelectionModal(true);
   };
 
@@ -367,27 +403,44 @@ function ListingDetailModal({
           <ModalButton variant="secondary" onClick={onClose}>
             Close
           </ModalButton>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <ModalButton
               variant="secondary"
-              onClick={isPending ? handleMarkAsAvailable : handleMarkAsPending}
+              onClick={handlePendingClick}
               leftIcon={<Icon name={isPending ? "check" : "schedule"} />}
+              className="hidden sm:flex"
             >
               {isPending ? 'Mark as Available' : 'Mark as Pending'}
             </ModalButton>
             <ModalButton
-              variant="success"
-              onClick={handleMarkAsSold}
-              leftIcon={<Icon name="check_circle" />}
+              variant="secondary"
+              onClick={handlePendingClick}
+              className="flex sm:hidden p-2 min-w-0"
             >
-              Mark as Sold
+              <Icon name={isPending ? "check" : "schedule"} />
+            </ModalButton>
+            <ModalButton
+              variant="success"
+              onClick={handleSoldClick}
+              leftIcon={<Icon name="check_circle" />}
+              className="whitespace-nowrap"
+            >
+              Sold
             </ModalButton>
             <ModalButton
               variant="primary"
               onClick={handleEditListing}
+              className="hidden sm:flex"
               leftIcon={<Icon name="edit" />}
             >
               Edit
+            </ModalButton>
+            <ModalButton
+              variant="primary"
+              onClick={handleEditListing}
+              className="flex sm:hidden p-2 min-w-0 rounded-lg"
+            >
+              <Icon name="edit" />
             </ModalButton>
           </div>
         </div>
@@ -790,6 +843,38 @@ function ListingDetailModal({
         isOpen={showBuyerSelectionModal}
         onClose={() => setShowBuyerSelectionModal(false)}
         listing={listing}
+      />
+
+      {/* Pending/Available Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showPendingConfirm}
+        onClose={() => setShowPendingConfirm(false)}
+        onConfirm={listing?.status === 'pending' ? handleMarkAsAvailable : handleMarkAsPending}
+        title={listing?.status === 'pending' ? 'Mark as Available' : 'Mark as Pending'}
+        message={
+          listing?.status === 'pending' 
+            ? 'Are you sure you want to mark this listing as available? It will be visible to buyers again.'
+            : 'Are you sure you want to mark this listing as pending? It will be hidden from buyers temporarily.'
+        }
+        confirmText={listing?.status === 'pending' ? 'Mark Available' : 'Mark Pending'}
+        cancelText="Cancel"
+        variant="secondary"
+        loading={actionLoading}
+        zIndex="60000"
+      />
+
+      {/* Mark as Sold Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showSoldConfirm}
+        onClose={() => setShowSoldConfirm(false)}
+        onConfirm={handleMarkAsSold}
+        title="Mark as Sold"
+        message="Are you sure you want to mark this listing as sold? You'll be able to select a buyer next."
+        confirmText="Mark Sold"
+        cancelText="Cancel"
+        variant="success"
+        loading={actionLoading}
+        zIndex="60000"
       />
     </>
   );

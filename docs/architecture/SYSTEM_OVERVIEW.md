@@ -6,7 +6,7 @@
 
 ## 🏗️ **System Architecture Overview**
 
-The Pokemon Card Tracker is a **Progressive Web Application (PWA)** built as a modern React SPA with Firebase backend services, designed for collectible card management with real-time synchronization, marketplace functionality, and comprehensive data management.
+The Pokemon Card Tracker is a **Progressive Web Application (PWA)** built as a modern React SPA with Firebase backend services, designed for collectible card management with real-time synchronization, **social marketplace functionality with instant payments**, order tracking, and comprehensive data management.
 
 ### **Architecture Principles**
 - **Mobile-First Design**: Responsive design with touch-optimized interactions
@@ -70,8 +70,18 @@ Region: us-central1
 |---------|---------|----------------|----------------|
 | **PSA API** | Grading verification | Firebase Functions proxy | API token |
 | **Price Charting** | Market pricing data | Direct API calls with rate limiting | API key |
-| **Stripe** | Payment processing | Frontend + Firebase Functions | Publishable/Secret keys |
+| **Stripe** | Payment processing & subscriptions | Frontend + Firebase Functions | Publishable/Secret keys |
+| **Stripe Connect** | Marketplace payments & instant payouts | Firebase Functions | Platform account |
 | **SendGrid** | Email notifications | Firebase Functions | API key |
+
+### **Social Marketplace Features**
+| Service | Purpose | Implementation | Status |
+|---------|---------|----------------|--------|
+| **Social Following** | User-to-user relationships | Firestore collections + real-time listeners | Planned |
+| **Instant Buy-Now** | Immediate purchase with seller payouts | Stripe Connect + order management | Planned |
+| **Offer System** | Negotiation with payment verification | 48-hour expiry + funds verification | Planned |
+| **Order Tracking** | Professional order lifecycle | Status management + manual updates | Planned |
+| **Notification Center** | Unified activity hub | Real-time notifications + bell UI | Planned |
 
 ### **External Libraries**
 | Library | Purpose | Version |

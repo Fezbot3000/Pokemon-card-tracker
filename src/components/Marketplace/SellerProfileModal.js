@@ -276,9 +276,9 @@ function SellerProfileModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="modal-width-60"
+      size="lg"
       title="Seller Profile"
-      position="right"
+      position="center"
       className="overflow-hidden rounded-2xl"
       closeOnClickOutside={true}
       footer={modalFooter}
@@ -288,20 +288,20 @@ function SellerProfileModal({
           <div className="size-8 animate-spin rounded-full border-b-2 border-purple-600"></div>
         </div>
       ) : (
-        <div className="space-y-8 pb-8">
+        <div className="space-y-4 sm:space-y-8 pb-4 sm:pb-8">
           {/* Header Section */}
-          <div className="mt-6 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 p-8 text-white">
-            <div className="flex items-center gap-6 px-4">
+          <div className="mt-6 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 p-4 sm:p-8 text-white">
+            <div className="flex items-center gap-4 sm:gap-6 px-2 sm:px-4">
               {/* Avatar */}
-              <div className="bg-white/20 flex size-20 shrink-0 items-center justify-center rounded-2xl backdrop-blur-sm">
-                <Icon name="person" size="xl" className="text-white" />
+              <div className="bg-white/20 flex size-16 sm:size-20 shrink-0 items-center justify-center rounded-2xl backdrop-blur-sm">
+                <Icon name="person" size="lg" className="text-white sm:text-xl" />
               </div>
 
               {/* Seller Info */}
               <div className="flex-1">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex-1">
-                    <h2 className="mb-2 text-3xl font-bold">
+                    <h2 className="mb-2 text-xl sm:text-3xl font-bold">
                       {sellerProfile?.displayName || 'Seller'}
                     </h2>
                     <div className="space-y-2">

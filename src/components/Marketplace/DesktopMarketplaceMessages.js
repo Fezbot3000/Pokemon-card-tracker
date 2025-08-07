@@ -97,6 +97,20 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
             // If there's no active chat and we have conversations, select the first one
             if (!activeChat && filteredChats.length > 0) {
               setActiveChat(filteredChats[0]);
+            } else if (activeChat && filteredChats.length > 0) {
+              // Check if the current activeChat still exists in filtered chats
+              const activeChatStillExists = filteredChats.find(chat => chat.id === activeChat.id);
+              if (!activeChatStillExists) {
+                // Current active chat was deleted, clear it or select another
+                if (filteredChats.length > 0) {
+                  setActiveChat(filteredChats[0]);
+                } else {
+                  setActiveChat(null);
+                }
+              }
+            } else if (filteredChats.length === 0) {
+              // No conversations left, ensure activeChat is cleared
+              setActiveChat(null);
             }
           } catch (error) {
             logger.error('Error processing chats:', error);
@@ -232,12 +246,31 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   useEffect(() => {
     const handleOpenSpecificChat = event => {
       const { chatId } = event.detail;
+      logger.debug('DesktopMarketplaceMessages: openSpecificChat event received:', {
+        chatId,
+        conversationsLength: conversations.length,
+        conversationIds: conversations.map(c => c.id)
+      });
+      
       if (chatId && conversations.length > 0) {
         // Find the chat in the current conversations
         const targetChat = conversations.find(chat => chat.id === chatId);
+        logger.debug('Target chat search result:', {
+          targetChatFound: !!targetChat,
+          targetChatId: targetChat?.id
+        });
+        
         if (targetChat) {
           setActiveChat(targetChat);
+          logger.debug('Active chat set to:', targetChat.id);
+        } else {
+          logger.warn('Chat not found in conversations list:', chatId);
         }
+      } else {
+        logger.warn('Invalid conditions for opening chat:', {
+          hasChatId: !!chatId,
+          hasConversations: conversations.length > 0
+        });
       }
     };
 
@@ -427,24 +460,43 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
 
     try {
       const chatRef = doc(firestoreDb, 'chats', activeChat.id);
-
-      // Get the current chat document
-      const chatDoc = await getDoc(chatRef);
-      if (!chatDoc.exists()) {
+      const chatSnap = await getDoc(chatRef);
+      
+      if (!chatSnap.exists()) {
         toast.error('Chat not found');
         return;
       }
+      
+      const chatData = chatSnap.data();
 
-      // Get the current hiddenBy status or initialize it
-      const chatData = chatDoc.data();
-      const hiddenBy = chatData.hiddenBy || {};
+      // Determine if user is buyer or seller
+      const isBuyer = user.uid === chatData.buyerId;
+      const isSeller = user.uid === chatData.sellerId;
 
-      // Set the hiddenBy status for the current user
-      hiddenBy[user.uid] = true;
+      if (!isBuyer && !isSeller) {
+        toast.error('You cannot delete this chat');
+        return;
+      }
 
-      // Update the chat document with the new hiddenBy status
-      await updateDoc(chatRef, { hiddenBy });
+      // Create a new hiddenBy object that exactly matches what was there before
+      // This is critical for the security rules to work
+      const existingHiddenBy = chatData.hiddenBy || {};
+      const newHiddenBy = {};
 
+      // Copy all existing properties
+      Object.keys(existingHiddenBy).forEach(key => {
+        newHiddenBy[key] = existingHiddenBy[key];
+      });
+
+      // Set only the property we're allowed to change
+      newHiddenBy[user.uid] = true;
+
+      // Update the document with the new hiddenBy object
+      await updateDoc(chatRef, { hiddenBy: newHiddenBy });
+
+      // Clear the active chat to update UI state
+      setActiveChat(null);
+      
       toast.success('Chat deleted');
     } catch (error) {
       logger.error('Error deleting chat:', error);
@@ -528,12 +580,12 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   };
 
   return (
-    <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-1">
+    <div className="p-4 pt-16 sm:p-6 sm:pt-1">
       <MarketplaceNavigation
         currentView={currentView}
         onViewChange={onViewChange}
       />
-      <div className="-mx-4 flex h-[calc(100vh-13rem)] overflow-hidden sm:h-[calc(100vh-8rem)] sm:-mx-6">
+      <div className="-mx-4 flex h-[calc(100vh-16rem)] overflow-hidden sm:h-[calc(100vh-12rem)] sm:-mx-6">
         {/* Chat list - 1/3 width on desktop */}
         <div className="flex w-1/3 flex-col overflow-hidden border-r border-gray-200 dark:border-gray-700">
 
@@ -625,7 +677,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
         </div>
 
         {/* Chat messages - 2/3 width on desktop */}
-        <div className="flex w-2/3 flex-col overflow-hidden">
+        <div className="relative flex w-2/3 flex-col overflow-hidden">
           {!activeChat ? (
             <div className="flex flex-1 items-center justify-center">
               <div className="p-4 text-center">
@@ -855,10 +907,11 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
               ) : (
                 <form
                   onSubmit={handleSendMessage}
-                  className="sticky bottom-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
+                  className="absolute bottom-0 inset-x-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
                 >
                   <div className="flex items-center space-x-2">
                     <TextField
+                      name="message"
                       value={newMessage}
                       onChange={e => setNewMessage(e.target.value)}
                       placeholder="Type a message..."
@@ -867,7 +920,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                     />
                     <Button
                       type="submit"
-                      variant={sendingMessage || !newMessage.trim() ? 'disabled' : 'primary'}
+                      variant={sendingMessage || !newMessage.trim() ? 'secondary' : 'primary'}
                       size="md"
                       disabled={sendingMessage || !newMessage.trim()}
                     >

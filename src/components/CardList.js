@@ -1308,9 +1308,9 @@ const CardList = ({
       {selectedCards.size > 0 && (
         <>
           {/* Bottom shadow overlay for better contrast - subtle transparency */}
-          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-1/3 bg-gradient-to-t from-white/80 via-white/50 to-transparent dark:from-black/80 dark:via-black/50 dark:to-transparent"></div>
+          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[3050] h-1/3 bg-gradient-to-t from-white/80 via-white/50 to-transparent dark:from-black/80 dark:via-black/50 dark:to-transparent"></div>
 
-          <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
+          <div className="fixed bottom-6 left-1/2 z-[3100] -translate-x-1/2">
             {/* Selection Count Badge */}
             <div className="mb-3 flex justify-center">
               <div className="rounded-full border border-[#E5E7EB] bg-[#ffffff] px-4 py-2 shadow-lg backdrop-blur-sm dark:border-[#374151] dark:bg-[#000000]">
