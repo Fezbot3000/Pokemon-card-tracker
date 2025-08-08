@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Seller Setup Complete - MyCardTracker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 { margin-bottom: 20px; font-size: 2rem; }
+        p { margin-bottom: 30px; opacity: 0.9; }
+        .checkmark {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #10B981;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="checkmark">✓</div>
+        <h1>Payment Setup Complete!</h1>
+        <p>Your seller account has been successfully configured.</p>
+        <p>Redirecting you back to MyCardTracker...</p>
+        <div class="loading"></div>
+    </div>
+
+    <script>
+        // Redirect to dashboard after 3 seconds
+        setTimeout(() => {
+            window.location.href = '/dashboard';
+        }, 3000);
+        
+        // Also try to close if opened in popup
+        try {
+            if (window.opener) {
+                window.opener.location.reload();
+                window.close();
+            }
+        } catch (e) {
+            // Ignore cross-origin errors
+        }
+    </script>
+</body>
+</html>
+

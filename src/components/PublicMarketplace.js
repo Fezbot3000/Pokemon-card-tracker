@@ -9,7 +9,7 @@ import {
   limit,
   getDocs,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../services/firebase';
+import { db as firestoreDb } from '../services/firebase-unified';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
 import LoginModal from '../design-system/components/LoginModal';

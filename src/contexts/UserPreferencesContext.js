@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { db } from '../services/firebase-unified';
 import { useAuth } from '../design-system/contexts/AuthContext';
 import logger from '../utils/logger';
 

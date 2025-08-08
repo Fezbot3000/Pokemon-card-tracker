@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { getFirebaseAuth } from '../firebase-lazy';
 import logger from '../utils/logger';
-import { db } from '../firebase-lazy';
+import { db } from '../services/firebase-unified';
 
 // Constants
 const PSA_COLLECTION = 'psa-cards';

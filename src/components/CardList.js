@@ -16,7 +16,7 @@ import {
   getDocs,
 } from 'firebase/firestore';
 import db from '../services/firestore/dbAdapter';
-import { db as firestoreDb } from '../services/firebase';
+import { db as firestoreDb } from '../services/firebase-unified';
 import { toast } from 'react-hot-toast';
 import {
   StatisticsSummary,

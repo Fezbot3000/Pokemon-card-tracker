@@ -15,7 +15,7 @@ import {
   updateDoc,
   increment,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import toast from 'react-hot-toast';
 import logger from '../../utils/logger';
 

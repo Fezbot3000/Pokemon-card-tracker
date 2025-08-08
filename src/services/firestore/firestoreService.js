@@ -20,7 +20,7 @@ import {
   writeBatch,
   onSnapshot,
 } from 'firebase/firestore';
-import { db, auth } from '../../firebase';
+import { db, auth } from '../../services/firebase-unified';
 import logger from '../../utils/logger';
 
 class FirestoreService {

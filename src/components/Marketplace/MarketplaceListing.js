@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { doc, getDoc } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import { useAuth } from '../../design-system';
 import ListingDetailModal from './ListingDetailModal';
 import logger from '../../utils/logger';

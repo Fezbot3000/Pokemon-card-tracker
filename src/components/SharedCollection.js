@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db as firestoreDb } from '../firebase';
+import { db as firestoreDb } from '../services/firebase-unified';
 import { Card, Button, formatCurrency } from '../design-system';
 import sharingService from '../services/sharingService';
 import LoggingService from '../services/LoggingService';

@@ -15,7 +15,7 @@ import {
   getDocs,
   updateDoc,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import logger from '../../utils/logger';
 import MapView from './MapView';
 import BuyerSelectionModal from './BuyerSelectionModal';

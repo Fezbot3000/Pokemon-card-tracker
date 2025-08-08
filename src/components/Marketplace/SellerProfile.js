@@ -10,7 +10,7 @@ import {
   orderBy,
   limit,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import logger from '../../utils/logger';
 import LazyImage from './LazyImage';
 import ReviewSystem from './ReviewSystem';

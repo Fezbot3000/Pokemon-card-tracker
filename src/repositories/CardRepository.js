@@ -23,7 +23,7 @@ import {
   deleteObject,
   listAll,
 } from 'firebase/storage';
-import { db as firestoreDb, storage } from '../services/firebase';
+import { db as firestoreDb, storage } from '../services/firebase-unified';
 import db from '../services/firestore/dbAdapter';
 import LoggingService from '../services/LoggingService';
 

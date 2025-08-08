@@ -23,7 +23,7 @@ import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
 import AddCardModal from './components/AddCardModal';
 import ProfitChangeModal from './components/ProfitChangeModal';
-import useCardData from './contexts/CardContextCompatibility';
+import useCardsSource from './hooks/useCardsSource';
 import db from './services/firestore/dbAdapter';
 import { useTutorial } from './contexts/TutorialContext';
 import LoggingService from './services/LoggingService';
@@ -68,7 +68,7 @@ function Dashboard() {
   };
   
   // Get data loading state to combine with auth loading (only if authenticated)
-  const { loading: dataLoading } = useCardData();
+  const { loading: dataLoading } = useCardsSource();
 
   // Debug tool will be rendered in AppContent with proper selectedCollection prop
 
@@ -688,7 +688,7 @@ function AppContent({ currentView, setCurrentView }) {
     updateCard,
     deleteCard,
     addCard,
-  } = useCardData();
+  } = useCardsSource();
 
 
 
@@ -1345,6 +1345,6 @@ function AppContent({ currentView, setCurrentView }) {
 }
 
 // Export Dashboard and DashboardIndex for router
-export { Dashboard, DashboardIndex };
+export { Dashboard, DashboardIndex, AppContent };
 
 export default Dashboard;

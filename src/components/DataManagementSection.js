@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../design-system';
 import { toast } from 'react-hot-toast';
 import logger from '../utils/logger';
-import { auth } from '../services/firebase';
+import { auth } from '../services/firebase-unified';
 
 /**
  * Data Management component for the Settings modal

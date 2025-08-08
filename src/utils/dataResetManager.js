@@ -8,7 +8,7 @@ import {
   setDoc,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../services/firebase';
+import { db as firestoreDb } from '../services/firebase-unified';
 import db from '../services/firestore/dbAdapter';
 import shadowSync from '../services/shadowSync';
 import { CardRepository } from '../repositories/CardRepository';

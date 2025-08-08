@@ -6,7 +6,7 @@ import {
   where,
   onSnapshot,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import logger from '../../utils/logger';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import MarketplaceImageService from '../../services/MarketplaceImageService';

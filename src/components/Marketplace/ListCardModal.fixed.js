@@ -11,7 +11,7 @@ import {
   doc,
   getDoc,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import { toast } from 'react-hot-toast';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import logger from '../../utils/logger';

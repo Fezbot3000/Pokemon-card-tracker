@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../services/firebase';
+import { storage } from '../services/firebase-unified';
 import { useAuth } from '../design-system';
 import { toast } from 'react-hot-toast';
 import logger from '../utils/logger';

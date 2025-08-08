@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useAuth } from '../../design-system';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import toast from 'react-hot-toast';
 import logger from '../../utils/logger';
 import CustomDropdown from '../../design-system/molecules/CustomDropdown';
