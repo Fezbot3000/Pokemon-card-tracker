@@ -1,5 +1,5 @@
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { functions } from './firebase';
+import { functions } from './firebase-unified';
 import logger from '../utils/logger';
 
 /**

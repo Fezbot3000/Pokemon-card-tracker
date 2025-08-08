@@ -30,7 +30,8 @@ src/router.js
 
 ### **Key Files**
 - **`src/router.js`** - Main routing configuration
-- **`src/App.js`** - Dashboard components (`Dashboard`, `DashboardIndex`, `AppContent`)
+- **`src/dashboard/`** - Dashboard components (`DashboardShell.jsx`, `DashboardIndex.jsx`, `views/*`) with proxy re-exports in `src/dashboard/index.js`
+- **`src/App.js`** - Legacy container now exposing `Dashboard`, `DashboardIndex`, `AppContent` during migration
 - **`src/AppContent.js`** - ⚠️ **LEGACY/UNUSED** component (not in router)
 
 ---
@@ -63,7 +64,7 @@ src/router.js
 ### **Protected Routes** (Authentication Required)
 | Route | Component | File | Authentication |
 |-------|-----------|------|----------------|
-| `/dashboard` | `DashboardApp` → `DashboardIndex` | `src/App.js` | ✅ Required |
+| `/dashboard` | `DashboardApp` → `DashboardIndex` | `src/dashboard` (lazy via proxy) | ✅ Required |
 | `/dashboard/settings` | `Settings` | `src/components/Settings.js` | ✅ Required |
 
 ---
@@ -73,13 +74,13 @@ src/router.js
 ### **Component Hierarchy**
 ```
 Router: /dashboard
-├── DashboardApp (Dashboard function in src/App.js)
+├── DashboardApp (Dashboard component in `src/dashboard/DashboardShell.jsx`)
 │   ├── 🔒 Authentication Check
 │   ├── 📱 Mobile Bottom Navigation
 │   ├── 🌐 Global UI Elements (FloatingDebugTool, etc.)
 │   └── <Outlet context={{ currentView, setCurrentView }} />
 │
-└── DashboardIndex (DashboardIndex function in src/App.js)
+└── DashboardIndex (DashboardIndex component in `src/dashboard/DashboardIndex.jsx`)
     ├── 📊 Context from Dashboard via useOutletContext()
     ├── 🧭 Navigation State Handling
     └── AppContent (AppContent function in src/App.js)

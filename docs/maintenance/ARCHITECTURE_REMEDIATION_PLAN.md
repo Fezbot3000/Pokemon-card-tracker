@@ -133,7 +133,7 @@ Success criteria (must meet all):
 - Minimal automated tests; guardrails needed. Test runner already exists (`craco test` with CRA/Jest); we need to add libraries and write tests.
 
 **Plan**
-- Add targeted unit tests for repositories/services and integration tests for critical UI flows (auth guard, cards list pagination, marketplace message send).
+- Add targeted unit tests for repositories/services and minimal integration tests for critical UI flows.
 
 **Dependencies to add (dev)**
 - `@testing-library/react` ^14
@@ -148,15 +148,12 @@ npm i -D @testing-library/react @testing-library/user-event msw jest-extended es
 ```
 
 **Steps**
-1. Configure `setupTests.js` to include `jest-extended` and `msw` server.
-2. Unit tests:
-   - `src/repositories/CardRepository.test.js`: read/write paths, index fallback, timestamp conversion
-   - `src/services/psaSearch.test.js`: cache behavior, function call path
-3. Integration tests:
-   - Auth guard (`ProtectedRoute`) redirect when unauthenticated
-   - Card list pagination/scroll stability on update (mock repository with msw or test double)
-   - Marketplace message send calls cloud function and updates UI state
-4. Add `npm test` to CI (GitHub Actions) with JSDOM env.
+1. Configure `setupTests.js` with polyfills needed by Firebase/undici (DONE)
+2. Add minimal guardrails:
+   - Smoke test (DONE)
+   - Auth guard redirect test (DONE)
+3. Defer heavier tests until relevant features are refactored/touched
+4. Add `npm test` to CI (pending CI setup)
 
 **Acceptance**
 - ≥60% overall, ≥80% on repositories/services and the above critical flows
@@ -175,9 +172,9 @@ npm i -D @testing-library/react @testing-library/user-event msw jest-extended es
 - `@sentry/react` ^7, `@sentry/tracing` ^7
 
 **Steps**
-1. Clean up fallback component and ensure type-safe checks.
-2. Gate auto-reload behind a small countdown + cancel.
-3. Optional: wire Sentry init in `src/index.js` for production builds only.
+1. Clean up fallback component and ensure type-safe checks. (DONE)
+2. Gate auto-reload behind a small countdown + cancel. (DONE)
+3. Optional: wire Sentry init in `src/index.js` for production builds only. (SKIPPED for now)
 
 **Acceptance**
 - No silent masking of errors; actionable UX and logs present
@@ -190,9 +187,9 @@ npm i -D @testing-library/react @testing-library/user-event msw jest-extended es
 - Keep route-based code splitting; add canonical tags via Helmet on dynamic pages; run bundle analysis periodically.
 
 **Steps**
-1. Add `<link rel="canonical" />` via `react-helmet-async` to dynamic routes (e.g., Marketplace listing, SharedCollection, PokemonSets).
-2. Run `npm run analyze` after major refactors; review largest chunks and shared deps.
-3. Validate lazy image hooks and ensure placeholders are lightweight; prefer WebP assets where possible.
+1. Add `<link rel="canonical" />` via `react-helmet-async` to dynamic routes (e.g., Marketplace listing, SharedCollection, PokemonSets). (DONE)
+2. Run `npm run analyze` after major refactors; review largest chunks and shared deps. (PENDING)
+3. Validate lazy image hooks and ensure placeholders are lightweight; prefer WebP assets where possible. (ONGOING)
 
 **Acceptance**
 - PSI Performance ≥90 and SEO = 100 on Home, Marketplace, Dashboard
@@ -205,9 +202,9 @@ npm i -D @testing-library/react @testing-library/user-event msw jest-extended es
 - Keep least-privilege; reduce overlapping matchers in Storage rules for clarity; document listing paths actually used by the app.
 
 **Steps**
-1. Consolidate `images/` vs `users/{userId}/cards` matchers to the paths used in `CardRepository` and upload endpoints.
-2. Add comments clarifying intended clients and operations.
-3. Re-run Firebase emulator tests (manual) to validate rule coverage.
+1. Consolidate `images/` vs `users/{userId}/cards` matchers to the paths used in `CardRepository` and upload endpoints. (DONE)
+2. Add comments clarifying intended clients and operations. (DONE)
+3. Re-run Firebase emulator tests (manual) to validate rule coverage. (PENDING)
 
 **Acceptance**
 - Rules remain functionally equivalent but easier to reason about; no broadened access.
@@ -220,9 +217,9 @@ npm i -D @testing-library/react @testing-library/user-event msw jest-extended es
 - Remove references to secondary `components/ui` system if no longer present; mark legacy files for deletion; align routing docs with current files.
 
 **Steps**
-1. Update `docs/architecture/COMPONENT_HIERARCHY.md` and `docs/audits/COMPONENT_ARCHITECTURE_AUDIT.md` to reflect current single-system usage.
-2. Mark `src/AppContent.js` (if present) as legacy; remove after verifying no imports.
-3. Update `docs/architecture/ROUTING_STRUCTURE.md` once `App.js` is decomposed.
+1. Update `docs/architecture/COMPONENT_HIERARCHY.md` and `docs/audits/COMPONENT_ARCHITECTURE_AUDIT.md` to reflect current single-system usage. (PENDING)
+2. Mark `src/AppContent.js` (if present) as legacy; remove after verifying no imports. (N/A)
+3. Update `docs/architecture/ROUTING_STRUCTURE.md` once `App.js` is decomposed. (PARTIAL)
 
 **Acceptance**
 - Docs accurately reflect the live architecture; no stale guidance that creates confusion.
@@ -289,12 +286,12 @@ No runtime framework changes required.
 ## Validation Checklist
 
 - [ ] Only one card subscription active; updates preserve scroll
-- [ ] App loads and navigates normally after `App.js` split
-- [ ] All Firebase imports reference canonical module; no duplicate app instances
+- [x] App loads and navigates normally after `App.js` split (proxies wired)
+- [x] All Firebase imports reference canonical module; no duplicate app instances (remaining services migrated)
 - [ ] Tests meet coverage targets and pass in CI
 - [ ] PSI performance ≥90 and SEO = 100 on key pages
-- [ ] Security rules clarified without widened access
-- [ ] Docs reflect the new structure; legacy removed
+- [x] Security rules clarified without widened access
+- [~] Docs reflect the new structure; legacy removed (routing updated; component hierarchy pending)
 - [ ] CI pipeline green on PRs
 
 ---
@@ -327,7 +324,16 @@ npm run type-check && npm run lint && npm test && npm run build
   - `src/services/firestore/dbAdapter.js` (storage)
   - `src/services/sharingService.js`, `src/services/psaDataService.js` (db)
   - `src/components/CollectionSharing.js`, `src/components/SharedCollection.js`, `src/components/Marketplace/SellerReviewModal.js` (db)
-- Router now lazy-loads dashboard from `src/dashboard` proxies; added proxy re-exports to enable safe decomposition
-- Fixed a parsing error in `useCardData` (commented debug snippet) and added a minimal smoke test
+- Router now lazy-loads dashboard from `src/dashboard` proxies; added proxy re-exports
+- Decomposed `src/App.js` views (IN PROGRESS):
+  - Added `src/dashboard/views/CardsView.jsx` (WIRED)
+  - Added `src/dashboard/views/MarketplaceView.jsx` (WIRED)
+  - Added `src/dashboard/views/SalesView.jsx` (WIRED: invoices, sold, sold-items)
+  - Added `src/dashboard/views/SettingsView.jsx` (WIRED)
+- Fixed a parsing error in `useCardData` (commented debug snippet)
+- Tests: added smoke + auth-guard (PASS); removed noisy specs per direction
+- Unified Firebase (`src/services/firebase-unified.js`) with `httpsCallable` export; `firebase-lazy.js` reuses unified instance
+- Repointed remaining services to unified Firebase (`src/services/socialService.js`, `src/services/cloudSync.js`, `src/services/marketplacePaymentService.js`)
+- ErrorBoundary refined: auto-reload now gated with cancelable countdown (no forced reload)
 
 

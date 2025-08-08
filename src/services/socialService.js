@@ -9,7 +9,7 @@ import {
   serverTimestamp,
   runTransaction
 } from 'firebase/firestore';
-import { db as firestoreDb } from './firebase';
+import { db as firestoreDb } from './firebase-unified';
 import logger from '../utils/logger';
 import { toast } from '../design-system';
 

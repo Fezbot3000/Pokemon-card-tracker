@@ -30,11 +30,9 @@ import LoggingService from './services/LoggingService';
 import './styles/globals.css';
 import './styles/utilities.css';
 
-import SoldItems from './components/SoldItems/SoldItems';
-import PurchaseInvoices from './components/PurchaseInvoices/PurchaseInvoices';
-import Marketplace from './components/Marketplace/Marketplace';
-import MarketplaceSelling from './components/Marketplace/MarketplaceSelling';
-import MarketplaceMessages from './components/Marketplace/MarketplaceMessages';
+import SalesView from './dashboard/views/SalesView';
+import SettingsView from './dashboard/views/SettingsView';
+import MarketplaceView from './dashboard/views/MarketplaceView';
 import Settings from './components/Settings';
 import BottomNavBar from './components/BottomNavBar';
 import TrialStatusBanner from './components/TrialStatusBanner';
@@ -47,6 +45,7 @@ import TutorialModal from './components/TutorialModal';
 import { settingsManager } from './utils/settingsManager';
 import { useCardModals } from './hooks/useCardModals';
 import { collectionManager } from './utils/collectionManager';
+import CardsView from './dashboard/views/CardsView';
 
 
 
@@ -1061,146 +1060,53 @@ function AppContent({ currentView, setCurrentView }) {
 
       <main className={getMainLayoutClasses()}>
         {currentView === 'cards' ? (
-          <div className="flex-1 overflow-y-auto">
-            {/* Main content */}
-            <div className={`pb-20 sm:p-6 ${isMobile ? 'px-2 pt-2' : 'p-4'}`}>
-              {/* Trial Status Banner - now in correct place */}
-              <TrialStatusBanner />
-
-              {/* Card List */}
-              {/* Removed duplicate loading state to prevent flicker - handled by AppContent loading */}
-              {cards.length === 0 ? (
-                <div className="flex h-full min-h-[400px] flex-col items-center justify-center">
-                  <span className="material-icons mb-4 text-6xl text-gray-400 dark:text-gray-600">
-                    inventory_2
-                  </span>
-                  <h2 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
-                    No cards in your collection
-                  </h2>
-                  <p className="mb-6 max-w-md text-center text-gray-500 dark:text-gray-400">
-                    Start building your Pokemon card collection by adding your
-                    first card!
-                  </p>
-                  <button
-                    onClick={() => openNewCardForm()}
-                    className="inline-flex items-center rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700"
-                  >
-                    <span className="material-icons mr-2 text-lg">add</span>
-                    Add Your First Card
-                  </button>
-                </div>
-              ) : (
-                <CardList
-                  cards={cards}
-                  exchangeRate={exchangeRate}
-                  onCardClick={card => {
-                    let actualCollectionName = selectedCollection;
-                    if (selectedCollection === 'All Cards') {
-                      for (const [
-                        collName,
-                        cardsInCollection,
-                      ] of Object.entries(collections)) {
-                        if (
-                          Array.isArray(cardsInCollection) &&
-                          cardsInCollection.some(
-                            c => c.slabSerial === card.slabSerial
-                          )
-                        ) {
-                          actualCollectionName = collName;
-                          break;
-                        }
-                      }
-                      if (actualCollectionName === 'All Cards') {
-                        logger.warn(
-                          'Could not determine original collection for card: ',
-                          card.slabSerial
-                        );
-                        actualCollectionName = null;
-                      }
-                    }
-                    openCardDetails(card, actualCollectionName);
-                  }}
-                  onDeleteCard={deleteCard}
-                  onUpdateCard={updateCard}
-                  onAddCard={() => openNewCardForm()}
-                  selectedCollection={selectedCollection}
-                  collections={collections}
-                  setCollections={setCollections}
-                  onCollectionChange={collection => {
-                    setSelectedCollection(collection);
-                    localStorage.setItem('selectedCollection', collection);
-                  }}
-                  onSelectionChange={setSelectedCards}
-                />
-              )}
-
-              {/* Floating Add Button - Mobile Only */}
-              {!selectedCards.size && (
-                <button
-                  onClick={() => openNewCardForm()}
-                  className="fixed right-4 z-50 flex size-14 items-center justify-center rounded-full border-2 border-white bg-[#ef4444] text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#dc2626] active:scale-95 dark:border-gray-800 sm:hidden"
-                  style={{
-                    bottom: 'calc(4rem + 8px)',
-                  }}
-                  aria-label="Add new card"
-                >
-                  <span className="material-icons text-2xl font-bold">add</span>
-                </button>
-              )}
-            </div>
-          </div>
+          <CardsView
+            isMobile={isMobile}
+            cards={cards}
+            exchangeRate={exchangeRate}
+            selectedCollection={selectedCollection}
+            collections={collections}
+            setCollections={setCollections}
+            selectedCards={selectedCards}
+            openNewCardForm={openNewCardForm}
+            openCardDetails={openCardDetails}
+            deleteCard={deleteCard}
+            updateCard={updateCard}
+            setSelectedCollection={setSelectedCollection}
+          />
         ) : currentView === 'purchase-invoices' || currentView === 'sold' ? (
-          <PurchaseInvoices />
-        ) : currentView === 'marketplace' ? (
-          <Marketplace
-            currentView={currentView}
-            onViewChange={setCurrentView}
-          />
-        ) : currentView === 'marketplace-selling' ? (
-          <MarketplaceSelling
-            currentView={currentView}
-            onViewChange={setCurrentView}
-          />
-        ) : currentView === 'marketplace-messages' ? (
-          <MarketplaceMessages
-            currentView={currentView}
-            onViewChange={setCurrentView}
-          />
+          <SalesView currentView={currentView} />
+        ) : (currentView === 'marketplace' || currentView === 'marketplace-selling' || currentView === 'marketplace-messages') ? (
+          <MarketplaceView currentView={currentView} onViewChange={setCurrentView} />
         ) : currentView === 'sold-items' ? (
-          <SoldItems />
+          <SalesView currentView={currentView} />
         ) : (currentView === 'settings' || currentView === 'settings-account' || currentView === 'settings-marketplace' || currentView === 'settings-sharing') ? (
-          <div className="pt-16"> {/* Add padding-top to account for fixed header */}
-            <Settings
-              currentTab={currentView === 'settings' ? 'general' : currentView.replace('settings-', '')}
-              selectedCollection={selectedCollection}
-              collections={collections}
-              onStartTutorial={startTutorial}
-              onSignOut={logout}
-              onClose={() => setCurrentView('cards')}
-              onRenameCollection={(oldName, newName) => {
-                collectionManager.renameCollection(oldName, newName, {
-                  collections,
-                  setCollections,
-                  selectedCollection,
-                  setSelectedCollection,
-                  user,
-                });
-              }}
-              onDeleteCollection={(collectionName) => {
-                collectionManager.deleteCollection(collectionName, {
-                  collections,
-                  setCollections,
-                  selectedCollection,
-                  setSelectedCollection,
-                  user,
-                });
-              }}
-              onResetData={() => {
-                // Reset data functionality
-                // TODO: Implement reset data functionality
-              }}
-            />
-          </div>
+          <SettingsView
+            currentView={currentView}
+            selectedCollection={selectedCollection}
+            collections={collections}
+            onStartTutorial={startTutorial}
+            onSignOut={logout}
+            onClose={() => setCurrentView('cards')}
+            onRenameCollection={(oldName, newName) => {
+              collectionManager.renameCollection(oldName, newName, {
+                collections,
+                setCollections,
+                selectedCollection,
+                setSelectedCollection,
+                user,
+              });
+            }}
+            onDeleteCollection={(collectionName) => {
+              collectionManager.deleteCollection(collectionName, {
+                collections,
+                setCollections,
+                selectedCollection,
+                setSelectedCollection,
+                user,
+              });
+            }}
+          />
         ) : null}
       </main>
 
@@ -1345,6 +1251,7 @@ function AppContent({ currentView, setCurrentView }) {
 }
 
 // Export Dashboard and DashboardIndex for router
+// Keep exports during migration; AppContent is only used by dashboard proxy
 export { Dashboard, DashboardIndex, AppContent };
 
 export default Dashboard;
