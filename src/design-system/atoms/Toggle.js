@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import './Toggle.css';
 
 /**
  * Toggle Switch Component
@@ -17,38 +18,21 @@ const Toggle = ({
   className = '',
   ...props
 }) => {
-  // Define sizes
-  const sizes = {
-    sm: {
-      toggle: 'w-8 h-4',
-      circle: 'w-3 h-3',
-      translate: 'translate-x-4',
-      text: 'text-sm',
-    },
-    md: {
-      toggle: 'w-11 h-6',
-      circle: 'w-5 h-5',
-      translate: 'translate-x-5',
-      text: 'text-base',
-    },
-    lg: {
-      toggle: 'w-14 h-7',
-      circle: 'w-6 h-6',
-      translate: 'translate-x-7',
-      text: 'text-lg',
-    },
-  };
-
-  const currentSize = sizes[size] || sizes.md;
+  const toggleClass = `toggle ${disabled ? 'toggle--disabled' : ''} ${className}`;
+  const trackClass = `toggle__track toggle__track--${size} ${
+    checked ? 'toggle__track--checked' : 'toggle__track--unchecked'
+  }`;
+  const circleClass = `toggle__circle toggle__circle--${size} ${
+    checked ? 'toggle__circle--checked' : ''
+  }`;
+  const labelClass = `toggle__label toggle__label--${size}`;
 
   return (
-    <label
-      className={`inline-flex cursor-pointer items-center ${disabled ? 'cursor-not-allowed opacity-50' : ''} ${className}`}
-    >
-      <div className="relative">
+    <label className={toggleClass}>
+      <div className="toggle__wrapper">
         <input
           type="checkbox"
-          className="sr-only"
+          className="toggle__input"
           checked={checked}
           onChange={onChange}
           disabled={disabled}
@@ -56,17 +40,11 @@ const Toggle = ({
           name={name}
           {...props}
         />
-        <div
-          className={`${currentSize.toggle} ${checked ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777]' : 'bg-gray-200 dark:bg-gray-700'} rounded-full transition-colors duration-200 ease-in-out`}
-        />
-        <div
-          className={`absolute left-0.5 top-0.5 ${currentSize.circle} rounded-full bg-white shadow transition-transform duration-200 ease-in-out ${checked ? currentSize.translate : 'translate-x-0'}`}
-        />
+        <div className={trackClass} />
+        <div className={circleClass} />
       </div>
       {label && (
-        <span
-          className={`ml-3 ${currentSize.text} text-gray-900 dark:text-gray-100`}
-        >
+        <span className={labelClass}>
           {label}
         </span>
       )}

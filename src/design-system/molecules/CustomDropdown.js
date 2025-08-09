@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
+import './CustomDropdown.css';
 
 /**
  * CustomDropdown - A reusable custom dropdown component that replaces native HTML select elements
@@ -159,35 +160,21 @@ const CustomDropdown = ({
     }
   };
 
-  // Size styles
-  const sizeStyles = {
-    sm: 'h-8 text-sm px-2',
-    md: 'h-10 text-base px-3',
-    lg: 'h-12 text-lg px-4'
-  };
-
-  // Variant styles
-  const variantStyles = {
-    default: 'border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white',
-    primary: 'border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100',
-    danger: 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100'
-  };
-
-  const baseStyles = `
-    relative flex items-center justify-between border rounded-lg cursor-pointer transition-colors
-    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-    ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-400 dark:hover:border-gray-600'}
-    ${error ? 'border-red-500 dark:border-red-400' : ''}
-    ${fullWidth ? 'w-full' : 'w-auto'}
-    ${sizeStyles[size]}
-    ${variantStyles[variant]}
-    ${className}
-  `;
+  // Build button classes
+  const buttonClasses = [
+    'dropdown__trigger',
+    `dropdown__trigger--${size}`,
+    `dropdown__trigger--${variant}`,
+    isOpen && 'dropdown__trigger--open',
+    disabled && 'dropdown__trigger--disabled',
+    error && 'dropdown__trigger--error',
+    !fullWidth && 'dropdown__trigger--auto-width'
+  ].filter(Boolean).join(' ');
 
   const dropdownContent = (
     <div
       ref={portalRef}
-      className="fixed z-[60000] bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
+      className="dropdown__menu"
       style={{
         top: dropdownPosition.top,
         left: dropdownPosition.left,
@@ -197,11 +184,11 @@ const CustomDropdown = ({
     >
       {/* Search input for large option lists */}
       {showSearch && options.length > 5 && (
-        <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="dropdown__search">
           <input
             ref={inputRef}
             type="text"
-            className="w-full px-2 py-1 text-sm border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="dropdown__search-input"
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -213,7 +200,7 @@ const CustomDropdown = ({
       {/* Options list */}
       <div>
         {filteredOptions.length === 0 ? (
-          <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="dropdown__no-options">
             No options found
           </div>
         ) : (
@@ -226,10 +213,7 @@ const CustomDropdown = ({
               <button
                 key={optionValue || index}
                 type="button"
-                className={`
-                  w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors truncate
-                  ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : 'text-gray-900 dark:text-white'}
-                `}
+                className={`dropdown__option ${isSelected ? 'dropdown__option--selected' : ''}`}
                 onClick={() => handleSelect(option)}
               >
                 {optionLabel}
@@ -242,15 +226,15 @@ const CustomDropdown = ({
   );
 
   return (
-    <div className="relative">
+    <div className={`dropdown ${disabled ? 'dropdown--disabled' : ''} ${error ? 'dropdown--error' : ''} ${className}`}>
       {/* Label */}
       {label && (
         <label
           htmlFor={id || name}
-          className={`block text-sm font-medium mb-1 ${error ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-white'}`}
+          className="dropdown__label"
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="dropdown__required">*</span>}
         </label>
       )}
 
@@ -259,7 +243,7 @@ const CustomDropdown = ({
         <button
           ref={buttonRef}
           type="button"
-          className={baseStyles}
+          className={buttonClasses}
           onClick={handleToggle}
           onKeyDown={handleKeyDown}
           disabled={disabled}
@@ -273,13 +257,13 @@ const CustomDropdown = ({
           name={name}
           {...props}
         >
-          <span className={`truncate flex-1 text-left ${!value ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+          <span className={`dropdown__value ${!value ? 'dropdown__placeholder' : ''}`}>
             {getDisplayText()}
           </span>
           
           {/* Dropdown arrow */}
           <svg 
-            className={`ml-2 size-4 shrink-0 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+            className={`dropdown__chevron ${isOpen ? 'dropdown__chevron--open' : ''}`} 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -291,7 +275,7 @@ const CustomDropdown = ({
 
       {/* Error message */}
       {error && (
-        <p id={`${id || name}-error`} className="mt-1 text-sm text-red-600 dark:text-red-400">
+        <p id={`${id || name}-error`} className="dropdown__error">
           {error}
         </p>
       )}

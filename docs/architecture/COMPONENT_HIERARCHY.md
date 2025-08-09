@@ -10,16 +10,15 @@ The Pokemon Card Tracker uses **dual component systems** - a legacy design syste
 
 ## 📋 **Current Architecture State**
 
-### **🏗️ Dual System Reality**
+### **🏗️ Dual System Reality (Corrected)**
 - **Primary System**: `src/design-system/` (JavaScript, established patterns, widely used)
-- **Secondary System**: `src/components/ui/` (TypeScript, modern patterns, limited usage)
-- **Status**: Both systems coexist and function - application works correctly
+- **Modernization Utilities**: `src/lib/variants.ts` using CVA (TypeScript variants only; no `src/components/ui/` directory present)
+- **Status**: Single design system in active use; CVA utilities exist but are lightly adopted
 
 ### **📊 System Characteristics**
-- **Component Overlap**: Some components exist in both systems (Button, Card, Input, Modal)
 - **Styling Patterns**: Mix of Tailwind utilities and custom CSS variables
-- **Import Patterns**: Components may import from either system based on historical implementation
-- **Operational Status**: ✅ **All systems functional** - application builds and runs successfully
+- **Import Patterns**: Components import primarily from the design system; minimal usage of CVA variants
+- **Operational Status**: ✅ **Functional** - application builds and runs successfully
 
 ---
 
@@ -35,7 +34,6 @@ src/
 │   ├── contexts/           # Design system contexts
 │   └── index.js            # Centralized exports
 ├── components/             # Application-specific components (80+ files)
-│   ├── ui/                 # Modern TypeScript components (20+ components)
 │   ├── Marketplace/        # Feature-specific components (23 components)
 │   ├── settings/           # Settings-related components (8 components)
 │   ├── SoldItems/          # Sold items feature (1 component)
@@ -247,18 +245,16 @@ default: 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8]'
 | **DataManagement** | Import/export settings | Not specified | Data Settings |
 | **NotificationSettings** | Alert preferences | Not specified | User Settings |
 
-#### **🎨 UI Components** (`src/components/ui/`)
-**Organization**: Modern TypeScript components with variant systems
+#### **🎨 Variant Utilities** (`src/lib/variants.ts`)
+**Organization**: Tailwind class variants using `class-variance-authority`
 
-| Component | Purpose | File Type | Features |
-|-----------|---------|-----------|----------|
-| **button.tsx** | Modern button component | TypeScript | Variant API, Type safety |
-| **modal.tsx** | Modern modal component | TypeScript | Variant API, Type safety |
-| **input.tsx** | Modern input component | TypeScript | Variant API, Type safety |
-| **select.tsx** | Modern select component | TypeScript | Variant API, Type safety |
-| **tabs.tsx** | Tab interface component | TypeScript | Variant API, Type safety |
-| **card.tsx** | Modern card component | TypeScript | Variant API, Type safety |
-| **form-field.tsx** | Modern form field | TypeScript | Variant API, Type safety |
+| Variant | Purpose |
+|---------|---------|
+| `buttonVariants` | Standardized button class variants |
+| `modalVariants` | Modal layout variants |
+| `inputVariants` | Input styling variants |
+| `badgeVariants` | Badge styling variants |
+| `cardVariants` | Card container variants |
 
 ### **⚠️ Competing Systems Analysis**
 
@@ -268,11 +264,11 @@ default: 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8]'
 - **Status**: Widely used, but architecturally inconsistent
 - **Problems**: Hardcoded gradients, no centralized tokens
 
-#### **Modern UI System** (`src/components/ui/`)
+#### **Modernization Layer** (`src/lib/variants.ts`)
 - **Technology**: TypeScript, class-variance-authority (CVA)
-- **Styling**: Pure Tailwind with variant systems
-- **Status**: Partially implemented, not consistently adopted
-- **Problems**: Duplicates legacy components, creates confusion
+- **Styling**: Tailwind utilities organized via variants
+- **Status**: Lightly adopted; does not duplicate component tree
+- **Notes**: Can be leveraged during Tailwind deprecation to map variants to semantic classes
 
 **Export Pattern** (`src/components/ui/index.ts`):
 ```typescript
@@ -337,12 +333,10 @@ import EditListingModal from './EditListingModal';
 // Direct imports within feature directories
 ```
 
-### **Modern UI Import Pattern**
-```javascript
-// TypeScript UI components with explicit extensions
-import { Select, Option } from '../components/ui/select.tsx';
-import { Checkbox } from '../components/ui/checkbox.tsx';
-import { Button, type ButtonProps } from '../components/ui/button.tsx';
+### **Variant Utilities Import Pattern**
+```typescript
+// Type-safe Tailwind class variants
+import { buttonVariants, modalVariants } from '../lib/variants';
 ```
 
 ### **Mixed Import Pattern** (Common in large components)
@@ -533,8 +527,8 @@ grep -r "export.*Button" src/design-system/
 # Find application-specific components  
 find src/components/ -name "*.js" -o -name "*.jsx"
 
-# Find modern TypeScript components
-find src/components/ui/ -name "*.tsx"
+# Find variant utilities (CVA)
+grep -n "cva\(" src/lib/variants.ts
 
 # Find feature-specific components
 ls src/components/Marketplace/
@@ -549,8 +543,8 @@ import { Button, Modal, Header } from '../design-system';
 import CardList from './CardList';
 import { MarketplaceCard } from './Marketplace/MarketplaceCard';
 
-// Modern UI Components (TypeScript)
-import { Button, type ButtonProps } from './ui/button.tsx';
+// Variant utilities (TypeScript)
+import { buttonVariants } from '../lib/variants';
 
 // Mixed imports (when needed)
 import { useAuth } from '../design-system';
@@ -574,7 +568,7 @@ import SaleModal from './SaleModal';
 - **Need a Button?** Use `design-system/atoms/Button.js` (primary)
 - **Need a Modal?** Use `design-system/molecules/Modal.js` (primary)
 - **Need a Card?** Use `design-system/molecules/Card.js` (primary)
-- **Building TypeScript?** Consider `components/ui/` components when available
+- **Using Variants?** Import from `src/lib/variants.ts`
 
 ### **Common Patterns**
 - **Import from design system:** `import { Button, Modal } from '../design-system'`

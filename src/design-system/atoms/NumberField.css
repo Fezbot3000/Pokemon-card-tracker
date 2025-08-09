@@ -1,0 +1,79 @@
+.number-field {
+  position: relative;
+  width: 100%;
+}
+
+.number-field__input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--border-radius-lg);
+  background-color: var(--bg-primary);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.number-field__input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.number-field__input:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px rgb(230 24 92 / 0.2);
+}
+
+.number-field__input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Error state */
+.number-field__input--error {
+  border-color: var(--color-error);
+}
+
+.number-field__input--error:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgb(239 68 68 / 0.2);
+}
+
+/* With prefix */
+.number-field__input--with-prefix {
+  padding-left: calc(var(--space-3) + 1rem);
+}
+
+/* With suffix */
+.number-field__input--with-suffix {
+  padding-right: calc(var(--space-3) + 1.5rem);
+}
+
+/* Prefix/suffix styling */
+.number-field__prefix,
+.number-field__suffix {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.number-field__prefix {
+  left: var(--space-3);
+}
+
+.number-field__suffix {
+  right: var(--space-3);
+}
+
+/* Remove spinner arrows for consistent design */
+.number-field__input::-webkit-outer-spin-button,
+.number-field__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.number-field__input[type="number"] {
+  -moz-appearance: textfield;
+}

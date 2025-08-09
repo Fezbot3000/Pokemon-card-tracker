@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
+import './Modal.css';
 
 // Helper function to recursively replace onClose handlers with animated versions
 const replaceOnCloseInChildren = (children, originalOnClose, animatedOnClose) => {

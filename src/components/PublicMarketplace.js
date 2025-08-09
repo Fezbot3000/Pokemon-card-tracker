@@ -13,6 +13,7 @@ import { db as firestoreDb } from '../services/firebase-unified';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
 import LoginModal from '../design-system/components/LoginModal';
+import { Button } from '../design-system';
 import ImageModal from '../design-system/atoms/ImageModal'; // Import ImageModal component
 import MarketplaceImageService from '../services/MarketplaceImageService';
 import logger from '../services/LoggingService';
@@ -222,18 +223,12 @@ const PublicMarketplace = () => {
           </p>
 
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <button
-              onClick={handleSignUpPrompt}
-              className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-purple-700"
-            >
+            <Button onClick={handleSignUpPrompt} variant="primary" size="md">
               Join to Buy & Sell
-            </button>
-            <button
-              onClick={() => setShowLoginModal(true)}
-              className="bg-white/10 hover:bg-white/20 border-white/20 rounded-xl border px-6 py-3 font-semibold text-white backdrop-blur-sm transition-all duration-300"
-            >
+            </Button>
+            <Button onClick={() => setShowLoginModal(true)} variant="outline" size="md">
               Contact Sellers
-            </button>
+            </Button>
           </div>
         </div>
       </section>
@@ -279,12 +274,9 @@ const PublicMarketplace = () => {
                 <p className="mb-6 text-gray-400">
                   Be the first to list your Pokemon cards!
                 </p>
-                <button
-                  onClick={handleSignUpPrompt}
-                  className="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700"
-                >
+                <Button onClick={handleSignUpPrompt} variant="primary" size="md">
                   Create First Listing
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -350,12 +342,9 @@ const PublicMarketplace = () => {
                     )}
 
                     <div className="space-y-2">
-                      <button
-                        onClick={() => setShowLoginModal(true)}
-                        className="bg-white/10 hover:bg-white/20 border-white/20 w-full rounded-lg border px-4 py-2 text-white transition-colors"
-                      >
+                      <Button onClick={() => setShowLoginModal(true)} variant="outline" size="sm" className="w-full">
                         Contact Seller
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -373,12 +362,9 @@ const PublicMarketplace = () => {
                   Join our community to access all marketplace features, contact
                   sellers, and list your own cards for sale.
                 </p>
-                <button
-                  onClick={handleSignUpPrompt}
-                  className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-3 font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-purple-700"
-                >
+                <Button onClick={handleSignUpPrompt} variant="primary" size="md">
                   Join MyCardTracker
-                </button>
+                </Button>
               </div>
             </div>
           )}

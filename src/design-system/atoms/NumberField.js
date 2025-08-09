@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import './NumberField.css';
 
 /**
  * NumberField Component
@@ -42,10 +43,16 @@ const NumberField = ({
     }
   };
 
+  const inputClass = `number-field__input ${
+    error ? 'number-field__input--error' : ''
+  } ${prefix ? 'number-field__input--with-prefix' : ''} ${
+    suffix ? 'number-field__input--with-suffix' : ''
+  } ${className}`;
+
   return (
-    <div className="relative w-full">
+    <div className="number-field">
       {prefix && (
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">
+        <span className="number-field__prefix">
           {prefix}
         </span>
       )}
@@ -62,11 +69,11 @@ const NumberField = ({
         min={min}
         max={max}
         step={step}
-        className={`w-full px-3 py-2 ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-10' : ''} border ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-200 dark:border-gray-700'} rounded-lg bg-white text-sm text-gray-900 transition-colors placeholder:text-gray-500 focus:border-[#E6185C] focus:outline-none focus:ring-2 focus:ring-[#E6185C]/20 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400 ${className} `}
+        className={inputClass}
         {...props}
       />
       {suffix && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">
+        <span className="number-field__suffix">
           {suffix}
         </span>
       )}

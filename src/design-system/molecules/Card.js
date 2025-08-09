@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import './Card.css';
 
 /**
  * Card Component
@@ -16,35 +17,18 @@ const Card = ({
   onClick,
   ...props
 }) => {
-  // Base styles for all card variants
-  const baseClasses = 'rounded-xl overflow-hidden';
-
-  // Different variant styles
-  const variantClasses = {
-    default:
-      'bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-gray-700/50 shadow-sm',
-    flat: 'bg-white dark:bg-[#0F0F0F] border border-gray-100 dark:border-gray-800/50',
-    outlined: 'bg-transparent border border-gray-200 dark:border-gray-700/50',
-    elevated:
-      'bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-gray-700/50 shadow-md',
-  };
-
-  // Optional hover effect
-  const hoverClasses = hoverable
-    ? 'hover:shadow-md transition-shadow duration-200'
-    : '';
-
-  // Optional selectable state
-  const selectableClasses = selectable
-    ? 'cursor-pointer transition-colors duration-200' +
-      (selected
-        ? ' ring-2 ring-primary ring-offset-2 dark:ring-offset-[#0D1117]'
-        : '')
-    : '';
+  const cardClass = [
+    'card',
+    `card--${variant}`,
+    hoverable && 'card--hoverable',
+    selectable && 'card--selectable',
+    selected && 'card--selected',
+    className
+  ].filter(Boolean).join(' ');
 
   return (
     <div
-      className={`${baseClasses} ${variantClasses[variant]} ${hoverClasses} ${selectableClasses} ${className}`}
+      className={cardClass}
       onClick={onClick}
       {...props}
     >

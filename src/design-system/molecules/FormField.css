@@ -1,0 +1,29 @@
+.form-field {
+  width: 100%;
+}
+
+.form-field--error {
+  border-color: var(--color-error);
+}
+
+.form-field__inline-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.form-field__input-wrapper {
+  flex: 1;
+}
+
+.form-field__additional-content {
+  margin-top: var(--space-2);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.form-field__error {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+}

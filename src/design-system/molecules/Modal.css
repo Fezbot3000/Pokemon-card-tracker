@@ -1,0 +1,255 @@
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  overflow-y: auto;
+  z-index: 50;
+}
+
+/* Position variants */
+.modal-overlay--center {
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay--right {
+  justify-content: flex-end;
+  padding: 0;
+}
+
+/* Modal container */
+.modal {
+  position: relative;
+  width: 100%;
+  background-color: var(--bg-primary);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-2xl);
+  overflow: hidden;
+}
+
+/* Size variants */
+.modal--sm {
+  max-width: 24rem; /* 384px */
+}
+
+.modal--md {
+  max-width: 32rem; /* 512px */
+}
+
+.modal--lg {
+  max-width: 48rem; /* 768px */
+}
+
+.modal--xl {
+  max-width: 64rem; /* 1024px */
+}
+
+.modal--full {
+  max-width: none;
+  height: 100%;
+  border-radius: 0;
+}
+
+/* Right position variant */
+.modal--right {
+  height: 100%;
+  max-width: 32rem;
+  border-radius: 0;
+}
+
+/* Header */
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.modal__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.modal__close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background-color: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--border-radius-md);
+  transition: background-color 150ms ease;
+}
+
+.modal__close-button:hover {
+  background-color: var(--bg-secondary);
+}
+
+/* Content */
+.modal__content {
+  overflow-y: auto;
+  max-height: calc(100vh - 16rem);
+}
+
+.modal__content--padded {
+  padding: var(--space-6);
+}
+
+/* Footer */
+.modal__footer {
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--border-primary);
+}
+
+/* Animation classes */
+@keyframes modal-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modal-scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes modal-slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes modal-slide-out-right {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes modal-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes modal-exit-right {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.animate-modal-scale-in {
+  animation: modal-scale-in 200ms ease-out;
+}
+
+.animate-modal-scale-out {
+  animation: modal-scale-out 150ms ease-in;
+}
+
+.animate-modal-slide-in-right {
+  animation: modal-slide-in-right 300ms ease-out;
+}
+
+.animate-modal-slide-out-right {
+  animation: modal-slide-out-right 200ms ease-in;
+}
+
+.animate-modal-exit {
+  animation: modal-exit 150ms ease-in;
+}
+
+.animate-modal-exit-right {
+  animation: modal-exit-right 200ms ease-in;
+}
+
+/* Dark mode forced */
+.modal--dark {
+  background-color: var(--color-gray-900);
+  color: var(--color-white);
+}
+
+.modal--dark .modal__header {
+  border-bottom-color: var(--color-gray-700);
+}
+
+.modal--dark .modal__footer {
+  border-top-color: var(--color-gray-700);
+}
+
+/* Static mode */
+.modal--static {
+  position: relative;
+  box-shadow: none;
+}
+
+/* Additional classes */
+.modal-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-contextual {
+  /* Contextual modals have automatic height */
+  height: auto;
+}
+
+.modal-content,
+.modal-body {
+  /* These classes are used together */
+}
+
+/* iOS-specific border radius */
+.ios-modal-radius {
+  border-radius: var(--border-radius-xl);
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Body scroll lock */
+body.modal-open {
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+}

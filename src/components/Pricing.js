@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
-import Button from '../design-system/atoms/Button';
+import { Button } from '../design-system';
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -180,16 +180,14 @@ const Pricing = () => {
                   </ul>
 
                   {/* CTA Button */}
-                  <button
+                  <Button
                     onClick={() => navigate('/login?signup=true')}
-                    className={`w-full rounded-2xl px-6 py-4 text-lg font-semibold transition-all duration-300 hover:scale-[1.02] ${
-                      plan.popular
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl hover:from-green-600 hover:to-emerald-700 hover:shadow-2xl hover:shadow-green-500/25'
-                        : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:from-blue-600 hover:to-purple-700 hover:shadow-2xl hover:shadow-blue-500/25'
-                    }`}
+                    variant={plan.popular ? 'success' : 'primary'}
+                    size="lg"
+                    className="w-full"
                   >
                     {plan.cta}
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -238,12 +236,13 @@ const Pricing = () => {
             valuable collections.
           </p>
 
-          <button
+          <Button
             onClick={() => navigate('/login?signup=true')}
-            className="rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-4 text-lg font-semibold text-white shadow-2xl transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 hover:shadow-blue-500/25"
+            variant="primary"
+            size="lg"
           >
             Start Your Free Trial
-          </button>
+          </Button>
         </div>
       </section>
 

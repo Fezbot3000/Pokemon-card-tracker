@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import './SettingsPanel.css';
 
 /**
  * SettingsPanel Component
@@ -14,18 +15,18 @@ const SettingsPanel = ({
   ...props
 }) => {
   return (
-    <div className={`mb-6 ${className}`} {...props}>
+    <div className={`settings-panel ${className}`} {...props}>
       {title && (
-        <h3 className="mb-1 flex items-center text-base font-medium text-gray-900 dark:text-white">
+        <h3 className="settings-panel__title">
           {title}
         </h3>
       )}
       {description && (
-        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        <p className="settings-panel__description">
           {description}
         </p>
       )}
-      <div className="space-y-4">{children}</div>
+      <div className="settings-panel__content">{children}</div>
     </div>
   );
 };

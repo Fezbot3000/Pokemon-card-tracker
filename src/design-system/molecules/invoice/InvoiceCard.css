@@ -1,0 +1,59 @@
+.invoice-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-primary);
+  background-color: var(--bg-primary);
+}
+
+.invoice-card__header {
+  border-bottom: 1px solid var(--border-primary);
+  padding: var(--space-3);
+}
+
+.invoice-card__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.invoice-card__financial {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: var(--space-3);
+}
+
+.invoice-card__metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.invoice-card__metric--bordered {
+  border-left: 1px solid var(--border-primary);
+  border-right: 1px solid var(--border-primary);
+}
+
+.invoice-card__metric-label {
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.invoice-card__metric-value {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.invoice-card__metric-value--profit {
+  color: var(--color-success-500);
+}
+
+.invoice-card__metric-value--loss {
+  color: var(--color-error);
+}

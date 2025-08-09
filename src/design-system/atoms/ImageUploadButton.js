@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from './Icon';
 import LoggingService from '../../services/LoggingService';
+import './ImageUploadButton.css';
 
 /**
  * ImageUploadButton Component
@@ -70,7 +71,7 @@ const ImageUploadButton = ({ onImageChange, className = '' }) => {
 
   return (
     <div
-      className={`relative w-full max-w-[240px] ${className}`}
+      className={`image-upload-button ${className}`}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -79,11 +80,9 @@ const ImageUploadButton = ({ onImageChange, className = '' }) => {
       <button
         type="button"
         onClick={handleUploadClick}
-        className={`flex w-full items-center justify-center gap-2 px-4 py-2 ${
-          isDragging
-            ? 'border-[#E6185C] bg-[#E6185C]/10 text-[#E6185C]'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-[#0F0F0F] dark:text-white dark:hover:bg-[#1B2131]'
-        } rounded-lg border border-transparent text-sm font-medium transition-colors`}
+        className={`image-upload-button__btn ${
+          isDragging ? 'image-upload-button__btn--dragging' : ''
+        }`}
       >
         <Icon name="upload" />
         <span>{isDragging ? 'Drop image here' : 'Replace Image'}</span>
@@ -93,7 +92,7 @@ const ImageUploadButton = ({ onImageChange, className = '' }) => {
         type="file"
         accept="image/*"
         onChange={handleFileChange}
-        className="hidden"
+        className="image-upload-button__input"
       />
     </div>
   );

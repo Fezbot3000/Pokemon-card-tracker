@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import BottomSheet from './BottomSheet';
+import './Dropdown.css';
 
 /**
  * Dropdown component
@@ -70,40 +71,23 @@ const Dropdown = ({
     };
   }, [dropdownIsOpen, handleOpenChange]);
 
-  // Width classes for the dropdown menu
-  const widthClasses = {
-    auto: 'min-w-[180px]',
-    sm: 'w-48',
-    md: 'w-56',
-    lg: 'w-64',
-    xl: 'w-72',
-    full: 'w-full',
-  };
 
-  // Alignment classes for dropdown positioning
-  const alignClasses = {
-    left: 'left-0',
-    right: 'right-0',
-    center: 'left-1/2 -translate-x-1/2',
-  };
 
   // Render different UI for mobile and desktop
   return (
-    <div className={`relative ${className}`} ref={dropdownRef} {...props}>
+    <div className={`dropdown ${className}`} ref={dropdownRef} {...props}>
       {/* Trigger element */}
-      <div onClick={toggleDropdown} className="cursor-pointer">
+      <div onClick={toggleDropdown} className="dropdown__trigger">
         {trigger}
       </div>
 
       {/* Desktop Dropdown Menu */}
       {dropdownIsOpen && !isMobileView && (
         <div
-          className={`absolute z-50 mt-1 ${widthClasses[width]} ${alignClasses[align]} dark:border-gray-700/50 scrollbar-hide rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:bg-[#0F0F0F]`}
+          className={`dropdown__menu dropdown__menu--${width} dropdown__menu--${align}`}
           style={{
             maxHeight: 'none', // Allow dropdown to grow as tall as needed
             overflowY: 'visible', // No vertical scroll
-            overflowX: 'hidden',
-            display: 'block',
           }}
           {...props}
         >
@@ -118,13 +102,13 @@ const Dropdown = ({
           onClose={() => handleOpenChange(false)}
           title={title || 'Select Option'}
         >
-          <div className="space-y-2 px-2 py-1">
+          <div className="dropdown--mobile dropdown__content">
             {React.Children.map(children, child => {
               // Skip dividers in bottom sheet
               if (child.type === DropdownDivider) return null;
 
-                             // Clone DropdownItem elements with standard styling
-               if (child.type === DropdownItem) {
+              // Clone DropdownItem elements with standard styling
+              if (child.type === DropdownItem) {
                 return React.cloneElement(child, {
                   onClick: () => {
                     if (child.props.onClick) {
@@ -141,7 +125,7 @@ const Dropdown = ({
             {/* Cancel Button */}
             <button
               onClick={() => handleOpenChange(false)}
-              className="mt-3 block w-full rounded-lg border border-gray-700 bg-[#000000] px-4 py-3 text-center text-sm font-semibold text-gray-300 hover:opacity-90"
+              className="dropdown__cancel-button"
             >
               Close
             </button>
@@ -165,21 +149,21 @@ export const DropdownItem = ({
   className = '',
   ...props
 }) => {
-  const baseClasses =
-    'flex items-center w-full px-4 py-2 text-sm text-left transition-colors truncate';
-  const stateClasses = disabled
-    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
-    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#0F0F0F] cursor-pointer';
+  const itemClass = [
+    'dropdown-item',
+    disabled ? 'dropdown-item--disabled' : 'dropdown-item--enabled',
+    className
+  ].filter(Boolean).join(' ');
 
   return (
     <button
-      className={`${baseClasses} ${stateClasses} ${className}`}
+      className={itemClass}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       {...props}
     >
-      {icon && <span className="mr-2 shrink-0">{icon}</span>}
-      <span className="w-full truncate text-left">{children}</span>
+      {icon && <span className="dropdown-item__icon">{icon}</span>}
+      <span className="dropdown-item__content">{children}</span>
     </button>
   );
 };
@@ -191,7 +175,7 @@ export const DropdownItem = ({
  */
 export const DropdownDivider = ({ className = '', ...props }) => (
   <div
-    className={`dark:border-gray-700/50 my-1 border-t border-gray-200 ${className}`}
+    className={`dropdown-divider ${className}`}
     {...props}
   />
 );

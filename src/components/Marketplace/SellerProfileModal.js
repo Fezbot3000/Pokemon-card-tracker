@@ -346,9 +346,9 @@ function SellerProfileModal({
                         {onContactSeller && (
                           <Button
                             onClick={handleMessageSeller}
-                            variant="secondary"
+                            variant="outline"
                             size="md"
-                            className="bg-white/10 border-white/20 hover:bg-white/20 w-full text-white backdrop-blur-sm transition-all duration-200"
+                            className="w-full"
                           >
                             <Icon name="message" size="sm" className="mr-2" />
                             Message Seller
@@ -371,9 +371,9 @@ function SellerProfileModal({
                       {onContactSeller && (
                         <Button
                           onClick={handleMessageSeller}
-                          variant="secondary"
+                          variant="outline"
                           size="md"
-                          className="bg-white/10 border-white/20 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-200"
+                          className=""
                         >
                           <Icon name="message" size="sm" className="mr-2" />
                           Message Seller
@@ -540,7 +540,7 @@ function SellerProfileModal({
                         <Button
                           variant="primary"
                           size="sm"
-                          className="w-full border-0 bg-gradient-to-r from-purple-600 to-blue-600 shadow-md hover:from-purple-700 hover:to-blue-700"
+                          className="w-full text-center"
                         >
                           <Icon name="visibility" size="sm" className="mr-2" />
                           View Details

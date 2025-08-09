@@ -1,0 +1,111 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.toggle--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.toggle__wrapper {
+  position: relative;
+}
+
+.toggle__input {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+}
+
+.toggle__track {
+  border-radius: var(--radius-full);
+  transition: background-color 200ms ease-in-out;
+}
+
+/* Size variants */
+.toggle__track--sm {
+  width: 2rem; /* 32px */
+  height: 1rem; /* 16px */
+}
+
+.toggle__track--md {
+  width: 2.75rem; /* 44px */
+  height: 1.5rem; /* 24px */
+}
+
+.toggle__track--lg {
+  width: 3.5rem; /* 56px */
+  height: 1.75rem; /* 28px */
+}
+
+/* Track states */
+.toggle__track--checked {
+  background-image: linear-gradient(to right, var(--color-danger-500), var(--color-pink-500));
+}
+
+.toggle__track--unchecked {
+  background-color: var(--color-gray-200);
+}
+
+.dark .toggle__track--unchecked {
+  background-color: var(--color-gray-700);
+}
+
+.toggle__circle {
+  position: absolute;
+  left: 0.125rem; /* 2px */
+  top: 0.125rem; /* 2px */
+  background-color: var(--color-white);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  transition: transform 200ms ease-in-out;
+}
+
+/* Circle sizes */
+.toggle__circle--sm {
+  width: 0.75rem; /* 12px */
+  height: 0.75rem; /* 12px */
+}
+
+.toggle__circle--md {
+  width: 1.25rem; /* 20px */
+  height: 1.25rem; /* 20px */
+}
+
+.toggle__circle--lg {
+  width: 1.5rem; /* 24px */
+  height: 1.5rem; /* 24px */
+}
+
+/* Circle checked position */
+.toggle__circle--checked.toggle__circle--sm {
+  transform: translateX(1rem); /* 16px */
+}
+
+.toggle__circle--checked.toggle__circle--md {
+  transform: translateX(1.25rem); /* 20px */
+}
+
+.toggle__circle--checked.toggle__circle--lg {
+  transform: translateX(1.75rem); /* 28px */
+}
+
+.toggle__label {
+  margin-left: var(--space-3);
+  color: var(--text-primary);
+}
+
+.toggle__label--sm {
+  font-size: var(--font-size-sm);
+}
+
+.toggle__label--md {
+  font-size: var(--font-size-base);
+}
+
+.toggle__label--lg {
+  font-size: var(--font-size-lg);
+}

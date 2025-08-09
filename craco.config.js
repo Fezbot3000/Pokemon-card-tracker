@@ -4,16 +4,20 @@
  */
 
 const TerserPlugin = require('terser-webpack-plugin');
+const isDev = process.env.NODE_ENV !== 'production';
 
 module.exports = {
-  eslint: {
-    configure: {
-      rules: {
-        'tailwindcss/migration-from-tailwind-2': 'warn',
-        'tailwindcss/enforces-shorthand': 'warn'
-      }
-    }
-  },
+  // Disable ESLint in dev to avoid noisy overlay; keep it in prod builds
+  eslint: isDev
+    ? { enable: false }
+    : {
+        configure: {
+          rules: {
+            'tailwindcss/migration-from-tailwind-2': 'warn',
+            'tailwindcss/enforces-shorthand': 'warn'
+          }
+        }
+      },
   webpack: {
     configure: (webpackConfig) => {
               // Optimization for production builds

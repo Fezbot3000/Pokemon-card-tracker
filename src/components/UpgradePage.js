@@ -186,13 +186,10 @@ const UpgradePage = () => {
       <div className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
         <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-            >
+            <Button variant="text" onClick={() => navigate('/dashboard')} className="flex items-center">
               <Icon name="arrow_back" className="mr-2" />
               Back to Dashboard
-            </button>
+            </Button>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
               Upgrade to Premium
             </h1>
@@ -204,7 +201,7 @@ const UpgradePage = () => {
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Trial Status */}
         {isOnTrial && (
-          <div className="mb-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 p-6 text-center text-white">
+          <div className="mb-8 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center text-white">
             <h2 className="mb-2 text-2xl font-bold">
               {getTrialDaysRemaining()} Day
               {getTrialDaysRemaining() !== 1 ? 's' : ''} Left in Your Free Trial
@@ -218,7 +215,7 @@ const UpgradePage = () => {
 
         {/* Pricing Card */}
         <div className="mb-8 overflow-hidden rounded-lg bg-white shadow-lg dark:bg-gray-900">
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-6 text-center text-white">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center text-white">
             <h2 className="mb-2 text-3xl font-bold">Premium Plan</h2>
             <div className="mb-2 text-5xl font-bold">
               $9.99
@@ -236,7 +233,7 @@ const UpgradePage = () => {
               size="lg"
               onClick={handleUpgrade}
               loading={loading}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 py-4 text-lg hover:from-purple-600 hover:to-pink-600"
+              className="w-full py-4 text-lg"
             >
               <Icon name="star" className="mr-2" />
               {loading ? 'Processing...' : 'Upgrade to Premium'}

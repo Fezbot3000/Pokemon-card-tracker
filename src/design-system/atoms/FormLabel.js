@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import './FormLabel.css';
 
 /**
  * FormLabel Component
@@ -10,10 +11,10 @@ const FormLabel = ({ children, htmlFor, required, className = '' }) => {
   return (
     <label
       htmlFor={htmlFor}
-      className={`mb-1 block text-sm font-medium text-gray-800 dark:text-gray-200 ${className}`}
+      className={`form-label ${className}`}
     >
       {children}
-      {required && <span className="ml-1 text-red-500">*</span>}
+      {required && <span className="form-label__required">*</span>}
     </label>
   );
 };

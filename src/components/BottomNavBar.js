@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import logger from '../utils/logger';
+import './BottomNavBar.css';
 
 const BottomNavBar = ({ currentView, onViewChange }) => {
   const navigate = useNavigate();

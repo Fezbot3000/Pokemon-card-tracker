@@ -1,0 +1,16 @@
+.component-section {
+  margin-bottom: var(--space-12);
+  border-radius: var(--border-radius-lg);
+  background-color: var(--bg-primary);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-md);
+}
+
+.component-section__title {
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: var(--space-2);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}

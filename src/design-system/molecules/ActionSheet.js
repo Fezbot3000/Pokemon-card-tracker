@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import BottomSheet from './BottomSheet';
+import './ActionSheet.css';
 
 /**
  * ActionSheet component
@@ -98,34 +99,19 @@ const ActionSheet = ({
     };
   }, [actionSheetIsOpen, handleOpenChange]);
 
-  // Width classes for the dropdown menu
-  const widthClasses = {
-    auto: 'min-w-[180px]',
-    sm: 'w-48',
-    md: 'w-56',
-    lg: 'w-64',
-    xl: 'w-72',
-    full: 'w-full',
-  };
 
-  // Alignment classes for dropdown positioning
-  const alignClasses = {
-    left: 'left-0',
-    right: 'right-0',
-    center: 'left-1/2 -translate-x-1/2',
-  };
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef} {...props}>
+    <div className={`action-sheet ${className}`} ref={dropdownRef} {...props}>
       {/* Trigger element */}
-      <div onClick={toggleActionSheet} className="cursor-pointer">
+      <div onClick={toggleActionSheet} className="action-sheet__trigger">
         {trigger}
       </div>
 
       {/* Desktop Dropdown Menu */}
       {shouldRender && !isMobileView && (
         <div
-          className={`absolute z-50 mt-1 ${widthClasses[width]} ${alignClasses[align]} dark:border-gray-700/50 scrollbar-hide rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:bg-[#0F0F0F] ${
+          className={`action-sheet__dropdown action-sheet__dropdown--${width} action-sheet__dropdown--${align} ${
             actionSheetIsOpen ? 'animate-actionsheet-enter' : 'animate-actionsheet-exit'
           }`}
           style={{
@@ -148,10 +134,10 @@ const ActionSheet = ({
           onClose={() => handleOpenChange(false)}
           title={title || 'Select Option'}
         >
-          <div className="flex h-full flex-col">
+          <div className="action-sheet--mobile action-sheet__content">
             {/* Scrollable Content Area */}
             <div 
-              className="scrollbar-hide grow overflow-y-auto space-y-2 px-2 py-1"
+              className="action-sheet__scroll-area"
               style={{ maxHeight: 'calc(85vh - 130px)' }}
             >
               {React.Children.map(children, child => {
@@ -181,22 +167,11 @@ const ActionSheet = ({
                   const originalChildren = child.props.children;
 
                   return React.cloneElement(child, {
-                    className: `text-center rounded-lg py-3 ${
+                    className: `action-sheet-item ${
                       isSelected
-                        ? 'bg-primary-gradient text-white font-semibold'
-                        : 'bg-white dark:bg-[#000000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
-                    } 
-                      hover:opacity-90 ${child.props.className || ''}`
-                      .replace('bg-gray-100', '')
-                      .replace('dark:bg-black', '')
-                      .replace('bg-blue-50', '')
-                      .replace('text-blue-600', '')
-                      .replace('shadow-sm', '')
-                      .replace('ring-1', '')
-                      .replace('ring-blue-200', '')
-                      .replace('dark:bg-blue-900/30', '')
-                      .replace('dark:text-blue-400', '')
-                      .replace('dark:ring-blue-800', ''),
+                        ? 'action-sheet-item--selected'
+                        : 'action-sheet-item--default'
+                    } ${child.props.className || ''}`,
                     onClick: () => {
                       if (child.props.onClick) {
                         child.props.onClick();
@@ -208,7 +183,7 @@ const ActionSheet = ({
                       // If this is an SVG (tick icon), make it white
                       if (grandchild && grandchild.type === 'svg') {
                         return React.cloneElement(grandchild, {
-                          className: 'ml-3 size-4 shrink-0 text-white'
+                          className: 'action-sheet-item__icon--selected'
                         });
                       }
                       // If this is a div containing an SVG, update the SVG inside
@@ -216,7 +191,7 @@ const ActionSheet = ({
                         const updatedChildren = React.Children.map(grandchild.props.children, greatGrandchild => {
                           if (greatGrandchild && greatGrandchild.type === 'svg') {
                             return React.cloneElement(greatGrandchild, {
-                              className: 'ml-3 size-4 shrink-0 text-white'
+                              className: 'action-sheet-item__icon--selected'
                             });
                           }
                           return greatGrandchild;
@@ -235,10 +210,10 @@ const ActionSheet = ({
             </div>
             
             {/* Fixed Cancel Button */}
-            <div className="sticky inset-x-0 bottom-0 mt-2 border-t border-gray-700 bg-white dark:bg-[#000000] pt-2">
+            <div className="action-sheet__cancel-wrapper">
               <button
                 onClick={() => handleOpenChange(false)}
-                className="mb-2 block w-full rounded-lg border border-gray-700 bg-[#000000] px-4 py-3 text-center text-sm font-semibold text-gray-300 hover:opacity-90"
+                className="action-sheet__cancel-button"
               >
                 Close
               </button>
@@ -263,21 +238,21 @@ export const ActionSheetItem = ({
   className = '',
   ...props
 }) => {
-  const baseClasses =
-    'flex items-center w-full px-4 py-2 text-sm text-left transition-colors truncate';
-  const stateClasses = disabled
-    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
-    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#0F0F0F] cursor-pointer';
+  const itemClass = [
+    'action-sheet-item',
+    disabled ? 'action-sheet-item--disabled' : 'action-sheet-item--enabled',
+    className
+  ].filter(Boolean).join(' ');
 
   return (
     <button
-      className={`${baseClasses} ${stateClasses} ${className}`}
+      className={itemClass}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       {...props}
     >
-      {icon && <span className="mr-2 shrink-0">{icon}</span>}
-      <span className="w-full truncate text-left">{children}</span>
+      {icon && <span className="action-sheet-item__icon">{icon}</span>}
+      <span className="action-sheet-item__content">{children}</span>
     </button>
   );
 };
@@ -289,7 +264,7 @@ export const ActionSheetItem = ({
  */
 export const ActionSheetDivider = ({ className = '', ...props }) => (
   <div
-    className={`dark:border-gray-700/50 my-1 border-t border-gray-200 ${className}`}
+    className={`action-sheet-divider ${className}`}
     {...props}
   />
 );

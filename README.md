@@ -32,11 +32,12 @@ The Pokemon Card Tracker is a full-stack React application that helps collectors
 - [Deployment Guide](./docs/deployment.md) - Production deployment and CI/CD
 
 ### Development
-- [Local Setup](./docs/local-setup.md) - Development environment configuration
-- [Component Architecture](./docs/component-architecture.md) - Frontend structure and patterns
-- [State Management](./docs/state-management.md) - Context and hooks usage
-- [Styling Guide](./docs/styling-guide.md) - Design system and Tailwind usage
-- [Testing](./docs/testing.md) - Testing strategy and implementation
+- [Architecture: System Overview](./docs/architecture/SYSTEM_OVERVIEW.md)
+- [Architecture: Component Hierarchy](./docs/architecture/COMPONENT_HIERARCHY.md)
+- [Setup](./docs/setup/README-LOCAL-SETUP.md)
+- [Tailwind Deprecation Plan](./docs/features/TAILWIND_DEPRECATION_PLAN.md)
+- [Tailwind Migration Progress](./docs/features/TAILWIND_MIGRATION_PROGRESS.md)
+- [Tailwind Migration Summary](./docs/features/TAILWIND_MIGRATION_SUMMARY.md)
 
 ## 🚀 Quick Start
 

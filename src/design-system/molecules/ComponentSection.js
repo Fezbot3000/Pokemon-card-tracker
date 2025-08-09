@@ -1,4 +1,5 @@
 import React from 'react';
+import './ComponentSection.css';
 
 /**
  * ComponentSection Component
@@ -9,9 +10,9 @@ import React from 'react';
 const ComponentSection = ({ title, children, id }) => (
   <div
     id={id}
-    className="mb-12 rounded-lg bg-white p-6 shadow-md dark:bg-gray-800"
+    className="component-section"
   >
-    <h2 className="mb-4 border-b border-gray-200 pb-2 text-2xl font-semibold text-gray-800 dark:border-gray-700 dark:text-gray-100">
+    <h2 className="component-section__title">
       {title}
     </h2>
     {children}

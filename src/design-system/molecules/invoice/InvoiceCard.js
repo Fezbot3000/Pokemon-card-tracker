@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import './InvoiceCard.css';
 
 /**
  * InvoiceCard Component
@@ -76,13 +77,13 @@ const InvoiceCard = ({
   return (
     <div
       id={`invoice-card-${card.id || card.slabSerial}`}
-      className={`flex flex-col overflow-hidden rounded-md border border-gray-200 bg-white dark:border-[#ffffff1a] dark:bg-[#1B2131] ${className}`}
+      className={`invoice-card ${className}`}
       {...props}
     >
       {/* Card Title - Optimized format */}
-      <div className="border-b border-gray-200 p-3 dark:border-[#ffffff1a]">
+      <div className="invoice-card__header">
         <div
-          className="truncate text-sm font-medium text-gray-900 dark:text-white"
+          className="invoice-card__title"
           title={card.card}
         >
           {formatCardName(card.card)}
@@ -90,29 +91,29 @@ const InvoiceCard = ({
       </div>
 
       {/* Financial Details - Simplified and better aligned */}
-      <div className="grid grid-cols-3 p-3">
-        <div className="flex flex-col items-center">
-          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+      <div className="invoice-card__financial">
+        <div className="invoice-card__metric">
+          <div className="invoice-card__metric-label">
             Paid
           </div>
-          <div className="text-xs font-medium text-gray-900 dark:text-white">
+          <div className="invoice-card__metric-value">
             ${paid.toFixed(2)}
           </div>
         </div>
-        <div className="flex flex-col items-center border-x border-gray-200 dark:border-[#ffffff1a]">
-          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+        <div className="invoice-card__metric invoice-card__metric--bordered">
+          <div className="invoice-card__metric-label">
             Sold
           </div>
-          <div className="text-xs font-medium text-gray-900 dark:text-white">
+          <div className="invoice-card__metric-value">
             ${sold.toFixed(2)}
           </div>
         </div>
-        <div className="flex flex-col items-center">
-          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+        <div className="invoice-card__metric">
+          <div className="invoice-card__metric-label">
             Profit
           </div>
           <div
-            className={`text-xs font-medium ${profit >= 0 ? 'text-green-500' : 'text-red-500'}`}
+            className={`invoice-card__metric-value ${profit >= 0 ? 'invoice-card__metric-value--profit' : 'invoice-card__metric-value--loss'}`}
           >
             {profit >= 0 ? '' : '-'}${Math.abs(profit).toFixed(2)}
           </div>

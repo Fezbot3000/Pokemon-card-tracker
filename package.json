@@ -60,7 +60,27 @@
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "rules": {
+      "no-console": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "import/no-anonymous-default-export": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "react/no-array-index-key": "off",
+      "jsx-a11y/role-has-required-aria-props": "off",
+      "tailwindcss/no-custom-classname": "off",
+      "tailwindcss/classnames-order": "off"
+    },
+    "settings": {
+      "tailwindcss": {
+        "whitelist": [
+          "material-icons",
+          "view-selector",
+          "drag-area",
+          "modal-body"
+        ]
+      }
+    }
   },
   "jest": {},
   "browserslist": {

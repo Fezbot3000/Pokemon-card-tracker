@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { preventBodyScroll, restoreBodyScroll } from '../../utils/modalUtils';
+import './BottomSheet.css';
 
 
 
@@ -80,20 +81,17 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
   return (
     // Backdrop
     <div 
-      className="fixed inset-0 z-[70000] flex min-h-screen w-full items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center"
+      className="bottom-sheet__backdrop"
       onClick={onClose}
     >
       {/* Sheet Content */}
       <div
         ref={sheetRef}
-        className={`fixed inset-x-0 bottom-0 z-[70001] w-full rounded-t-xl bg-white px-3 pt-3 shadow-xl ease-out dark:bg-[#000000] ${
-          isDragging ? 'transition-none' : 'transition-transform duration-500'
-        }`}
+        className={`bottom-sheet ${isDragging ? 'bottom-sheet--dragging' : ''} ${isVisible ? 'bottom-sheet--visible' : 'bottom-sheet--hidden'}`}
         style={{
-          maxHeight: '90vh',
           transform: isVisible 
             ? `translateY(${currentTranslateY}px)` 
-            : 'translateY(100%)',
+            : undefined,
           paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))`,
         }}
         onTransitionEnd={() => {
@@ -103,18 +101,18 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
       >
         {/* Expanded drag area covering top section */}
         <div 
-          className="drag-area cursor-grab active:cursor-grabbing touch-none pb-3"
+          className="bottom-sheet__drag-area"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           {/* Visual Grabber Handle */}
-          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+          <div className="bottom-sheet__grabber"></div>
 
           {/* Header with Title */}
           {(title || onClose) && (
-            <div className="mb-0 flex items-center justify-between px-1">
-              <h3 className="grow text-center text-base font-semibold text-gray-700 dark:text-white">
+            <div className="bottom-sheet__header">
+              <h3 className="bottom-sheet__title">
                 {title}
               </h3>
             </div>
