@@ -575,8 +575,6 @@ header .max-h-60.overflow-y-auto::-webkit-scrollbar {
 .card-details-modal #modal-title {
   display: flex !important;
   width: 100% !important;
-  font-size: inherit !important;
-  font-weight: inherit !important;
 }
 
 

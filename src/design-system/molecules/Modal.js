@@ -283,8 +283,8 @@ const Modal = ({
     : `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm rounded-t-xl`;
 
   const titleClasses = forceDarkMode
-    ? 'text-xl font-medium text-gray-200'
-    : 'text-xl font-medium text-gray-800 dark:text-gray-200';
+    ? 'text-xl text-gray-200'
+    : 'text-xl text-gray-800 dark:text-gray-200';
 
   // Close button classes removed as they were unused
 
@@ -370,7 +370,7 @@ const Modal = ({
         {/* Modal Header - Sticky */}
         {title && (
           <div className={headerClasses}>
-            <h2 id="modal-title" className={titleClasses}>
+            <h2 id="modal-title" className="modal__title" style={{ fontSize: '1.25rem', fontWeight: '600', color: forceDarkMode ? '#e5e7eb' : undefined }}>
               {title}
             </h2>
           </div>
