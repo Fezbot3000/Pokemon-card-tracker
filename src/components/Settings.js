@@ -42,16 +42,20 @@ const Settings = ({
         <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">Choose your preferred light or dark theme.</p>
         
         <div className="space-y-3">
-          {/* Light Mode */}
-          <Button
+          {/* Light Mode (mobile-only card) */}
+          <div
+            role="button"
+            aria-pressed={theme === 'light'}
             onClick={() => theme === 'dark' && toggleTheme()}
-            variant={theme === 'light' ? 'primary' : 'outline'}
-            size="md"
-            className="w-full justify-start"
+            className={`w-full overflow-hidden rounded-xl border p-4 ${
+              theme === 'light'
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 dark:border-gray-700 dark:bg-black'
+            }`}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">Light Mode</h3>
+            <div className="flex w-full min-w-0 items-center justify-between">
+              <div className="min-w-0">
+                <h3 className="truncate font-medium text-gray-900 dark:text-white">Light Mode</h3>
                 <div className="mt-2 flex items-center space-x-2">
                   <div className="h-4 w-8 rounded bg-blue-500"></div>
                   <div className="h-2 w-16 rounded bg-gray-300"></div>
@@ -59,23 +63,27 @@ const Settings = ({
                 </div>
               </div>
               {theme === 'light' && (
-                <div className="flex size-6 items-center justify-center rounded-full bg-blue-500">
+                <div className="ml-3 flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-500">
                   <span className="text-xs text-white">✓</span>
                 </div>
               )}
             </div>
-          </Button>
+          </div>
 
-          {/* Dark Mode */}
-          <Button
+          {/* Dark Mode (mobile-only card) */}
+          <div
+            role="button"
+            aria-pressed={theme === 'dark'}
             onClick={() => theme === 'light' && toggleTheme()}
-            variant={theme === 'dark' ? 'primary' : 'outline'}
-            size="md"
-            className="w-full justify-start"
+            className={`w-full overflow-hidden rounded-xl border p-4 ${
+              theme === 'dark'
+                ? 'border-blue-500 bg-gray-800'
+                : 'border-gray-200 dark:border-gray-700 dark:bg-black'
+            }`}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">Dark Mode</h3>
+            <div className="flex w-full min-w-0 items-center justify-between">
+              <div className="min-w-0">
+                <h3 className="truncate font-medium text-gray-900 dark:text-white">Dark Mode</h3>
                 <div className="mt-2 flex items-center space-x-2">
                   <div className="h-4 w-8 rounded bg-blue-500"></div>
                   <div className="h-2 w-16 rounded bg-gray-600"></div>
@@ -83,12 +91,12 @@ const Settings = ({
                 </div>
               </div>
               {theme === 'dark' && (
-                <div className="flex size-6 items-center justify-center rounded-full bg-blue-500">
+                <div className="ml-3 flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-500">
                   <span className="text-xs text-white">✓</span>
                 </div>
               )}
             </div>
-          </Button>
+          </div>
         </div>
       </div>
 
@@ -109,16 +117,7 @@ const Settings = ({
             Start Tutorial
           </Button>
 
-          {/* Cloud Sync Status */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Cloud Sync</h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Enable automatic cloud synchronization for your data</p>
-            </div>
-            <div className="rounded-full bg-blue-500 px-3 py-1 text-xs text-white">
-              Enabled
-            </div>
-          </div>
+
 
           {/* Currency Settings */}
           <div>

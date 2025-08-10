@@ -11,7 +11,7 @@ import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useBackup } from '../contexts/BackupContext';
+
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import db from '../../services/firestore/dbAdapter';
 import featureFlags, {
@@ -59,7 +59,7 @@ const SettingsModal = ({
   const { user } = useAuth();
   const { preferredCurrency, updatePreferredCurrency } = useUserPreferences(); // Added hook usage
   // Restore and backup hooks (keeping only the ones needed)
-  const { addBackupLog } = useBackup();
+
   const [isRenaming, setIsRenaming] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [activeTab, setActiveTab] = useState('general');
@@ -229,12 +229,10 @@ const SettingsModal = ({
       return;
     }
 
-    addBackupLog(`Starting image upload from file: ${file.name}`);
-
     // Call the onUploadImagesFromZip function
     onUploadImagesFromZip(file, {
       onProgress: (step, percent, message) => {
-        addBackupLog(message);
+        // Progress message removed with backup logging
       },
     }).finally(() => {
       e.target.value = null; // Reset the file input
@@ -329,11 +327,11 @@ const SettingsModal = ({
                 >
                   <div className="flex flex-col gap-4 sm:flex-row">
                     <div
-                      className={`flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${!isDarkMode ? 'border-blue-500 bg-blue-50' : 'border-gray-200 dark:border-gray-700'} `}
+                      className={`flex-1 cursor-pointer overflow-hidden rounded-lg border-2 p-4 transition-all duration-200 ${!isDarkMode ? 'border-blue-500 bg-blue-50' : 'border-gray-200 dark:border-gray-700'} `}
                       onClick={() => toggleTheme('light')}
                     >
-                      <div className="mb-2 flex items-center justify-between">
-                        <h4 className="font-medium text-gray-900 dark:text-white">
+                      <div className="mb-2 flex min-w-0 items-center justify-between">
+                        <h4 className="truncate font-medium text-gray-900 dark:text-white">
                           Light Mode
                         </h4>
                         {!isDarkMode && (
@@ -348,11 +346,11 @@ const SettingsModal = ({
                     </div>
 
                     <div
-                      className={`flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${isDarkMode ? 'border-blue-500 bg-gray-800' : 'border-gray-200 dark:border-gray-700'} `}
+                      className={`flex-1 cursor-pointer overflow-hidden rounded-lg border-2 p-4 transition-all duration-200 ${isDarkMode ? 'border-blue-500 bg-gray-800' : 'border-gray-200 dark:border-gray-700'} `}
                       onClick={() => toggleTheme('dark')}
                     >
-                      <div className="mb-2 flex items-center justify-between">
-                        <h4 className="font-medium text-gray-900 dark:text-white">
+                      <div className="mb-2 flex min-w-0 items-center justify-between">
+                        <h4 className="truncate font-medium text-gray-900 dark:text-white">
                           Dark Mode
                         </h4>
                         {isDarkMode && (
@@ -384,48 +382,7 @@ const SettingsModal = ({
                       </Button>
                     )}
 
-                    {/* Feature Flag Toggle - Moved from Developer Settings */}
-                    <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
-                      <div className="flex items-center justify-between py-2">
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Cloud Sync
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Enable automatic cloud synchronization for your data
-                          </p>
-                        </div>
-                        <Button
-                          variant={
-                            featureFlags.enableFirestoreSync
-                              ? 'primary'
-                              : 'outline'
-                          }
-                          size="sm"
-                          onClick={() => {
-                            updateFeatureFlag(
-                              'enableFirestoreSync',
-                              !featureFlags.enableFirestoreSync
-                            );
-                            if (!featureFlags.enableFirestoreSync) {
-                              // Also enable related flags for full cloud functionality
-                              updateFeatureFlag('enableFirestoreReads', true);
-                              updateFeatureFlag(
-                                'enableRealtimeListeners',
-                                true
-                              );
-                            }
-                            toastService.success(
-                              `Cloud Sync ${!featureFlags.enableFirestoreSync ? 'enabled' : 'disabled'}`
-                            );
-                          }}
-                        >
-                          {featureFlags.enableFirestoreSync
-                            ? 'Enabled'
-                            : 'Disabled'}
-                        </Button>
-                      </div>
-                    </div>
+
 
                     {/* Preferred Currency Setting */}
                     <div className="max-w-md rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">

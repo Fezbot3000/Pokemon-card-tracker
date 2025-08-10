@@ -10,7 +10,7 @@ import {
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../services/firebase-unified';
 import db from '../services/firestore/dbAdapter';
-import shadowSync from '../services/shadowSync';
+
 import { CardRepository } from '../repositories/CardRepository';
 import logger from './logger';
 
@@ -47,8 +47,7 @@ export const dataResetManager = {
           updateProgress('Cleaning up cloud data');
           logger.debug('Deleting cloud data for user:', user.uid);
 
-          // 1. Clean up shadowSync listeners first to prevent race conditions
-          shadowSync.cleanupListeners();
+          // 1. Listeners cleanup removed with shadowSync
 
           // 2. Use CardRepository for comprehensive cloud cleanup
           const repository = new CardRepository(user.uid);

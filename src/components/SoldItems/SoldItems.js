@@ -329,7 +329,7 @@ const SoldItems = () => {
   const formattedStatistics = useMemo(() => {
     return [
       {
-        label: 'INVESTMENT TOTAL',
+        label: 'PAID',
         value: statistics.totalInvestment,
         isMonetary: true,
         originalCurrencyCode: preferredCurrency.code,

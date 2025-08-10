@@ -6,8 +6,7 @@ import DesignSystemProvider from './design-system/providers/DesignSystemProvider
 import { UserPreferencesProvider } from './contexts/UserPreferencesContext';
 import { TutorialProvider } from './contexts/TutorialContext';
 import { CardProvider } from './contexts/CardContext';
-import { BackupProvider, BackupProgressBar } from './design-system';
-import { RestoreProvider, RestoreProgressBar } from './design-system';
+
 import InvoiceProvider from './contexts/InvoiceContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import ScrollToTop from './components/ScrollToTop';
@@ -55,30 +54,24 @@ export const RootProviders = () => (
         <UserPreferencesProvider>
           <TutorialProvider>
             <CardProvider>
-              <BackupProvider>
-                <BackupProgressBar />
-                <RestoreProvider>
-                  <RestoreProgressBar />
-                  <InvoiceProvider>
-                    <Toast
-                      position="top-left"
-                      toastOptions={{
-                        duration: 3000,
-                        style: {
-                          background: '#1B2131',
-                          color: '#FFFFFF',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                          borderRadius: '12px',
-                          padding: '12px 24px',
-                          fontWeight: '500',
-                        },
-                      }}
-                    />
-                    <ScrollToTop />
-                    <Outlet />
-                  </InvoiceProvider>
-                </RestoreProvider>
-              </BackupProvider>
+              <InvoiceProvider>
+                <Toast
+                  position="top-left"
+                  toastOptions={{
+                    duration: 3000,
+                    style: {
+                      background: '#1B2131',
+                      color: '#FFFFFF',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                      borderRadius: '12px',
+                      padding: '12px 24px',
+                      fontWeight: '500',
+                    },
+                  }}
+                />
+                <ScrollToTop />
+                <Outlet />
+              </InvoiceProvider>
             </CardProvider>
           </TutorialProvider>
         </UserPreferencesProvider>

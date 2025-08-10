@@ -15,7 +15,7 @@ import logger from '../../utils/logger';
 const StatisticsSummary = ({ statistics = [], className = '', ...props }) => {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
-  const { formatAmountForDisplay, preferredCurrency } = useUserPreferences();
+  const { formatAmountForDisplay, preferredCurrency, convertToUserCurrency } = useUserPreferences();
 
   return (
     <div
@@ -37,29 +37,27 @@ const StatisticsSummary = ({ statistics = [], className = '', ...props }) => {
               const originalCurrency = stat.originalCurrencyCode || 'USD'; // Assume USD if not specified
               if (typeof stat.value === 'number' && !isNaN(stat.value)) {
                 try {
-                  displayValue = formatAmountForDisplay(
+                  // Convert to user's preferred currency but format as number without currency symbol
+                  const convertedAmount = convertToUserCurrency(
                     stat.value,
                     originalCurrency
                   );
+                  // Format as number with thousand separators and 2 decimal places, no currency symbol
+                  displayValue = convertedAmount.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  });
                 } catch (e) {
                   logger.error(
                     `Error formatting ${stat.label} in StatisticsSummary:`,
                     e
                   );
-                  displayValue = `${preferredCurrency.symbol || '$'} Error`; // Fallback
+                  displayValue = 'Error'; // Fallback without currency symbol
                 }
               } else {
                 // Handle cases where value might be a pre-formatted string or non-numeric (e.g., "N/A")
                 // If it's already a string, display as is, assuming it might be intentionally non-numeric.
                 displayValue = String(stat.value);
-                // Attempt to prefix with symbol if it looks like a number but isn't, and doesn't have one.
-                if (
-                  typeof stat.value === 'string' &&
-                  !isNaN(parseFloat(stat.value.replace(/[^0-9.-]+/g, ''))) &&
-                  !displayValue.startsWith(preferredCurrency.symbol || '$')
-                ) {
-                  // displayValue = (preferredCurrency.symbol || '$') + displayValue; // This might be too aggressive
-                }
               }
             } else {
               displayValue = String(stat.value); // For non-monetary stats like 'CARDS'

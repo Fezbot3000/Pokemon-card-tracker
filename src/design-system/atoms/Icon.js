@@ -31,7 +31,8 @@ const Icon = ({ name, className = '', color = 'currentColor', size = 16 }) => {
   };
 
   // Combine the classes
-  const iconClasses = `material-icons ${sizeClasses[size]} ${colorClasses[color]} ${className}`;
+  // inline-flex + items-center centers the glyph box; align-middle aligns with text; leading-none removes extra vertical space
+  const iconClasses = `material-icons inline-flex items-center align-middle leading-none ${sizeClasses[size]} ${colorClasses[color]} ${className}`;
 
   return (
     // Spread only the 'rest' of the props, excluding data-component-name

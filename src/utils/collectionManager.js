@@ -395,15 +395,7 @@ export const collectionManager = {
       // ADDITIONAL FIX: Force a sync to ensure cloud state is consistent
       if (user && featureFlags.enableFirestoreSync) {
         try {
-          const shadowSyncService = await import('../services/shadowSync').then(
-            module => module.default
-          );
-          await shadowSyncService.shadowWriteCollection(newName, {
-            name: newName,
-            cardCount: cardsToUpdate.length,
-            description: '',
-            updatedAt: new Date(),
-          });
+          // Shadow sync removed - collection writes now handled directly
           logger.log(
             `Successfully synced new collection "${newName}" via shadow sync`
           );

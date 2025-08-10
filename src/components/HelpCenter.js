@@ -197,56 +197,6 @@ const HelpCenter = () => {
       tags: ['marketplace', 'buying', 'selling', 'safety', 'shipping'],
     },
     {
-      id: 5,
-      title: 'Cloud Backup and Sync',
-      category: 'general-features',
-      content: 'Learn how to backup and sync your collection across devices.',
-      fullContent: `
-        Users can backup and sync their collections across all devices.
-
-        **Setting Up Cloud Backup**
-        1. Go to Settings > Cloud Backup
-        2. Enable automatic backup
-        3. Choose backup frequency
-        4. Verify backup completion
-
-        **Manual Backup**
-        1. Click "Backup Now" button
-        2. Wait for upload completion
-        3. Verify backup in cloud storage
-        4. Download backup file if needed
-
-        **Syncing Across Devices**
-        1. Log in to your account on new device
-        2. Cloud sync happens automatically
-        3. Wait for data to download
-        4. Verify all collections are present
-        5. Enable auto-sync for future updates
-
-        **Backup Contents**
-        - All collection data
-        - Card photos and images
-        - Personal notes and tags
-        - Purchase history
-        - Marketplace activity
-        - Settings and preferences
-
-        **Restore from Backup**
-        1. Go to Settings > Restore
-        2. Select backup date
-        3. Choose what to restore
-        4. Confirm restoration
-        5. Wait for process completion
-
-        **Troubleshooting Sync Issues**
-        - Check internet connection
-        - Force sync manually
-        - Clear app cache if needed
-        - Contact support for persistent issues
-      `,
-      tags: ['backup', 'sync', 'cloud', 'restore'],
-    },
-    {
       id: 6,
       title: 'Advanced Analytics and Reports',
       category: 'general-features',

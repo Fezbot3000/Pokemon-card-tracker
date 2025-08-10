@@ -38,7 +38,7 @@ import BottomNavBar from './components/BottomNavBar';
 import TrialStatusBanner from './components/TrialStatusBanner';
 
 import logger from './utils/logger';
-import RestoreListener from './components/RestoreListener';
+
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 
 import TutorialModal from './components/TutorialModal';
@@ -1206,41 +1206,7 @@ function AppContent({ currentView, setCurrentView }) {
         />
       )}
 
-      {/* Add RestoreListener at the App component level where state setters are in scope */}
-      <RestoreListener
-        onRefreshData={() => {
-          logger.log('App: Refreshing data after restore/backup');
-          // Refresh collections from the database
-          db.getCollections()
-            .then(savedCollections => {
-              if (Object.keys(savedCollections).length > 0) {
-                setCollections(savedCollections);
-                // If there are collections but none is selected, select the first one
-                if (
-                  !selectedCollection ||
-                  (selectedCollection !== 'All Cards' &&
-                    !savedCollections[selectedCollection])
-                ) {
-                  const newCollection = Object.keys(savedCollections)[0];
-                  setSelectedCollection(newCollection);
-                  localStorage.setItem('selectedCollection', newCollection);
-                  logger.log(
-                    `App: Selected new collection after restore: ${newCollection}`
-                  );
-                }
-                toastService.success(
-                  'Data restored successfully! Your collections are now available.'
-                );
-              }
-            })
-            .catch(error => {
-              logger.error(
-                'Error refreshing collections after restore:',
-                error
-              );
-            });
-        }}
-      />
+
 
       <TutorialModal />
       <SyncStatusIndicator />
