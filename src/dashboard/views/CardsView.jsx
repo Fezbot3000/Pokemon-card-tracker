@@ -17,7 +17,7 @@ function CardsView({
 }) {
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className={`pb-20 sm:p-6 ${isMobile ? 'px-2 pt-2' : 'p-4'}`}>
+      <div className={`pb-20 ${isMobile ? 'p-4 pt-16' : 'p-4 pt-16 sm:p-6 sm:pt-8'}`}>
         {cards.length === 0 ? (
           <div className="flex h-full min-h-[400px] flex-col items-center justify-center">
             <span className="material-icons mb-4 text-6xl text-gray-400 dark:text-gray-600">

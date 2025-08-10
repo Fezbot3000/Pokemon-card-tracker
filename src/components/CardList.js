@@ -1024,7 +1024,7 @@ const CardList = ({
           filteredCards.length,
           paginatedCards.length
         )}
-        className="mb-3 sm:mb-4"
+        className="mb-4"
       />
 
       {/* Controls Section - Always show so users can add cards */}
