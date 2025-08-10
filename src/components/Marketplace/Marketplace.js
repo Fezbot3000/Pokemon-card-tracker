@@ -535,7 +535,7 @@ function Marketplace({ currentView, onViewChange }) {
             {paginatedListings.map(listing => (
               <div
                 key={listing.id}
-                className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-black"
+                className="flex h-full flex-col overflow-hidden rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
               >
                 <div className="relative aspect-square grow">
                   <LazyImage
@@ -556,21 +556,29 @@ function Marketplace({ currentView, onViewChange }) {
                     </span>
                   )}
                 </div>
-                <div className="rounded-b-lg bg-white p-3 dark:bg-black">
-                  <div className="flex flex-col items-center space-y-2">
-                    <div className="w-full text-center">
-                      <p className="truncate font-semibold text-gray-900 dark:text-white">
-                        {listing.cardName ||
-                          listing.card?.name ||
-                          listing.card?.cardName ||
-                          'Unknown Card'}
-                      </p>
-                      <p className="font-semibold text-gray-900 dark:text-white">
-                        {formatAmountForDisplay(listing.listingPrice, listing.currency || 'AUD')}
-                      </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                        {listing.location || 'No location'}
-                      </p>
+                <div className="bg-white p-3 text-center dark:bg-[#0F0F0F]">
+                  <div className="flex flex-col space-y-2">
+                    {/* Card Name */}
+                    <h3 className="mb-1 truncate text-lg font-medium text-gray-900 dark:text-white">
+                      {(listing.cardName ||
+                        listing.card?.name ||
+                        listing.card?.cardName ||
+                        'Unknown Card').toUpperCase()}
+                    </h3>
+                    {/* Location */}
+                    <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400">
+                      {listing.location || 'No location'}
+                    </p>
+                    {/* Price Box */}
+                    <div className="rounded-md border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F]">
+                      <div className="text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          Price
+                        </div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {formatAmountForDisplay(listing.listingPrice, listing.currency || 'AUD')}
+                        </div>
+                      </div>
                     </div>
                     {user && user.uid === listing.userId ? (
                       // Own listing - show Edit button

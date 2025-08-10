@@ -25,7 +25,7 @@ const MarketplaceCard = ({
   if (children) {
     return (
       <div
-        className={`group relative cursor-pointer overflow-hidden rounded-2xl bg-white transition-shadow duration-300 dark:bg-black ${isSelected ? 'border-2 border-purple-500' : 'border border-gray-200 dark:border-gray-700'} ${className}`}
+        className={`group relative cursor-pointer overflow-hidden rounded-md bg-white transition-shadow duration-300 dark:bg-[#0F0F0F] ${isSelected ? 'border-2 border-purple-500' : 'border border-gray-200 dark:border-gray-700'} ${className}`}
         onClick={onClick}
         {...props}
       >
@@ -68,7 +68,7 @@ const MarketplaceCard = ({
 
   return (
     <div
-      className={`group relative h-full cursor-pointer overflow-hidden bg-white text-white transition-all dark:bg-black ${
+      className={`group relative h-full cursor-pointer overflow-hidden bg-white text-white transition-all dark:bg-[#0F0F0F] ${
         isSelected
           ? 'border-2 border-purple-500'
           : 'border border-gray-200 dark:border-gray-700'
@@ -101,7 +101,7 @@ const MarketplaceCard = ({
       )}
 
       {/* Card Image */}
-      <div className="relative aspect-[2/3] overflow-hidden bg-white p-2 dark:bg-black">
+      <div className="relative aspect-[2/3.5] overflow-hidden rounded-md bg-white p-2 dark:bg-[#0F0F0F]">
         {cardImage ? (
           <ImageWithAnimation
             src={cardImage}
@@ -118,7 +118,7 @@ const MarketplaceCard = ({
       </div>
 
       {/* Card Details */}
-      <div className="bg-white p-3 text-center dark:bg-black">
+      <div className="bg-white p-3 text-center dark:bg-[#0F0F0F]">
         <h3 className="mb-1 truncate text-lg font-medium text-gray-900 dark:text-white">
           {(
             card.cardName ||

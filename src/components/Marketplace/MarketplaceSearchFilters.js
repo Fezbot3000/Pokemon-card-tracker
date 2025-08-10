@@ -108,6 +108,7 @@ const rawConditions = [
 function MarketplaceSearchFilters({
   onFilterChange,
   initialFilters,
+  hideFollowing = false,
 }) {
   const { user } = useAuth();
   // Filter state
@@ -241,8 +242,8 @@ function MarketplaceSearchFilters({
         placeholder="Search by card name, brand, category..."
       />
 
-      {/* Following filter toggle - only show if user is authenticated */}
-      {user && (
+      {/* Following filter toggle - only show if user is authenticated and not hidden */}
+      {user && !hideFollowing && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
@@ -311,7 +312,7 @@ function MarketplaceSearchFilters({
         filters.category ||
         filters.gradingCompany ||
         filters.grade ||
-        filters.following) && (
+        (!hideFollowing && filters.following)) && (
         <div className="flex justify-end">
           <button
             onClick={clearFilters}

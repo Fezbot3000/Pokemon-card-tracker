@@ -27,6 +27,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
     category: '',
     gradingCompany: '',
     grade: '',
+    // No 'following' filter needed for My Listings
   });
   const [loading, setLoading] = useState(true);
   const [cardImages, setCardImages] = useState({});
@@ -265,6 +266,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
       <MarketplaceSearchFilters
         onFilterChange={handleFilterChange}
         listings={allListings}
+        hideFollowing={true}
       />
 
       {loading ? (
@@ -348,7 +350,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
           {filteredListings.map(listing => (
             <div
               key={listing.id}
-              className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-black"
+              className="flex h-full flex-col overflow-hidden rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
             >
               <div className="grow">
                 <MarketplaceCard
@@ -366,18 +368,25 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                   formatUserCurrency={formatUserCurrency}
                 />
               </div>
-              <div className="rounded-b-lg bg-white p-3 dark:bg-black">
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="text-center">
-                    <p className="font-semibold text-gray-900 dark:text-white">
-                      {formatUserCurrency(listing.listingPrice, listing.currency || 'AUD')}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {listing.location || 'No location'}
-                    </p>
+              <div className="bg-white p-3 text-center dark:bg-[#0F0F0F]">
+                <div className="flex flex-col space-y-2">
+                  {/* Location */}
+                  <p className="truncate text-sm text-gray-500 dark:text-gray-400">
+                    {listing.location || 'No location'}
+                  </p>
+                  {/* Price Box */}
+                  <div className="rounded-md border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F]">
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Price
+                      </div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {formatUserCurrency(listing.listingPrice, listing.currency || 'AUD')}
+                      </div>
+                    </div>
                     {listing.status && listing.status !== 'available' && (
                       <p
-                        className={`mt-1 text-xs font-semibold ${
+                        className={`mt-2 text-xs font-semibold ${
                           listing.status === 'sold'
                             ? 'text-red-600 dark:text-red-400'
                             : listing.status === 'pending'
@@ -393,17 +402,16 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                       </p>
                     )}
                   </div>
-                  <div className="w-full">
-                    <Button
-                      variant="primary"
-                      onClick={() => handleCardClick(listing)}
-                      leftIcon={<Icon name="edit" />}
-                      size="sm"
-                      className="w-full"
-                    >
-                      Edit
-                    </Button>
-                  </div>
+                  {/* Edit Button */}
+                  <Button
+                    variant="primary"
+                    onClick={() => handleCardClick(listing)}
+                    leftIcon={<Icon name="edit" />}
+                    size="sm"
+                    className="w-full"
+                  >
+                    Edit
+                  </Button>
                 </div>
               </div>
             </div>
