@@ -47,6 +47,7 @@ function Marketplace({ currentView, onViewChange }) {
 
   const [indexBuildingError, setIndexBuildingError] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
+  const [messageModalListing, setMessageModalListing] = useState(null);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [existingChats, setExistingChats] = useState({});
@@ -243,36 +244,18 @@ function Marketplace({ currentView, onViewChange }) {
       totalExistingChats: Object.keys(existingChats).length
     });
 
-    if (existingChatId) {
-      // Navigate to Messages tab and open the existing chat
-      logger.debug('Navigating to existing chat:', existingChatId);
-      
-      // Update URL while preserving performance system (same as MarketplaceNavigation)
-      navigate('/dashboard/marketplace-messages', { replace: true });
-      
-      // Still use state for instant navigation
-      setTimeout(() => {
-        if (onViewChange && typeof onViewChange === 'function') {
-          onViewChange('marketplace-messages');
-        }
-      }, 0);
-
-      // Set a timeout to ensure the Messages component has loaded, then trigger chat selection
-      setTimeout(() => {
-        // Dispatch a custom event that the Messages component can listen for
-        window.dispatchEvent(
-          new CustomEvent('openSpecificChat', {
-            detail: { chatId: existingChatId },
-          })
-        );
-      }, 300);
-    } else {
-      // No existing chat, open the message modal to start a new conversation
-      logger.debug('Opening message modal for new conversation');
-      setSelectedListing(listing);
-      setPrefilledMessage(message);
-      setIsMessageModalOpen(true);
-    }
+    // Always open the message modal instead of navigating away
+    // This preserves the modal stack and state
+    logger.debug('Opening message modal', {
+      listingId: listing.id,
+      existingChatId,
+      hasExistingChat: !!existingChatId
+    });
+    
+    // Use separate state for message modal to preserve the original listing
+    setMessageModalListing(listing);
+    setPrefilledMessage(message);
+    setIsMessageModalOpen(true);
   };
 
   const handleCardClick = listing => {
@@ -405,8 +388,8 @@ function Marketplace({ currentView, onViewChange }) {
 
   const handleEditListing = async listing => {
     setSelectedListing(listing);
-    setIsDetailModalOpen(false); // Close detail modal
-    setIsEditModalOpen(true); // Open edit modal
+    // Don't close the detail modal - keep it open in the background
+    setIsEditModalOpen(true); // Open edit modal on top
   };
 
   const handleMarkAsPending = async listing => {
@@ -640,19 +623,7 @@ function Marketplace({ currentView, onViewChange }) {
         </>
       )}
 
-      {/* Message Modal */}
-      <MessageModal
-        isOpen={isMessageModalOpen}
-        onClose={() => {
-          setIsMessageModalOpen(false);
-          setPrefilledMessage('');
-        }}
-        listing={selectedListing}
-        prefilledMessage={prefilledMessage}
-        onViewChange={onViewChange}
-      />
-
-      {/* Listing Detail Modal */}
+      {/* Listing Detail Modal - First layer (lowest z-index) */}
       <ListingDetailModal
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
@@ -675,7 +646,7 @@ function Marketplace({ currentView, onViewChange }) {
         onViewChange={onViewChange}
       />
 
-      {/* Seller Profile Modal */}
+      {/* Seller Profile Modal - Second layer (middle z-index) */}
       {showSellerProfile && selectedSellerId && (
         <SellerProfileModal
           isOpen={showSellerProfile}
@@ -697,27 +668,14 @@ function Marketplace({ currentView, onViewChange }) {
         />
       )}
 
-      {/* Report Listing Modal */}
-      {showReportModal && reportingListing && (
-        <ReportListing
-          listingId={reportingListing.id}
-          sellerId={reportingListing.userId}
-          onClose={() => {
-            setShowReportModal(false);
-            setReportingListing(null);
-          }}
-        />
-      )}
-
-      {/* Edit Listing Modal */}
+      {/* Edit Listing Modal - Second layer (same as Seller Profile) */}
       {isEditModalOpen && selectedListing && (
         <EditListingModal
           isOpen={isEditModalOpen}
           listing={selectedListing}
           onClose={() => {
             setIsEditModalOpen(false);
-            // Re-open the listing detail modal instead of closing completely
-            setIsDetailModalOpen(true);
+            // Listing detail modal stays open in the background
           }}
           onListingDeleted={(deletedListingId) => {
             // Remove deleted listing from state
@@ -739,9 +697,37 @@ function Marketplace({ currentView, onViewChange }) {
             
             setAllListings(updateListing);
             setFilteredListings(updateListing);
-            // Close edit modal and re-open detail modal with updated data
+            // Update the selected listing with new data
+            if (selectedListing && selectedListing.id === listingId) {
+              setSelectedListing({ ...selectedListing, ...updatedData });
+            }
+            // Close edit modal - listing detail modal stays open showing updated data
             setIsEditModalOpen(false);
-            setIsDetailModalOpen(true);
+          }}
+        />
+      )}
+
+      {/* Message Modal - Third layer (highest z-index) */}
+      <MessageModal
+        isOpen={isMessageModalOpen}
+        onClose={() => {
+          setIsMessageModalOpen(false);
+          setMessageModalListing(null);
+          setPrefilledMessage('');
+        }}
+        listing={messageModalListing}
+        prefilledMessage={prefilledMessage}
+        onViewChange={onViewChange}
+      />
+
+      {/* Report Listing Modal */}
+      {showReportModal && reportingListing && (
+        <ReportListing
+          listingId={reportingListing.id}
+          sellerId={reportingListing.userId}
+          onClose={() => {
+            setShowReportModal(false);
+            setReportingListing(null);
           }}
         />
       )}

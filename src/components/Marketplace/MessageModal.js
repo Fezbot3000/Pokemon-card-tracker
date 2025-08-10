@@ -467,9 +467,8 @@ const MessageModal = ({
       onClose={onClose}
       title="Send Message"
       position="right"
-      size="modal-width-60"
+      size="modal-width-50"
       closeOnClickOutside={false}
-              zIndex="60"
       footer={
         <div className="flex w-full items-center justify-between">
           <ModalButton variant="secondary" onClick={onClose}>

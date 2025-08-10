@@ -1,0 +1,149 @@
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  overflow-y: auto;
+  z-index: 50;
+}
+
+/* Position variants */
+.modal-overlay--center {
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay--right {
+  justify-content: flex-end;
+  padding: 0;
+}
+
+/* Modal container */
+.modal {
+  position: relative;
+  /* Allow width to be controlled by passed Tailwind classes (e.g., w-[70%], w-3/5) */
+  width: auto;
+  background-color: var(--bg-primary);
+  border-radius: var(--border-radius-xl);
+  /* Add a clearer drop shadow for better edge visibility */
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), 0 10px 20px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+/* Size variants - deprecated, use viewport-based sizes instead */
+
+/* Right position variant */
+.modal--right {
+  height: 100%;
+  border-radius: 0;
+}
+
+/* Header */
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.modal__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.modal__close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background-color: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--border-radius-md);
+  transition: background-color 150ms ease;
+}
+
+.modal__close-button:hover {
+  background-color: var(--bg-secondary);
+}
+
+/* Content */
+.modal__content {
+  overflow-y: auto;
+  max-height: calc(100vh - 16rem);
+}
+
+.modal__content--padded {
+  padding: var(--space-6);
+}
+
+/* Footer */
+.modal__footer {
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--border-primary);
+}
+
+/* Animation classes are defined in src/design-system/styles/animations.css */
+
+/* Dark mode forced */
+.modal--dark {
+  background-color: var(--color-gray-900);
+  color: var(--color-white);
+}
+
+.modal--dark .modal__header {
+  border-bottom-color: var(--color-gray-700);
+}
+
+.modal--dark .modal__footer {
+  border-top-color: var(--color-gray-700);
+}
+
+/* Static mode */
+.modal--static {
+  position: relative;
+  box-shadow: none;
+}
+
+/* Additional classes */
+.modal-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-contextual {
+  /* Contextual modals have automatic height */
+  height: auto;
+}
+
+/* modal-content and modal-body are used together for styling the content area */
+
+/* iOS-specific border radius */
+.ios-modal-radius {
+  border-radius: var(--border-radius-xl);
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Body scroll lock */
+body.modal-open {
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+}

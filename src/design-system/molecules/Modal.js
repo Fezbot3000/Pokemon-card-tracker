@@ -3,6 +3,9 @@ import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 
+// Global modal stack to track open modals
+const modalStack = [];
+
 // Helper function to recursively replace onClose handlers with animated versions
 const replaceOnCloseInChildren = (children, originalOnClose, animatedOnClose) => {
   return React.Children.map(children, child => {
@@ -55,6 +58,7 @@ const Modal = ({
 }) => {
   const modalRef = useRef(null);
   const scrollPosRef = useRef(null);
+  const modalIdRef = useRef(null);
 
   const [animationClass, setAnimationClass] = useState('');
 
@@ -169,34 +173,50 @@ const Modal = ({
 
 
 
-  // Handle escape key to close modal - only for topmost modal
+  // Add modal to stack when it opens
   useEffect(() => {
+    if (isOpen && !showAsStatic) {
+      // Generate a unique ID for this modal instance
+      modalIdRef.current = `modal-${Date.now()}-${Math.random()}`;
+      modalStack.push({
+        id: modalIdRef.current,
+        close: handleAnimatedClose
+      });
+    }
+    
+    return () => {
+      // Remove from stack when closing
+      if (modalIdRef.current) {
+        const index = modalStack.findIndex(m => m.id === modalIdRef.current);
+        if (index !== -1) {
+          modalStack.splice(index, 1);
+        }
+      }
+    };
+  }, [isOpen, showAsStatic, handleAnimatedClose]);
+
+  // Handle escape key - only the topmost modal should respond
+  useEffect(() => {
+    if (!isOpen) return;
+
     const handleEscapeKey = e => {
-      if (isOpen && e.key === 'Escape') {
-        // Only respond to escape if this is likely the topmost modal
-        const currentZIndex = size === 'modal-width-60' ? 50001 : 50000;
-        const allModals = document.querySelectorAll('[role="dialog"]');
-        let isTopmost = true;
-        
-        // Check if any modal has a higher z-index
-        allModals.forEach(modal => {
-          const modalZIndex = parseInt(window.getComputedStyle(modal.parentElement).zIndex || '0');
-          if (modalZIndex > currentZIndex) {
-            isTopmost = false;
-          }
-        });
-        
-        if (isTopmost) {
+      if (e.key === 'Escape') {
+        // Check if this modal is the topmost (last in the stack)
+        if (modalStack.length > 0 && modalStack[modalStack.length - 1].id === modalIdRef.current) {
+          e.preventDefault();
+          e.stopPropagation();
           handleAnimatedClose();
         }
       }
     };
 
-    document.addEventListener('keydown', handleEscapeKey);
+    // Use capture phase to ensure we get the event first
+    document.addEventListener('keydown', handleEscapeKey, true);
+    
     return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
+      document.removeEventListener('keydown', handleEscapeKey, true);
     };
-  }, [isOpen, handleAnimatedClose, size]); // Include size dependency
+  }, [isOpen, handleAnimatedClose]);
 
   // Handle backdrop click
   const handleBackdropClick = useCallback((e) => {
@@ -216,9 +236,10 @@ const Modal = ({
 
   // Z-index management for modal layering
   const getModalZIndex = () => {
-    if (size === 'modal-width-60') return 'z-[50001]'; // Second layer - highest z-index
-    if (size === 'modal-width-70') return 'z-[50000]'; // First layer - high z-index
-    return zIndex ? `z-[${zIndex}]` : 'z-[50000]';     // Default to high z-index
+    if (size === 'modal-width-50') return 'z-[50002]'; // Third layer - highest z-index
+    if (size === 'modal-width-60') return 'z-[50001]'; // Second layer - high z-index
+    if (size === 'modal-width-70') return 'z-[50000]'; // First layer - base z-index
+    return zIndex ? `z-[${zIndex}]` : 'z-[50000]';     // Default to base z-index
   };
 
   // Size variations
@@ -232,6 +253,7 @@ const Modal = ({
     '4xl': 'max-w-4xl', // ~896px
     '5xl': 'max-w-5xl', // ~1024px
     'modal-width': 'w-[55%]', // exactly 55% width
+    'modal-width-50': 'w-[50%]', // exactly 50% width - for third-layer modals
     'modal-width-60': 'w-3/5', // exactly 60% width - for second-layer modals
     'modal-width-70': 'w-[70%]', // exactly 70% width - for first-layer modals
     full: 'w-full max-w-full',
@@ -324,7 +346,15 @@ const Modal = ({
         ref={modalRef}
         className={`${modalClasses} flex flex-col ${animationClass} modal-container ${size === 'contextual' ? 'modal-contextual' : ''} ${
           position === 'right'
-            ? `w-screen h-screen sm:w-[70%] sm:h-full sm:rounded-lg max-w-none overflow-hidden rounded-lg ${getModalZIndex()}`
+            ? `w-screen h-screen ${
+                size === 'modal-width-50' 
+                  ? 'sm:w-1/2'
+                  : size === 'modal-width-60'
+                  ? 'sm:w-3/5'
+                  : size === 'modal-width-70'
+                  ? 'sm:w-[70vw]'
+                  : 'sm:w-[70vw]'
+              } sm:h-full sm:rounded-lg max-w-none overflow-hidden rounded-lg ${getModalZIndex()}`
             : mobileFullWidth ||
               (size === 'custom' ? maxWidth : sizeClasses[size] || (size === 'modal-width-70' ? 'w-[70%]' : size === 'modal-width-60' ? 'w-3/5' : 'w-[55%]'))
         } ${className}`}

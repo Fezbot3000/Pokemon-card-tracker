@@ -244,6 +244,19 @@ module.exports = {
     'modal-open',
     'page-no-padding',
     
+    // Modal viewport width classes
+    'w-1/2',
+    'w-3/5',
+    'w-[70vw]',
+    'sm:w-1/2',
+    'sm:w-3/5',
+    'sm:w-[70vw]',
+    
+    // Modal z-index classes
+    'z-[50000]',
+    'z-[50001]',
+    'z-[50002]',
+    
     // Glass effect classes
     'glass-bg',
     'glass-border',

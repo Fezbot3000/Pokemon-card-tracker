@@ -263,7 +263,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
         isOpen={isOpen}
         onClose={onClose}
         title="Edit Listing"
-        size="modal-width-70"
+        size="modal-width-60"
         position="right"
         closeOnClickOutside={true}
         zIndex="50"

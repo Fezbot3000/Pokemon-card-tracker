@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Modal, Button, Icon, toast } from '../../design-system';
+import ModalButton from '../../design-system/atoms/ModalButton';
 import { useAuth } from '../../design-system';
 import {
   collection,
@@ -250,27 +251,20 @@ function SellerProfileModal({
 
     const prefilledMessage = `Hi! I'd like to discuss your Pokemon cards.`;
 
-    // Close this modal first to prevent modal stacking issues
-    onClose();
-
-    // Small delay to ensure modal closes before opening the next one
-    setTimeout(() => {
-      onContactSeller(generalListing, prefilledMessage);
-    }, 100);
+    // Don't close this modal - let it stay open in the background
+    // The message modal will appear on top
+    onContactSeller(generalListing, prefilledMessage);
   };
 
   // Footer with close button
   const modalFooter = (
-    <div className="flex justify-center">
-      <Button
+    <div className="flex justify-start">
+      <ModalButton
         onClick={onClose}
         variant="secondary"
-        size="md"
-        className="min-w-[120px]"
       >
-        <Icon name="close" size="sm" className="mr-2" />
         Close
-      </Button>
+      </ModalButton>
     </div>
   );
 
@@ -278,10 +272,10 @@ function SellerProfileModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="lg"
+      size="modal-width-60"
       title="Seller Profile"
-      position="center"
-      className="overflow-hidden rounded-2xl w-full max-w-none sm:max-w-[90%] lg:max-w-[60%] lg:ml-auto lg:mr-8"
+      position="right"
+      className="overflow-hidden rounded-2xl"
       closeOnClickOutside={true}
       footer={modalFooter}
     >
