@@ -43,13 +43,11 @@ const Settings = ({
         
         <div className="space-y-3">
           {/* Light Mode */}
-          <button
+          <Button
             onClick={() => theme === 'dark' && toggleTheme()}
-            className={`w-full rounded-lg border-2 p-4 text-left transition-all ${
-              theme === 'light'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500'
-            }`}
+            variant={theme === 'light' ? 'primary' : 'outline'}
+            size="md"
+            className="w-full justify-start"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -66,16 +64,14 @@ const Settings = ({
                 </div>
               )}
             </div>
-          </button>
+          </Button>
 
           {/* Dark Mode */}
-          <button
+          <Button
             onClick={() => theme === 'light' && toggleTheme()}
-            className={`w-full rounded-lg border-2 p-4 text-left transition-all ${
-              theme === 'dark'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500'
-            }`}
+            variant={theme === 'dark' ? 'primary' : 'outline'}
+            size="md"
+            className="w-full justify-start"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -92,7 +88,7 @@ const Settings = ({
                 </div>
               )}
             </div>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -103,13 +99,15 @@ const Settings = ({
         
         <div className="space-y-4">
           {/* Start Tutorial Button */}
-          <button
+          <Button
             onClick={onStartTutorial}
-            className="flex w-full items-center justify-center rounded-lg border border-gray-300 bg-gray-50 py-3 text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            variant="outline"
+            size="md"
+            className="w-full"
           >
             <span className="material-icons mr-2 text-lg">help_outline</span>
             Start Tutorial
-          </button>
+          </Button>
 
           {/* Cloud Sync Status */}
           <div className="flex items-center justify-between">

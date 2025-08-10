@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Button } from '../design-system';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
@@ -489,12 +490,9 @@ const About = () => {
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
-            <Link
-              to="/login?signup=true"
-              className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-4 text-center text-lg font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl sm:w-auto"
-            >
+            <Button as={Link} to="/login?signup=true" variant="primary" size="md" className="w-full sm:w-auto">
               Start Your Journey
-            </Link>
+            </Button>
             <Link
               to="/help-center"
               className="bg-white/10 border-white/20 hover:bg-white/20 w-full rounded-2xl border px-8 py-4 text-center text-lg font-semibold backdrop-blur-sm transition-all duration-300 hover:scale-105 sm:w-auto"

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
+import { Button } from '../design-system';
 import Footer from './Footer';
 
 const HelpCenter = () => {
@@ -521,18 +522,15 @@ const HelpCenter = () => {
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-wrap justify-center gap-3">
             {categories.map(category => (
-              <button
+              <Button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
-                  selectedCategory === category.id
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                    : 'bg-white/10 border-white/20 hover:bg-white/20 border text-gray-300 backdrop-blur-sm'
-                }`}
+                variant={selectedCategory === category.id ? 'primary' : 'glass'}
+                size="md"
               >
                 <span className="mr-2">{category.icon}</span>
                 {category.name}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -652,30 +650,21 @@ const HelpCenter = () => {
               <p className="mb-4 text-gray-400">
                 Get instant help from our support team
               </p>
-              <button className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-2 font-medium transition-all duration-300 hover:from-blue-600 hover:to-purple-700">
-                Start Chat
-              </button>
+              <Button variant="primary" size="md" className="w-full">Start Chat</Button>
             </div>
 
             <div className="border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm transition-all duration-300">
               <div className="mb-4 text-4xl">📧</div>
               <h3 className="mb-2 text-xl font-bold">Email Support</h3>
               <p className="mb-4 text-gray-400">Send us a detailed message</p>
-              <a
-                href="mailto:support@collectiblestracker.com"
-                className="bg-white/10 border-white/20 hover:bg-white/20 block w-full rounded-xl border px-4 py-2 text-center font-medium backdrop-blur-sm transition-all duration-300"
-              >
-                Send Email
-              </a>
+              <Button as="a" href="mailto:support@collectiblestracker.com" variant="outline" size="md" className="w-full">Send Email</Button>
             </div>
 
             <div className="border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm transition-all duration-300">
               <div className="mb-4 text-4xl">🎥</div>
               <h3 className="mb-2 text-xl font-bold">Video Tutorials</h3>
               <p className="mb-4 text-gray-400">Watch step-by-step guides</p>
-              <button className="bg-white/10 border-white/20 hover:bg-white/20 w-full rounded-xl border px-4 py-2 font-medium backdrop-blur-sm transition-all duration-300">
-                Watch Videos
-              </button>
+              <Button variant="outline" size="md" className="w-full">Watch Videos</Button>
             </div>
           </div>
         </div>

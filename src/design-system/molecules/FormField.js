@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import FormLabel from '../atoms/FormLabel';
 import TextField from '../atoms/TextField';
 import NumberField from '../atoms/NumberField';
+import './FormField.css';
 
 /**
  * FormField Component
@@ -27,7 +28,7 @@ const FormField = ({
 
   return (
     <div
-      className={`w-full ${className} ${hasError ? 'border-red-500' : ''}`}
+      className={`form-field ${hasError ? 'form-field--error' : ''} ${className}`}
     >
       {label && (
         <FormLabel htmlFor={fieldId} required={required}>
@@ -36,28 +37,27 @@ const FormField = ({
       )}
 
       {additionalContentPosition === 'inline' ? (
-        <div className="flex items-center gap-2">
-          {type === 'number' ? (
-            <NumberField
-              id={fieldId}
-              prefix={prefix}
-              suffix={suffix}
-              required={required}
-              className="flex-1"
-              error={error}
-              {...inputProps}
-            />
-          ) : (
-            <TextField
-              id={fieldId}
-              type={type}
-              required={required}
-              className="flex-1"
-              error={error}
-              {...inputProps}
-            />
-          )}
-
+        <div className="form-field__inline-wrapper">
+          <div className="form-field__input-wrapper">
+            {type === 'number' ? (
+              <NumberField
+                id={fieldId}
+                prefix={prefix}
+                suffix={suffix}
+                required={required}
+                error={error}
+                {...inputProps}
+              />
+            ) : (
+              <TextField
+                id={fieldId}
+                type={type}
+                required={required}
+                error={error}
+                {...inputProps}
+              />
+            )}
+          </div>
           {additionalContent}
         </div>
       ) : (
@@ -82,12 +82,12 @@ const FormField = ({
           )}
 
           {additionalContent && (
-            <div className="mt-2 flex justify-end">{additionalContent}</div>
+            <div className="form-field__additional-content">{additionalContent}</div>
           )}
         </>
       )}
       {error && (
-        <div className="mt-1 text-xs text-red-500 dark:text-red-400">
+        <div className="form-field__error">
           {error}
         </div>
       )}

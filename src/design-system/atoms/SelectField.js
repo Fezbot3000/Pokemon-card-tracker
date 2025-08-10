@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import FormLabel from './FormLabel'; // Assuming FormLabel is in the same directory
+import FormLabel from './FormLabel';
+import './SelectField.css';
 
 /**
  * SelectField Component
@@ -27,18 +28,9 @@ const SelectField = ({
   ...props
 }) => {
   const fieldId = id || `field-${name}`;
-  const selectClasses = `
-    w-full px-3 py-2
-    border ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}
-    rounded-lg bg-white dark:bg-[#0F0F0F]
-    text-gray-900 dark:text-white text-sm
-    focus:outline-none focus:ring-2 focus:ring-[var(--primary-default)]/20 focus:border-[var(--primary-default)]
-    disabled:opacity-60 disabled:cursor-not-allowed
-    transition-colors
-    appearance-none // Hide default arrow
-    bg-no-repeat bg-right-center bg-[length:1.5em_1.5em]
-    pr-8 // Add padding for custom arrow space
-  `;
+  const selectClass = `select-field__select ${
+    error ? 'select-field__select--error' : ''
+  }`;
 
   // Handler for adding custom option
   const handleAddCustomOption = () => {
@@ -62,13 +54,13 @@ const SelectField = ({
   };
 
   return (
-    <div className={`w-full ${className}`}>
+    <div className={`select-field ${className}`}>
       {label && (
         <FormLabel htmlFor={fieldId} required={required}>
           {label}
         </FormLabel>
       )}
-      <div className="relative">
+      <div className="select-field__wrapper">
         <select
           id={fieldId}
           name={name}
@@ -76,8 +68,8 @@ const SelectField = ({
           onChange={handleChange}
           required={required}
           disabled={disabled}
-          className={selectClasses}
-          data-testid={testId} // Convert testId to data-testid
+          className={selectClass}
+          data-testid={testId}
           {...props}
         >
           {placeholder && (
@@ -100,7 +92,7 @@ const SelectField = ({
           )}
         </select>
         {/* Custom dropdown arrow */}
-        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+        <span className="select-field__arrow">
           <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
             <path
               d="M6 8l4 4 4-4"
@@ -112,7 +104,7 @@ const SelectField = ({
           </svg>
         </span>
         {error && (
-          <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>
+          <p className="select-field__error">{error}</p>
         )}
       </div>
     </div>

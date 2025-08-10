@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Button } from '../design-system';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
@@ -88,20 +89,18 @@ const Privacy = () => {
                 <h3 className="mb-4 text-lg font-bold">Quick Navigation</h3>
                 <nav className="space-y-2">
                   {sections.map(section => (
-                    <button
+                    <Button
                       key={section.id}
                       onClick={() => scrollToSection(section.id)}
-                      className={`flex w-full items-center rounded-xl px-4 py-3 text-left transition-all duration-300 ${
-                        activeSection === section.id
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                          : 'bg-white/5 hover:bg-white/10 text-gray-300'
-                      }`}
+                      variant={activeSection === section.id ? 'primary' : 'glass'}
+                      size="md"
+                      className="flex w-full items-center justify-start"
                     >
                       <span className="mr-3">{section.icon}</span>
                       <span className="text-sm font-medium">
                         {section.title}
                       </span>
-                    </button>
+                    </Button>
                   ))}
                 </nav>
               </div>
@@ -685,18 +684,8 @@ const Privacy = () => {
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
-            <Link
-              to="/help-center"
-              className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-4 text-center text-lg font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl sm:w-auto"
-            >
-              Contact Support
-            </Link>
-            <Link
-              to="/terms"
-              className="bg-white/10 border-white/20 hover:bg-white/20 w-full rounded-2xl border px-8 py-4 text-center text-lg font-semibold backdrop-blur-sm transition-all duration-300 hover:scale-105 sm:w-auto"
-            >
-              Terms of Service
-            </Link>
+            <Button as={Link} to="/help-center" variant="primary" size="md" className="w-full sm:w-auto">Contact Support</Button>
+            <Button as={Link} to="/terms" variant="outline" size="md" className="w-full sm:w-auto">Terms of Service</Button>
           </div>
         </div>
       </section>

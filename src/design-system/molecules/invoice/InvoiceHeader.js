@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../../atoms/Icon';
 import Button from '../../atoms/Button';
+import './InvoiceHeader.css';
 
 /**
  * InvoiceHeader Component
@@ -26,13 +27,6 @@ const InvoiceHeader = ({
   originalCurrencyCode,
   ...props
 }) => {
-  const headerClasses = `
-    flex flex-col sm:flex-row sm:items-center sm:justify-between w-full p-4 sm:p-5 
-    bg-gray-50 dark:bg-gray-900 
-    cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors
-    ${className}
-  `;
-
   // Clean wrapper for Icon component
   const CleanIcon = iconProps => {
     const cleanedProps = { ...iconProps };
@@ -43,22 +37,22 @@ const InvoiceHeader = ({
   };
 
   return (
-    <div className={headerClasses} onClick={onToggle} {...props}>
+    <div className={`invoice-header ${className}`} onClick={onToggle} {...props}>
       {/* Left side - Invoice info and expand icon */}
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="invoice-header__left">
         <CleanIcon
           name={isExpanded ? 'expand_less' : 'expand_more'}
           size="md"
-          className="shrink-0 text-gray-400 dark:text-gray-500"
+          className="invoice-header__expand-icon"
         />
-        <div className="flex min-w-0 flex-col">
+        <div className="invoice-header__info">
           <h3
-            className="truncate text-base font-semibold text-gray-900 dark:text-white"
+            className="invoice-header__title"
             title={`Sold to: ${title}`}
           >
             Sold to: {title}
           </h3>
-          <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+          <div className="invoice-header__meta">
             <span>Date: {subtitle}</span>
             <span>Cards: {cardCount}</span>
           </div>
@@ -66,35 +60,35 @@ const InvoiceHeader = ({
       </div>
 
       {/* Right side - Financial summary and actions */}
-      <div className="flex items-center gap-4">
+      <div className="invoice-header__right">
         {/* Financial summary - Horizontal layout */}
-        <div className="hidden items-center gap-6 sm:flex">
-          <div className="text-right">
-            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">
+        <div className="invoice-header__financial">
+          <div className="invoice-header__metric">
+            <div className="invoice-header__metric-label">
               Investment
             </div>
-            <div className="text-base font-medium text-gray-900 dark:text-white">
+            <div className="invoice-header__metric-value">
               {formatUserCurrency
                 ? formatUserCurrency(totalInvestment, originalCurrencyCode)
                 : `$${parseFloat(totalInvestment || 0).toFixed(2)}`}
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">
+          <div className="invoice-header__metric">
+            <div className="invoice-header__metric-label">
               Sold for
             </div>
-            <div className="text-base font-medium text-gray-900 dark:text-white">
+            <div className="invoice-header__metric-value">
               {formatUserCurrency
                 ? formatUserCurrency(totalSale, originalCurrencyCode)
                 : `$${parseFloat(totalSale || 0).toFixed(2)}`}
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">
+          <div className="invoice-header__metric">
+            <div className="invoice-header__metric-label">
               Profit
             </div>
             <div
-              className={`text-base font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}
+              className={`invoice-header__metric-value ${totalProfit >= 0 ? 'invoice-header__metric-value--profit' : 'invoice-header__metric-value--loss'}`}
             >
               {formatUserCurrency
                 ? formatUserCurrency(totalProfit, originalCurrencyCode)
@@ -104,13 +98,13 @@ const InvoiceHeader = ({
         </div>
 
         {/* Mobile financial summary */}
-        <div className="flex text-right sm:hidden">
-          <div>
-            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">
+        <div className="invoice-header__financial-mobile">
+          <div className="invoice-header__metric">
+            <div className="invoice-header__metric-label">
               Profit
             </div>
             <div
-              className={`text-base font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}
+              className={`invoice-header__metric-value ${totalProfit >= 0 ? 'invoice-header__metric-value--profit' : 'invoice-header__metric-value--loss'}`}
             >
               {formatUserCurrency
                 ? formatUserCurrency(totalProfit, originalCurrencyCode)
@@ -121,7 +115,7 @@ const InvoiceHeader = ({
 
         {/* Action buttons */}
         {(onPrint || onDelete) && (
-          <div className="flex items-center gap-1 border-l border-gray-200 pl-4 dark:border-gray-700">
+          <div className="invoice-header__actions">
             {onPrint && (
               <Button
                 variant="text"
@@ -131,7 +125,7 @@ const InvoiceHeader = ({
                   e.stopPropagation();
                   onPrint();
                 }}
-                className="!p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                className="invoice-header__action-button"
                 title="Download PDF"
               />
             )}
@@ -145,7 +139,7 @@ const InvoiceHeader = ({
                   e.stopPropagation();
                   onDelete();
                 }}
-                className="!p-2 text-gray-600 hover:text-red-500 dark:text-gray-400"
+                className="invoice-header__action-button invoice-header__action-button--delete"
                 title="Delete receipt"
               />
             )}

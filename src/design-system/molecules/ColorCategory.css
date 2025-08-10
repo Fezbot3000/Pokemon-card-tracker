@@ -1,0 +1,28 @@
+.color-category {
+  margin-bottom: var(--space-8);
+}
+
+.color-category__title {
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+.color-category__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .color-category__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .color-category__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

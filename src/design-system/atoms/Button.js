@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Icon from './Icon';
+import './Button.css';
 
 /**
  * Button component that supports various visual styles and sizes
@@ -25,33 +26,31 @@ const Button = ({
 }) => {
   // Handle both isLoading and loading props for backward compatibility
   const isLoadingState = isLoading || loading === true;
-  // Base styles that apply to all buttons
-  const baseClasses =
-    'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none';
+  // Base and size/variant classes (semantic, tokens-backed)
+  const baseClasses = 'btn';
 
   // Size variations
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-5 py-2.5 text-lg',
+    sm: 'btn--sm',
+    md: 'btn--md',
+    lg: 'btn--lg',
   };
 
   // Variant variations using color system
   const variantClasses = {
-    primary: `bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
-    constructive: `bg-gradient-to-r from-[#10b981] to-[#059669] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
-    // Secondary button - styled primarily for dark contexts or consistent look
-    secondary: `bg-[#000] text-gray-300 border border-gray-700 hover:opacity-90 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
-    outline: `border border-gray-200 dark:border-gray-700 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
-    text: `bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
-    danger: `bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
-    destructive: `bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
-    success: `bg-green-500 text-white hover:opacity-90 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
-    icon: `w-10 h-10 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
+    primary: `btn--primary ${disabled ? 'is-disabled' : ''}`,
+    constructive: `btn--constructive ${disabled ? 'is-disabled' : ''}`,
+    secondary: `btn--secondary ${disabled ? 'is-disabled' : ''}`,
+    outline: `btn--outline ${disabled ? 'is-disabled' : ''}`,
+    text: `btn--text ${disabled ? 'is-disabled' : ''}`,
+    danger: `btn--danger ${disabled ? 'is-disabled' : ''}`,
+    destructive: `btn--destructive ${disabled ? 'is-disabled' : ''}`,
+    success: `btn--success ${disabled ? 'is-disabled' : ''}`,
+    icon: `btn--icon ${disabled ? 'is-disabled' : ''}`,
   };
 
   // Width control
-  const widthClasses = fullWidth ? 'w-full' : '';
+  const widthClasses = fullWidth ? 'btn--block' : '';
 
   // Combine all classes
   const buttonClasses = `${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${widthClasses} ${className}`;
@@ -64,8 +63,7 @@ const Button = ({
   const finalIconRight = rightIcon || iconRight;
 
   // Determine icon classes based on variant and size
-  const iconSizeClass =
-    size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-xl' : 'text-base';
+  const iconSizeClass = size === 'sm' ? 'btn__icon--sm' : size === 'lg' ? 'btn__icon--lg' : 'btn__icon--md';
   // Adjust icon color based on variant to match text color
   const getIconColor = variant => {
     switch (variant) {
@@ -101,7 +99,7 @@ const Button = ({
       {isLoadingState ? (
         <>
           <svg
-            className="-ml-1 mr-3 size-5 animate-spin text-white"
+            className="btn__spinner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -125,7 +123,7 @@ const Button = ({
       ) : (
         <>
           {finalIconLeft && (
-            <span className={`${children ? 'mr-2' : ''}`}>
+            <span className={`${children ? 'btn__icon--left' : ''}`}>
               {React.isValidElement(finalIconLeft) ? (
                 React.cloneElement(finalIconLeft, {
                   className: `${iconSizeClass} ${finalIconLeft.props.className || ''}`,
@@ -143,7 +141,7 @@ const Button = ({
           )}
           {children}
           {finalIconRight && (
-            <span className={`${children ? 'ml-2' : ''}`}>
+            <span className={`${children ? 'btn__icon--right' : ''}`}>
               {React.isValidElement(finalIconRight) ? (
                 React.cloneElement(finalIconRight, {
                   className: `${iconSizeClass} ${finalIconRight.props.className || ''}`,

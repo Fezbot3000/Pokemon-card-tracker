@@ -5,7 +5,7 @@ import {
   listAll,
   deleteObject,
 } from 'firebase/storage';
-import { storage } from './firebase';
+import { storage } from './firebase-unified';
 import db from './firestore/dbAdapter';
 import logger from '../utils/logger';
 import { CardRepository } from '../repositories/CardRepository';

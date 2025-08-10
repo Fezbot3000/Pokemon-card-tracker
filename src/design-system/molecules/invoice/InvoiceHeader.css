@@ -1,0 +1,136 @@
+.invoice-header {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: var(--space-4);
+  background-color: var(--bg-secondary);
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.invoice-header:hover {
+  background-color: var(--bg-tertiary);
+}
+
+@media (min-width: 640px) {
+  .invoice-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-5);
+  }
+}
+
+/* Left side content */
+.invoice-header__left {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.invoice-header__expand-icon {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.invoice-header__info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.invoice-header__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.invoice-header__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+/* Right side content */
+.invoice-header__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* Financial summary */
+.invoice-header__financial {
+  display: none;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+@media (min-width: 640px) {
+  .invoice-header__financial {
+    display: flex;
+  }
+}
+
+.invoice-header__financial-mobile {
+  display: flex;
+  text-align: right;
+}
+
+@media (min-width: 640px) {
+  .invoice-header__financial-mobile {
+    display: none;
+  }
+}
+
+.invoice-header__metric {
+  text-align: right;
+}
+
+.invoice-header__metric-label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.invoice-header__metric-value {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.invoice-header__metric-value--profit {
+  color: var(--color-success-500);
+}
+
+.invoice-header__metric-value--loss {
+  color: var(--color-error);
+}
+
+/* Action buttons */
+.invoice-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-left: 1px solid var(--border-primary);
+  padding-left: var(--space-4);
+}
+
+.invoice-header__action-button {
+  padding: var(--space-2);
+  color: var(--text-secondary);
+}
+
+.invoice-header__action-button:hover {
+  color: var(--text-primary);
+}
+
+.invoice-header__action-button--delete:hover {
+  color: var(--color-error);
+}

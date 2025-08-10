@@ -36,8 +36,9 @@ const UpgradePage = lazy(() => import('./components/UpgradePage'));
 const Pricing = lazy(() => import('./components/Pricing'));
 
 // Dashboard components - lazy loaded since they're behind authentication
-const DashboardApp = lazy(() => import('./App').then(module => ({ default: module.Dashboard })));
-const DashboardIndex = lazy(() => import('./App').then(module => ({ default: module.DashboardIndex })));
+// Point to dashboard proxies to enable safe decomposition without changing exports
+const DashboardApp = lazy(() => import('./dashboard').then(module => ({ default: module.Dashboard })));
+const DashboardIndex = lazy(() => import('./dashboard').then(module => ({ default: module.DashboardIndex })));
 
 // Loading component for Suspense fallback
 const LoadingFallback = () => (

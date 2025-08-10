@@ -8,6 +8,7 @@ import { useAuth } from '../design-system'; // Import auth context
 import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import './Header.css';
 
 const Header = ({
   selectedCollection,
@@ -106,49 +107,49 @@ const Header = ({
   return (
     <>
       <header
-        className="header-responsive dark:border-gray-700/50 fixed inset-x-0 top-0 z-40 hidden w-full border-b border-gray-200 bg-white shadow-md dark:bg-[#0F0F0F] sm:flex"
+        className="header header-responsive"
         style={{ 
           position: 'fixed'
         }}
       >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+        <div className="header__content">
+          <div className="header__wrapper">
             {/* Logo and Collection Dropdown */}
-            <div className="flex min-w-0 max-w-[45%] shrink items-center gap-2 sm:max-w-[60%] sm:gap-4 md:max-w-[70%]">
-              <Link to="/cards" className="shrink-0">
+            <div className="header__logo-section">
+              <Link to="/cards" className="header__logo">
                 <img
                   src="/favicon_L-192x192.png"
                   alt="MyCardTracker"
-                  className="size-8 rounded-xl object-contain sm:size-10"
+                  className="header__logo-img"
                 />
               </Link>
-              <div className="relative min-w-0 shrink" ref={dropdownRef}>
+              <div className="header__collection-dropdown" ref={dropdownRef}>
                 <button
                   onClick={toggleDropdown}
-                  className="flex items-center gap-1 whitespace-nowrap rounded-lg p-2 text-gray-700 transition-colors hover:bg-white dark:text-gray-200 dark:hover:bg-[#252B3B] sm:gap-2 sm:px-3"
+                  className="header__collection-button"
                   data-collection-name={selectedCollection}
                 >
-                  <span className="max-w-[120px] truncate text-sm font-medium sm:max-w-[180px] md:max-w-[250px]">
+                  <span className="header__collection-name">
                     {selectedCollection}
                   </span>
-                  <span className="material-icons shrink-0 text-gray-600 dark:text-gray-300">
+                  <span className="material-icons header__collection-icon">
                     {isDropdownOpen ? 'expand_less' : 'expand_more'}
                   </span>
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-lg bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:bg-[#0F0F0F]">
+                  <div className="header__dropdown-menu">
                     <div
-                      className={`cursor-pointer flex items-center justify-between px-4 py-2 transition-all duration-200 min-h-[44px] rounded-md mx-1 my-0.5 ${
+                      className={`header__dropdown-item ${
                         selectedCollection === 'All Cards'
-                          ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800'
-                          : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800 hover:shadow-sm'
+                          ? 'header__dropdown-item--selected'
+                          : ''
                       }`}
                       onClick={() => handleCollectionSelect('All Cards')}
                     >
-                      <span className="truncate font-medium">All Cards</span>
+                      <span className="header__dropdown-item-text">All Cards</span>
                       {selectedCollection === 'All Cards' && (
-                        <svg className="ml-3 size-4 shrink-0 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="header__dropdown-item-check" fill="currentColor" viewBox="0 0 20 20">
                           <path
                             fillRule="evenodd"
                             d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"

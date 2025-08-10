@@ -17,7 +17,7 @@ import {
   db as firestoreDb,
   functions,
   httpsCallable,
-} from '../../services/firebase';
+} from '../../services/firebase-unified';
 import featureFlags from '../../utils/featureFlags';
 import logger from '../../utils/logger';
 import { useSubscription } from '../../hooks/useSubscription';

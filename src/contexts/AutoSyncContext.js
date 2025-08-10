@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '../design-system';
 import { ref, getDownloadURL } from 'firebase/storage';
-import { storage } from '../services/firebase';
+import { storage } from '../services/firebase-unified';
 import { toast } from 'react-hot-toast';
 import logger from '../utils/logger';
 

@@ -1,0 +1,14 @@
+.form-label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.form-label__required {
+  margin-left: var(--space-1);
+  color: var(--color-error);
+}
+
+/* Dark mode handled via CSS custom properties */

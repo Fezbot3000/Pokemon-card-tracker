@@ -1,4 +1,5 @@
 import React from 'react';
+import './ColorCategory.css';
 
 /**
  * ColorCategory Component
@@ -7,11 +8,11 @@ import React from 'react';
  */
 const ColorCategory = ({ title, children }) => {
   return (
-    <div className="mb-8">
-      <h3 className="mb-4 text-xl font-medium text-gray-700 dark:text-gray-300">
+    <div className="color-category">
+      <h3 className="color-category__title">
         {title}
       </h3>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+      <div className="color-category__grid">
         {children}
       </div>
     </div>

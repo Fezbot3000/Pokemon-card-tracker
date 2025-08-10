@@ -1,46 +1,26 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Default deny all access
+    // Default deny
     match /{allPaths=**} {
       allow read, write: if false;
     }
-    
-    // Allow users to access only their own backups
+
+    // Backups used by CloudSyncService
+    // Paths: backups/{userId}/metadata.json, backups/{userId}/collections.json, backups/{userId}/images/{imageName}
     match /backups/{userId}/{allFiles=**} {
-      // Allow read/write access to authenticated users for their own data
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-    
-    // Allow authenticated users to list all backups (needed for restore functionality)
-    match /backups/{userId} {
-      allow list: if request.auth != null;
-    }
-    
-    // Allow users to access only their own card images
-    match /images/{userId}/{cardId} {
-      // Allow read/write access to authenticated users for their own images
+
+    // Card images used by DatabaseAdapter and CardRepository
+    // Paths: users/{userId}/cards/{cardId}(.jpg|.png)
+    match /users/{userId}/cards/{cardFile=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-    
-    // Allow users to list their own image collection
-    match /images/{userId} {
-      allow list: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Allow users to access their card images
-    match /users/{userId}/cards/{cardId} {
-      // Allow read/write access to authenticated users for their own card images
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Allow users to list their card images
-    match /users/{userId}/cards {
-      allow list: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Allow general access to user's own storage paths
-    match /users/{userId}/{allPaths=**} {
+
+    // Legacy/Functions-based image path used by storeCardImage function
+    // Paths: images/{userId}/{cardId}.jpeg
+    match /images/{userId}/{allFiles=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }

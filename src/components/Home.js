@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../design-system';
+import { useAuth, Button } from '../design-system';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
@@ -183,18 +183,22 @@ function Home() {
 
           {/* CTA Buttons */}
           <div className="mb-12 flex flex-col items-center justify-center gap-3 px-4 sm:mb-16 sm:gap-4">
-            <button
+            <Button
               onClick={() => navigate('/login')}
-              className="w-full max-w-xs rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 text-base font-semibold text-white shadow-2xl transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 hover:shadow-blue-500/25 sm:max-w-sm sm:px-8 sm:py-4 sm:text-lg"
+              variant="primary"
+              size="lg"
+              className="w-full max-w-xs sm:max-w-sm"
             >
               Get Started
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => navigate('/pricing')}
-              className="glass-bg-secondary glass-border-light w-full max-w-xs rounded-2xl border px-6 py-3 text-base font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:opacity-90 sm:max-w-sm sm:px-8 sm:py-4 sm:text-lg"
+              variant="outline"
+              size="lg"
+              className="w-full max-w-xs sm:max-w-sm"
             >
               View Pricing
-            </button>
+            </Button>
           </div>
 
           {/* Social Proof */}
@@ -610,12 +614,14 @@ function Home() {
               </li>
             </ul>
 
-            <button
+            <Button
               onClick={() => navigate('/login')}
-              className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 py-4 text-lg font-semibold text-white shadow-2xl transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 hover:shadow-blue-500/25"
+              variant="primary"
+              size="lg"
+              className="w-full"
             >
               Get Started
-            </button>
+            </Button>
           </div>
         </div>
       </section>

@@ -243,13 +243,9 @@ const useCardData = () => {
           setTimeout(() => {
             const scrollAfter = window.scrollY;
             if (scrollBefore !== scrollAfter) {
-              // '📜 SCROLL POSITION CHANGED!', { 
-                before: scrollBefore, 
-                after: scrollAfter, 
-                diff: scrollAfter - scrollBefore 
-              });
+              // logger.debug('Scroll position changed', { before: scrollBefore, after: scrollAfter, diff: scrollAfter - scrollBefore });
             } else {
-              // '📜 Scroll position preserved', { position: scrollAfter });
+              // logger.debug('Scroll position preserved', { position: scrollAfter });
             }
           }, 100);
         } else {

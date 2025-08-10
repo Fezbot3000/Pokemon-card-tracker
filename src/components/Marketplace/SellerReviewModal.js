@@ -7,7 +7,7 @@ import {
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { db } from '../../services/firebase-unified';
 import { toast } from 'react-hot-toast';
 import LoggingService from '../../services/LoggingService';
 

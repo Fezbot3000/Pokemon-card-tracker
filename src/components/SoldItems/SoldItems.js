@@ -10,7 +10,7 @@ import InvoicePDF from '../InvoicePDF';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../design-system';
 import { doc, getDoc } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import logger from '../../utils/logger';
 import LoggingService from '../../services/LoggingService';
 import {

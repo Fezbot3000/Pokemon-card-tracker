@@ -1,15 +1,16 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import './NavigationBar.css';
 
 function NavigationBar() {
   return (
-    <div className="fixed inset-x-0 top-0 z-50 flex w-full justify-center pt-4 sm:pt-6 md:pt-8 lg:pt-12">
-      <div className="bg-white/10 mx-4 rounded-xl backdrop-blur-sm">
-        <div className="flex">
+    <div className="navigation-bar">
+      <div className="navigation-bar__wrapper">
+        <div className="navigation-bar__links">
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `hover:bg-white/10 rounded-l-xl px-3 py-2 text-xs font-medium text-white transition-colors sm:px-4 sm:py-2.5 sm:text-sm md:px-5 md:py-3 ${isActive ? 'bg-white/20' : ''}`
+              `navigation-bar__link navigation-bar__link--first ${isActive ? 'navigation-bar__link--active' : ''}`
             }
           >
             Home
@@ -17,7 +18,7 @@ function NavigationBar() {
           <NavLink
             to="/login"
             className={({ isActive }) =>
-              `hover:bg-white/10 px-3 py-2 text-xs font-medium text-white transition-colors sm:px-4 sm:py-2.5 sm:text-sm md:px-5 md:py-3 ${isActive ? 'bg-white/20' : ''}`
+              `navigation-bar__link ${isActive ? 'navigation-bar__link--active' : ''}`
             }
           >
             Login
@@ -25,7 +26,7 @@ function NavigationBar() {
           <NavLink
             to="/marketplace"
             className={({ isActive }) =>
-              `hover:bg-white/10 px-3 py-2 text-xs font-medium text-white transition-colors sm:px-4 sm:py-2.5 sm:text-sm md:px-5 md:py-3 ${isActive ? 'bg-white/20' : ''}`
+              `navigation-bar__link ${isActive ? 'navigation-bar__link--active' : ''}`
             }
           >
             Marketplace
@@ -33,7 +34,7 @@ function NavigationBar() {
           <NavLink
             to="/pricing"
             className={({ isActive }) =>
-              `hover:bg-white/10 rounded-r-xl px-3 py-2 text-xs font-medium text-white transition-colors sm:px-4 sm:py-2.5 sm:text-sm md:px-5 md:py-3 ${isActive ? 'bg-white/20' : ''}`
+              `navigation-bar__link navigation-bar__link--last ${isActive ? 'navigation-bar__link--active' : ''}`
             }
           >
             Pricing

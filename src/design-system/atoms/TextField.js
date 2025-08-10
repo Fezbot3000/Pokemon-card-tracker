@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import './TextField.css';
 
 /**
  * TextField Component
@@ -22,20 +23,12 @@ const TextField = ({
   rows = 3,
   ...props
 }) => {
-  const inputClasses = `
-    w-full px-3 py-2 
-          border ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-200 dark:border-gray-700'}
-    rounded-lg bg-white dark:bg-[#0F0F0F] 
-    text-gray-900 dark:text-white text-sm
-    focus:outline-none focus:ring-2 focus:ring-[var(--primary-default)]/20 focus:border-[var(--primary-default)]
-    disabled:opacity-60 disabled:cursor-not-allowed
-    placeholder:text-gray-500 dark:placeholder:text-gray-400
-    transition-colors
-    ${className}
-  `;
+  const inputClass = `text-field__input ${
+    error ? 'text-field__input--error' : ''
+  } ${multiline ? 'text-field__input--multiline' : ''} ${className}`;
 
   return (
-    <div className="w-full">
+    <div className="text-field">
       {multiline ? (
         <textarea
           id={id}
@@ -47,7 +40,7 @@ const TextField = ({
           required={required}
           placeholder={placeholder}
           rows={rows}
-          className={inputClasses}
+          className={inputClass}
           {...props}
         />
       ) : (
@@ -61,7 +54,7 @@ const TextField = ({
           disabled={disabled}
           required={required}
           placeholder={placeholder}
-          className={inputClasses}
+          className={inputClass}
           {...props}
         />
       )}

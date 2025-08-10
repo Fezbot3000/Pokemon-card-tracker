@@ -13,7 +13,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import { httpsCallable, getFunctions } from 'firebase/functions';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';

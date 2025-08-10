@@ -26,7 +26,7 @@ The Pokemon Card Tracker is a **Progressive Web Application (PWA)** built as a m
 | **React** | 18.2.0 | UI Framework | Modern hooks-based architecture |
 | **React Router** | 6.20.0 | Client-side routing | Nested routing with authentication guards |
 | **React Helmet Async** | 2.0.5 | SEO & Meta Management | Dynamic head management |
-| **Tailwind CSS** | Latest | Styling Framework | Utility-first with custom design tokens |
+| **Tailwind CSS** | 3.4.x | Styling Framework | Utility-first; extended via CSS custom properties |
 | **Class Variance Authority** | 0.7.1 | Component Variants | Type-safe component styling |
 
 ### **Build & Development Tools**
@@ -35,7 +35,7 @@ The Pokemon Card Tracker is a **Progressive Web Application (PWA)** built as a m
 | **CRACO** | React config override | `craco.config.js` - Webpack customization |
 | **Create React App** | 5.0.1 | Build toolchain | Enhanced with CRACO for customization |
 | **TerserPlugin** | Production optimization | Minification and tree-shaking |
-| **ESLint** | Code linting | Custom rules for Tailwind and React |
+| **ESLint** | Code linting | React rules; Tailwind rules mostly disabled (limited Tailwind warnings enabled in production via CRACO) |
 
 ### **State Management & Context**
 | Provider | Purpose | Scope |

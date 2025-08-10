@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import logger from '../utils/logger';
 import LoggingService from '../services/LoggingService';
 
@@ -26,45 +26,7 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
     error?.stack?.includes('ChunkLoadError');
 
   if (isChunkError) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 to-orange-100 p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
-          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-orange-100">
-            <svg
-              className="size-8 text-orange-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-              />
-            </svg>
-          </div>
-          <h2 className="mb-2 text-2xl font-bold text-gray-900">
-            Loading Issue
-          </h2>
-          <p className="mb-6 text-gray-600">
-            The app is updating. Please wait while we refresh the page...
-          </p>
-          <div className="mb-4 flex items-center justify-center">
-            <div className="size-6 animate-spin rounded-full border-b-2 border-orange-600"></div>
-            <span className="ml-2 text-gray-600">
-              Refreshing automatically...
-            </span>
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="w-full rounded-lg bg-orange-600 px-6 py-3 font-medium text-white transition-colors hover:bg-orange-700"
-          >
-            Refresh Now
-          </button>
-        </div>
-      </div>
-    );
+    return <ChunkReloadPrompt />;
   }
 
   return (
@@ -116,6 +78,69 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
   );
 };
 
+function ChunkReloadPrompt() {
+  const [secondsLeft, setSecondsLeft] = useState(5);
+  const [autoReload, setAutoReload] = useState(true);
+
+  useEffect(() => {
+    if (!autoReload) return;
+    if (secondsLeft <= 0) {
+      window.location.reload();
+      return;
+    }
+    const timer = setTimeout(() => setSecondsLeft(s => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [secondsLeft, autoReload]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 to-orange-100 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
+        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-orange-100">
+          <svg
+            className="size-8 text-orange-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+            />
+          </svg>
+        </div>
+        <h2 className="mb-2 text-2xl font-bold text-gray-900">Loading Issue</h2>
+        <p className="mb-6 text-gray-600">
+          The app was updated. You can refresh now, or we will auto-refresh in {secondsLeft}s.
+        </p>
+        <div className="mb-4 flex items-center justify-center">
+          <div className="size-6 animate-spin rounded-full border-b-2 border-orange-600"></div>
+          <span className="ml-2 text-gray-600">
+            {autoReload ? `Auto-refreshing in ${secondsLeft}s` : 'Auto-refresh cancelled'}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full rounded-lg bg-orange-600 px-6 py-3 font-medium text-white transition-colors hover:bg-orange-700"
+          >
+            Refresh Now
+          </button>
+          {autoReload && (
+            <button
+              onClick={() => setAutoReload(false)}
+              className="w-full rounded-lg border border-gray-300 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              Cancel Auto-refresh
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -153,15 +178,12 @@ class ErrorBoundary extends React.Component {
 
     // INVESTIGATION: Track what's causing the auto-reload
     if (isChunkError) {
-      LoggingService.error('🚨 ERROR BOUNDARY: Auto-reloading due to chunk error:', error.message);
+      LoggingService.error('🚨 ERROR BOUNDARY: Chunk error detected (reload gated):', error.message);
       localStorage.setItem('ERROR_BOUNDARY_RELOAD', JSON.stringify({
         type: 'chunk_error',
         message: error.message,
         timestamp: Date.now()
       }));
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
     } else {
       // Log any other errors that might cause issues
       LoggingService.warn('🔍 ERROR BOUNDARY: Caught error (not auto-reloading):', error.message);

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Modal from './Modal';
 import Button from '../atoms/Button';
 import LoggingService from '../../services/LoggingService';
+import './ConfirmDialog.css';
 
 /**
  * ConfirmDialog Component
@@ -96,7 +97,7 @@ const ConfirmDialog = ({
         </>
       }
     >
-      <div className="text-gray-700 dark:text-gray-300">{message}</div>
+      <div className="confirm-dialog__message">{message}</div>
     </Modal>
   );
 };

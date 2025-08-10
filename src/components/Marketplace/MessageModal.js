@@ -14,7 +14,7 @@ import {
   getDocs,
   updateDoc,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import { useAuth } from '../../design-system';
 import Modal from '../../design-system/molecules/Modal';
 import Icon from '../../design-system/atoms/Icon';

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {
   db as firestoreDb,
-} from '../../services/firebase';
+} from '../../services/firebase-unified';
 
 import { Modal, Button, ConfirmDialog, Icon, toast as toastService, CustomDropdown } from '../';
 import ModalButton from '../atoms/ModalButton';

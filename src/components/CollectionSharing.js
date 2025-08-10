@@ -11,7 +11,7 @@ import {
   orderBy,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../firebase';
+import { db as firestoreDb } from '../services/firebase-unified';
 import { useAuth } from '../design-system';
 import { useCards } from '../contexts/CardContext';
 import { Card, Button, TextField, Toggle, Modal } from '../design-system';

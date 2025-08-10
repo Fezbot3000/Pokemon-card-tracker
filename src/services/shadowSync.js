@@ -28,8 +28,8 @@ import {
 // Note: We don't import db directly to avoid circular dependencies
 // Instead, we'll use dynamic imports when needed
 
-// Firestore DB instance (ensure it's initialized elsewhere, e.g., in firebase.js)
-import { db as firestoreDb } from './firebase';
+// Firestore DB instance (ensure it's initialized elsewhere)
+import { db as firestoreDb } from '../services/firebase-unified';
 
 const MAX_BATCH_OPERATIONS = 500; // Firestore batch limit
 

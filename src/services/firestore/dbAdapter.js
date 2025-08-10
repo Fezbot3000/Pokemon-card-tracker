@@ -8,7 +8,7 @@
 
 import firestoreService from './firestoreService';
 import logger from '../../utils/logger';
-import { storage } from '../firebase';
+import { storage } from '../firebase-unified';
 import {
   ref,
   uploadBytes,

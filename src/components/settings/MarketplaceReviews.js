@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../design-system';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import logger from '../../utils/logger';
 
 function MarketplaceReviews() {

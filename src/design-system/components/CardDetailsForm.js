@@ -6,6 +6,7 @@ import FormField from '../molecules/FormField';
 // import SelectField from '../atoms/SelectField';
 import ImageUploadButton from '../atoms/ImageUploadButton';
 import Icon from '../atoms/Icon';
+import Button from '../atoms/Button';
 import CustomDropdown from '../molecules/CustomDropdown';
 import PSACardAutocomplete from '../molecules/PSACardAutocomplete';
 import {
@@ -739,7 +740,7 @@ const CardDetailsForm = ({
               <div className="mt-3 space-y-2">
                 <div className="flex w-full flex-col space-y-2">
                   {!card.psaUrl && (
-                    <button
+                    <Button
                       onClick={() => {
                         if (!hasFeature('PSA_SEARCH')) {
                           toast.error(
@@ -754,7 +755,9 @@ const CardDetailsForm = ({
                         isPsaSearching ||
                         !hasFeature('PSA_SEARCH')
                       }
-                      className="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      variant={hasFeature('PSA_SEARCH') ? 'outline' : 'secondary'}
+                      size="md"
+                      className="w-full"
                       data-component-name="CardDetailsForm"
                       title={
                         !hasFeature('PSA_SEARCH')
@@ -767,7 +770,7 @@ const CardDetailsForm = ({
                       {isPsaSearching ? (
                         <>
                           <svg
-                            className="-ml-1 mr-3 size-5 animate-spin text-white"
+                            className="-ml-1 mr-3 size-5 animate-spin"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -799,27 +802,21 @@ const CardDetailsForm = ({
                           Search PSA
                         </>
                       )}
-                    </button>
+                    </Button>
                   )}
 
                   {card.psaUrl && (
                     <div className="flex flex-col space-y-2">
-                      <a
-                        href={card.psaUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-blue-700 px-4 py-2 text-base font-medium text-white shadow-sm transition-colors hover:opacity-90 focus:outline-none"
-                      >
+                      <Button as="a" href={card.psaUrl} target="_blank" rel="noopener noreferrer" variant="primary" size="md" className="w-full">
                         <Icon
                           name="open_in_new"
                           className="mr-2"
-                          color="white"
                         />
                         View on PSA Website
-                      </a>
+                      </Button>
 
                       {card.slabSerial && onPsaSearch && (
-                        <button
+                        <Button
                           onClick={() => {
                             if (!hasFeature('PSA_SEARCH')) {
                               toast.error(
@@ -830,11 +827,9 @@ const CardDetailsForm = ({
                             onPsaSearch(card.slabSerial);
                           }}
                           disabled={!hasFeature('PSA_SEARCH')}
-                          className={`inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-base font-medium shadow-sm transition-colors focus:outline-none ${
-                            !hasFeature('PSA_SEARCH')
-                              ? 'cursor-not-allowed bg-gray-400 text-gray-600'
-                              : 'bg-gradient-to-r from-green-500 to-green-700 text-white hover:opacity-90'
-                          }`}
+                          variant={hasFeature('PSA_SEARCH') ? 'success' : 'secondary'}
+                          size="md"
+                          className="w-full"
                           title={
                             !hasFeature('PSA_SEARCH')
                               ? 'PSA search requires Premium subscription'
@@ -846,12 +841,11 @@ const CardDetailsForm = ({
                               !hasFeature('PSA_SEARCH') ? 'lock' : 'refresh'
                             }
                             className="mr-2"
-                            color="white"
                           />
                           {!hasFeature('PSA_SEARCH')
                             ? 'Premium Feature'
                             : 'Reload PSA Data'}
-                        </button>
+                        </Button>
                       )}
                     </div>
                   )}

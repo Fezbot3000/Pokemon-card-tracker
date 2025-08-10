@@ -15,7 +15,7 @@ import {
   getDocs,
   updateDoc,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
+import { db as firestoreDb } from '../../services/firebase-unified';
 import logger from '../../utils/logger';
 import MapView from './MapView';
 import BuyerSelectionModal from './BuyerSelectionModal';
@@ -399,7 +399,7 @@ function ListingDetailModal({
           <ModalButton variant="secondary" onClick={onClose}>
             Close
           </ModalButton>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 justify-end">
             <ModalButton
               variant="secondary"
               onClick={handlePendingClick}

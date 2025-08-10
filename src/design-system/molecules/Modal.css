@@ -34,8 +34,6 @@
   overflow: hidden;
 }
 
-/* Size variants - deprecated, use viewport-based sizes instead */
-
 /* Right position variant */
 .modal--right {
   height: 100%;
@@ -123,8 +121,6 @@
   /* Contextual modals have automatic height */
   height: auto;
 }
-
-/* modal-content and modal-body are used together for styling the content area */
 
 /* iOS-specific border radius */
 .ios-modal-radius {
