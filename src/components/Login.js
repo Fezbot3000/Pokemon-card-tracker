@@ -108,12 +108,13 @@ function Login() {
       if (isLogin) {
         // Login with remember me functionality
         await signIn({ email, password, remember: rememberMe });
-        navigate(from, { replace: true });
+        // Always land on Cards view after login
+        navigate('/dashboard', { replace: true, state: { targetView: 'cards' } });
       } else {
         // Sign up
         await signUp({ email, password, displayName: email.split('@')[0] });
-        // Navigate to dashboard on successful login
-        navigate('/dashboard', { replace: true });
+        // Navigate to dashboard Cards view on successful signup
+        navigate('/dashboard', { replace: true, state: { targetView: 'cards' } });
         setIsLoading(false);
       }
     } catch (error) {
@@ -131,7 +132,7 @@ function Login() {
 
       // IMPORTANT: Always navigate to dashboard and let NewUserRoute handle the redirects
       // This ensures all flows go through the same redirect logic
-      navigate('/dashboard', { replace: true });
+      navigate('/dashboard', { replace: true, state: { targetView: 'cards' } });
     } catch (error) {
       // Only log errors that aren't popup closed by user
       if (error.code !== 'auth/popup-closed-by-user') {
