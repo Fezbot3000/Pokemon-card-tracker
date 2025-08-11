@@ -628,6 +628,11 @@ function AppContent({ currentView, setCurrentView }) {
     }
   }, []);
 
+  // Debug: verify AppContent mounts
+  useEffect(() => {
+    console.info('[AppContent] mounted and rendering layout');
+  }, []);
+
   // Simple test to see if this code runs at all
   if (typeof window !== 'undefined') {
     window.testLog = 'AppContent is running!';
@@ -1059,6 +1064,10 @@ function AppContent({ currentView, setCurrentView }) {
       )}
 
       <main className={getMainLayoutClasses()}>
+        {/* Subscription/Trial banner */}
+        <div className="mt-2">
+          <TrialStatusBanner />
+        </div>
         {currentView === 'cards' ? (
           <CardsView
             isMobile={isMobile}
