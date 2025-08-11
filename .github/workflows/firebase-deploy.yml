@@ -42,6 +42,10 @@ jobs:
           CI: false
           NODE_OPTIONS: "--max-old-space-size=4096"
 
+      - name: Deploy Firestore Indexes
+        run: |
+          npx firebase-tools deploy --only firestore:indexes --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive --force
+      
       - name: Deploy to Firebase
         run: |
           npx firebase-tools deploy --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
