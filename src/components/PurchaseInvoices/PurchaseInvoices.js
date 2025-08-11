@@ -101,7 +101,12 @@ const PurchaseInvoices = () => {
           if (!querySnapshot.empty) {
             const firestoreInvoices = querySnapshot.docs.map(doc => {
               const data = doc.data();
-              return { ...data, id: doc.id };
+              // Normalize legacy 'note' -> 'notes'
+              const normalized = { ...data, id: doc.id };
+              if (normalized.notes === undefined && normalized.note !== undefined) {
+                normalized.notes = normalized.note;
+              }
+              return normalized;
             });
 
             // Set invoices from Firestore immediately
@@ -116,6 +121,13 @@ const PurchaseInvoices = () => {
                     cleanedInvoice[key] = value;
                   }
                 });
+                // Ensure normalized notes in background save as well
+                if (
+                  cleanedInvoice.notes === undefined &&
+                  cleanedInvoice.note !== undefined
+                ) {
+                  cleanedInvoice.notes = cleanedInvoice.note;
+                }
                 await db.savePurchaseInvoice(cleanedInvoice);
               }
             });
@@ -133,7 +145,14 @@ const PurchaseInvoices = () => {
       // Fall back to local database only if Firestore failed
       const purchaseInvoices =
         (await db.getPurchaseInvoices(currentUser?.uid)) || [];
-      setInvoices(purchaseInvoices);
+      // Normalize legacy 'note' -> 'notes' for local data too
+      const normalizedLocal = purchaseInvoices.map(inv => {
+        if (inv && inv.notes === undefined && inv.note !== undefined) {
+          return { ...inv, notes: inv.note };
+        }
+        return inv;
+      });
+      setInvoices(normalizedLocal);
     } catch (error) {
       LoggingService.error('Error loading purchase invoices:', error);
       toast.error('Failed to load purchase invoices');

@@ -37,7 +37,7 @@ const CreateInvoiceModal = ({
         seller !== (editingInvoice.seller || '') ||
         date !== (editingInvoice.date || '') ||
         invoiceNumber !== (editingInvoice.invoiceNumber || '') ||
-        notes !== (editingInvoice.notes || '') ||
+        notes !== ((editingInvoice.notes ?? editingInvoice.note) || '') ||
         JSON.stringify(selectedCards) !== JSON.stringify(editingInvoice.cards || [])
       );
     } else {
@@ -61,7 +61,7 @@ const CreateInvoiceModal = ({
       seller: editingInvoice.seller,
       date: editingInvoice.date,
       invoiceNumber: editingInvoice.invoiceNumber,
-      notes: editingInvoice.notes
+      notes: editingInvoice.notes ?? editingInvoice.note
     });
   }, [editingInvoice]);
   const preSelectedCardsKey = useMemo(() => {
@@ -106,7 +106,7 @@ const CreateInvoiceModal = ({
         editingInvoice.date || new Date().toISOString().split('T')[0]
       );
       setInvoiceNumber(editingInvoice.invoiceNumber || '');
-      setNotes(editingInvoice.notes || '');
+      setNotes((editingInvoice.notes ?? editingInvoice.note) || '');
       
       lastEditingInvoiceId.current = currentEditingInvoiceKey;
       hasInitialized.current = true;
