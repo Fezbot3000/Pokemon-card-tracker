@@ -232,7 +232,7 @@ const CardSearchAutocomplete = ({ onSelectCard, placeholder = "Search for cards.
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 mt-1 w-full max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+          className="absolute z-[60000] mt-1 w-full max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
         >
           {error ? (
             <div className="p-3 text-sm text-red-600 dark:text-red-400">

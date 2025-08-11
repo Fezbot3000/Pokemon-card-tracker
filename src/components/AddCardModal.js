@@ -471,6 +471,13 @@ const AddCardModal = ({
               placeholder="Type card name (e.g., Charizard, Pikachu)..."
               className="w-full"
             />
+            
+            {/* Price Charting Success Message */}
+            {saveMessage && saveMessage === 'Card details applied from Price Charting' && (
+              <div className="mt-4 rounded-lg bg-green-100 px-4 py-2 text-sm text-green-700 transition-all dark:bg-green-900/30 dark:text-green-400">
+                Card details applied from Price Charting
+              </div>
+            )}
           </div>
 
           {/* PSA Certificate Lookup Section */}
@@ -637,6 +644,7 @@ const AddCardModal = ({
           {/* Status message */}
           {saveMessage &&
             saveMessage !== 'PSA data applied successfully' &&
+            saveMessage !== 'Card details applied from Price Charting' &&
             !saveMessage.startsWith('Searching PSA') &&
             !saveMessage.startsWith('Failed to find PSA') &&
             !saveMessage.startsWith('Failed to search PSA') && (

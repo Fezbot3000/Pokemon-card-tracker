@@ -762,23 +762,28 @@ export const searchCardsByName = async (cardName, limit = 10) => {
       allProducts: allProducts 
     });
     
+    console.log('Sample product structure:', {
+      firstProduct: allProducts[0] ? JSON.stringify(allProducts[0], null, 2) : 'No products',
+      availableFields: allProducts[0] ? Object.keys(allProducts[0]) : []
+    });
+    
     const cardResults = allProducts
       .filter(product => {
         // Temporarily accept ALL products to test if filtering is the issue
         const productName = (product['product-name'] || product.name || '').toLowerCase();
         const category = (product.category || '').toLowerCase();
         
-        // Log each product to see what we're filtering out
-        const passes = true; // Accept everything for now
-        
-                 // Only log first few products to avoid console spam
+                 // Log each product to see what we're filtering out
+         const passes = true; // Accept everything for now
+         
+         // Only log first few products to avoid console spam
          if (allProducts.indexOf(product) < 3) {
            console.log('Filtering product (sample):', { 
              name: productName, 
              category, 
              id: product.id,
              allAvailableFields: Object.keys(product),
-             fullProductData: product,
+             fullProductData: JSON.stringify(product, null, 2),
              passes: passes
            });
          }
@@ -790,7 +795,7 @@ export const searchCardsByName = async (cardName, limit = 10) => {
          id: product.id,
          name: product['product-name'] || product.name,
          category: product.category,
-         console: product.console,
+         console: product.console || product['console-name'], // Try both console and console-name fields
          
          // Extract ALL available data from the API
          // Common Price Charting fields
@@ -800,11 +805,15 @@ export const searchCardsByName = async (cardName, limit = 10) => {
          gradedPrice: product['graded-price'],
          priceChartingPrice: product['price-charting-price'],
          
+         // Log the complete product data for debugging
+         _debugProductData: product, // Keep original data for debugging
+         
          // Product details
          releaseDate: product['release-date'],
          genre: product.genre,
          publisher: product.publisher,
          platform: product.platform,
+         consoleName: product['console-name'], // Add console-name field
          upc: product.upc,
          asin: product.asin,
          
@@ -1079,12 +1088,20 @@ export const convertPriceChartingToCardData = (cardResult) => {
   console.log('Set extraction debug:', {
     cardDetailsSet: cardDetails.set,
     console: cardResult.console,
+    consoleName: cardResult._debugProductData?.['console-name'], // Add console-name field
     genre: cardResult.genre,
     platform: cardResult.platform,
     publisher: cardResult.publisher,
     cardName: cardResult.name,
     releaseDate: cardResult.releaseDate
   });
+  
+  // COMPREHENSIVE LOGGING - Log the complete Price Charting response
+  console.log('=== PRICE CHARTING COMPLETE RESPONSE ===');
+  console.log('Full cardResult object:', JSON.stringify(cardResult, null, 2));
+  console.log('Card Details object:', JSON.stringify(cardDetails, null, 2));
+  console.log('Original Product:', JSON.stringify(originalProduct, null, 2));
+  console.log('=== END PRICE CHARTING RESPONSE ===');
   
   // Strategy 1: Try to extract specific set name from card name using comprehensive patterns
   if (!rawSetName || rawSetName === 'Unknown Set') {
@@ -1126,9 +1143,15 @@ export const convertPriceChartingToCardData = (cardResult) => {
       }
     }
     
-    // Strategy 2: If no specific set found, try console/genre/platform fields
+    // Strategy 2: If no specific set found, try console-name first, then console/genre/platform fields
     if (!rawSetName || rawSetName === 'Unknown Set') {
-      if (cardResult.console && cardResult.console !== 'Pokemon' && cardResult.console !== 'Pokemon Card') {
+      // Check for console-name field first (this is where Price Charting stores set info)
+      const consoleName = cardResult._debugProductData?.['console-name'];
+      if (consoleName && consoleName !== 'Pokemon' && consoleName !== 'Pokemon Card') {
+        rawSetName = consoleName;
+        console.log('Found set from console-name field:', consoleName);
+      }
+      else if (cardResult.console && cardResult.console !== 'Pokemon' && cardResult.console !== 'Pokemon Card') {
         rawSetName = cardResult.console;
       }
       else if (cardResult.genre && cardResult.genre !== 'Pokemon' && cardResult.genre !== 'Pokemon Card') {
