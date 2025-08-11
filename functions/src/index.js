@@ -407,7 +407,7 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
     const userRef = admin.firestore().doc(`users/${userId}`);
     const userDoc = await userRef.get();
     
-    if (userDoc.exists()) {
+    if (userDoc.exists) {
       const userData = userDoc.data();
       
       // Prevent duplicate subscriptions
@@ -445,7 +445,7 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
     
     // CRITICAL: Check for existing Stripe customer to prevent duplicates
     let existingCustomerId = null;
-    if (userDoc.exists()) {
+    if (userDoc.exists) {
       const userData = userDoc.data();
       existingCustomerId = userData.customerId;
     }
@@ -597,7 +597,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
   const eventRef = admin.firestore().doc(`webhook_events/${event.id}`);
   const eventDoc = await eventRef.get();
   
-  if (eventDoc.exists()) {
+  if (eventDoc.exists) {
     console.log(`Event ${event.id} already processed, skipping to prevent duplicates`);
     return res.json({ received: true, status: 'already_processed' });
   }

@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Bug Fixes
+- ✅ **Fixed Cloud Function Firebase Admin SDK syntax error breaking upgrade button** (RESOLVED 08/11/2025)
+  - Root cause: Cloud Functions using outdated Firebase Admin SDK syntax `userDoc.exists()` instead of new syntax `userDoc.exists` (without parentheses)
+  - Users clicking "Upgrade Now" button received "Server error: please update Cloud Function to use userDoc.exists (Admin SDK) instead of userDoc.exists()." error
+  - Critical production issue preventing users from upgrading to premium subscription
+  - **Evidence**: Multiple instances of deprecated syntax found in `functions/src/index.js` lines 409, 447, 599 causing 500 Internal Server Error responses
+  - **Impact**: Complete upgrade flow broken, users unable to access premium features, revenue impact from blocked subscriptions
+  - Solution: Updated all Cloud Function instances to use correct Firebase Admin SDK syntax and deployed fixes
+  - **Syntax fixes**: Changed `userDoc.exists()` to `userDoc.exists` in createCheckoutSession function (lines 409, 447) and stripeWebhook function (line 599)
+  - **Frontend optimization**: Updated UpgradeModal to use direct URL redirect instead of sessionId for improved reliability
+  - **Deployment**: Successfully deployed updated Cloud Functions to production environment
+  - **Error handling**: Enhanced frontend error logging to better diagnose future issues
+  - Files changed: functions/src/index.js, src/components/UpgradeModal.js
+  - Confidence level: 100% - Cloud Function logs show successful 200 responses, user successfully upgraded to premium
+  - Impact: Upgrade flow fully restored, users can now successfully subscribe to premium plan, revenue stream restored
+
+- ✅ **Fixed upgrade button redirect handling and error messaging** (RESOLVED 08/11/2025)
+  - Root cause: Frontend expecting `result.data.sessionId` but Cloud Function returning `result.data.url`, causing "Payment system error" fallback
+  - Users experienced "Payment system error. Please try again." message despite Cloud Function working correctly
+  - **Evidence**: UpgradeModal trying to use `stripe.redirectToCheckout()` with sessionId when direct URL was available
+  - **Impact**: Confusing error messages for users, unnecessary Stripe.js loading when direct redirect possible
+  - Solution: Updated frontend to prioritize direct URL redirect with fallback to sessionId method
+  - **Redirect optimization**: Changed to use `window.location.href = result.data.url` for direct redirect, eliminating Stripe.js dependency
+  - **Fallback handling**: Maintained sessionId fallback for backward compatibility
+  - **Error logging**: Enhanced debugging output to show exact response data and error details
+  - **User experience**: Faster redirects with fewer dependencies and clearer error messages
+  - Files changed: src/components/UpgradeModal.js
+  - Confidence level: 100% - user successfully completed upgrade flow, premium features now accessible
+  - Impact: Seamless upgrade experience, reduced error states, improved payment flow reliability
 - ✅ **Fixed mobile settings navigation button not working** (RESOLVED 02/05/2025)
   - Root cause: Settings button in mobile bottom navigation used different navigation pattern than other buttons, causing routing conflict
   - Users clicking Settings button experienced brief loading then instant revert back to previous page

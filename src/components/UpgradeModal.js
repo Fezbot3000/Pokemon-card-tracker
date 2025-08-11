@@ -71,43 +71,56 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
         userId: user?.uid,
       });
 
-      if (isDev) LoggingService.debug('Upgrade: function result', result);
+             if (isDev) LoggingService.debug('Upgrade: function result', result);
+       if (isDev) LoggingService.debug('Upgrade: result.data', result.data);
 
-      // Step 3: Load Stripe and redirect to checkout with session ID
-      if (isDev) LoggingService.debug('Upgrade: loading Stripe');
-      const stripePublishableKey = getStripePublishableKey();
-      if (isDev) LoggingService.debug('Upgrade: stripe key available', !!stripePublishableKey);
+       // Check if we have the URL directly
+       if (result.data && result.data.url) {
+         if (isDev) LoggingService.debug('Upgrade: redirecting to URL directly', result.data.url);
+         window.location.href = result.data.url;
+         return; // Exit early
+       }
 
-      const { loadStripe } = await import('@stripe/stripe-js');
-      const stripe = await loadStripe(stripePublishableKey);
+       // Fallback: Load Stripe and use sessionId if URL not available
+       if (isDev) LoggingService.debug('Upgrade: loading Stripe for fallback');
+       const stripePublishableKey = getStripePublishableKey();
+       if (isDev) LoggingService.debug('Upgrade: stripe key available', !!stripePublishableKey);
 
-      if (!stripe) {
-        LoggingService.error('Stripe failed to load');
-        throw new Error('Stripe failed to load');
-      }
+       const { loadStripe } = await import('@stripe/stripe-js');
+       const stripe = await loadStripe(stripePublishableKey);
 
-      if (isDev) LoggingService.debug('Upgrade: stripe loaded');
+       if (!stripe) {
+         LoggingService.error('Stripe failed to load');
+         throw new Error('Stripe failed to load');
+       }
 
-      // Step 4: Redirect to Stripe Checkout with session ID
-      if (isDev) LoggingService.debug('Upgrade: redirecting to Stripe Checkout');
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: result.data.sessionId,
-      });
+       if (isDev) LoggingService.debug('Upgrade: stripe loaded');
 
-      if (error) {
-        LoggingService.error('Stripe redirect error:', error);
-        throw error;
-      }
+       // Use sessionId as fallback
+       if (result.data && result.data.sessionId) {
+         if (isDev) LoggingService.debug('Upgrade: redirecting with sessionId', result.data.sessionId);
+         const { error } = await stripe.redirectToCheckout({
+           sessionId: result.data.sessionId,
+         });
+
+         if (error) {
+           LoggingService.error('Stripe redirect error:', error);
+           throw error;
+         }
+       } else {
+         throw new Error('No checkout URL or sessionId received from server');
+       }
 
       if (isDev) LoggingService.debug('Upgrade: redirected to Stripe');
-    } catch (error) {
-      // Normalize callable/internal error messages
-      const msg = error?.message || 'Unknown error';
-      const code = error?.code || 'unknown';
-      if (isDev) LoggingService.debug('Upgrade: error', { code, msg });
+         } catch (error) {
+       // Normalize callable/internal error messages
+       const msg = error?.message || 'Unknown error';
+       const code = error?.code || 'unknown';
+       if (isDev) LoggingService.debug('Upgrade: error', { code, msg });
+       if (isDev) LoggingService.debug('Upgrade: full error object', error);
 
-      // More specific error messages
-      let errorMessage = 'Payment system error';
+       // More specific error messages
+       let errorMessage = 'Payment system error';
 
       if (
         error.message &&
