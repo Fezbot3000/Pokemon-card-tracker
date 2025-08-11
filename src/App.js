@@ -5,16 +5,6 @@ import React, {
   useRef,
 } from 'react';
 
-// Suppress React DevTools warning in development
-if (process.env.NODE_ENV === 'development') {
-  const originalWarn = console.warn;
-  console.warn = (...args) => {
-    if (args[0] && typeof args[0] === 'string' && args[0].includes('Download the React DevTools')) {
-      return; // Suppress React DevTools warning
-    }
-    originalWarn.apply(console, args);
-  };
-}
 import {
   Navigate,
   useLocation,
@@ -58,7 +48,16 @@ import { useCardModals } from './hooks/useCardModals';
 import { collectionManager } from './utils/collectionManager';
 import CardsView from './dashboard/views/CardsView';
 
-
+// Suppress React DevTools warning in development
+if (process.env.NODE_ENV === 'development') {
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    if (args[0] && typeof args[0] === 'string' && args[0].includes('Download the React DevTools')) {
+      return; // Suppress React DevTools warning
+    }
+    originalWarn.apply(console, args);
+  };
+}
 
 // Main Dashboard Component
 function Dashboard() {
