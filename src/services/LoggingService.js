@@ -16,6 +16,7 @@
 // Environment configuration
 const isDevelopment = process.env.NODE_ENV === 'development';
 const isProduction = process.env.NODE_ENV === 'production';
+const isVerboseLogging = process.env.REACT_APP_VERBOSE_LOGGING === 'true';
 
 // Logging levels with numeric values for filtering
 const LOG_LEVELS = {
@@ -29,11 +30,11 @@ const LOG_LEVELS = {
 
 // Default configuration based on environment
 const getDefaultConfig = () => ({
-  level: isDevelopment ? LOG_LEVELS.DEBUG : LOG_LEVELS.WARN,
+  level: isVerboseLogging ? LOG_LEVELS.DEBUG : LOG_LEVELS.WARN, // Only verbose if explicitly enabled
   enableConsole: !isProduction,
   enableRemote: isProduction,
-  enablePerformance: isDevelopment,
-  enableStackTrace: isDevelopment,
+  enablePerformance: false, // Disabled to reduce noise
+  enableStackTrace: isDevelopment && isVerboseLogging,
   maxLogSize: 1000, // Maximum number of logs to keep in memory
   formatOutput: true,
   includeTimestamp: true,
@@ -369,7 +370,14 @@ class LoggingService {
       'NmLockState', 
       '@firebase/firestore: Firestore',
       'WebChannelConnection RPC',
-      'Missing or insufficient permissions'
+      'Missing or insufficient permissions',
+      'Download the React DevTools',
+      'The resource was preloaded using link preload',
+      'Cross-Origin-Opener-Policy policy would block',
+      'net::ERR_BLOCKED_BY_CLIENT',
+      'ERR_BLOCKED_BY_CLIENT',
+      'Subscription updated in real-time',
+      'CardRepository: Using fallback query'
     ];
 
     const shouldFilterMessage = (message) => {
@@ -408,6 +416,15 @@ class LoggingService {
           return; // Don't log external noise
         }
         originalConsole.error.apply(console, args);
+      };
+
+      // eslint-disable-next-line no-console
+      console.log = function (...args) {
+        const message = args.join(' ');
+        if (shouldFilterMessage(message)) {
+          return; // Don't log external noise
+        }
+        originalConsole.log.apply(console, args);
       };
     }
   }

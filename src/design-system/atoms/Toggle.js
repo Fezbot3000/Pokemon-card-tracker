@@ -16,6 +16,7 @@ const Toggle = ({
   name,
   size = 'md',
   className = '',
+  labelPosition,
   ...props
 }) => {
   const toggleClass = `toggle ${disabled ? 'toggle--disabled' : ''} ${className}`;
@@ -26,6 +27,22 @@ const Toggle = ({
     checked ? 'toggle__circle--checked' : ''
   }`;
   const labelClass = `toggle__label toggle__label--${size}`;
+
+  // Filter out non-DOM props to prevent React warnings
+  const inputProps = Object.keys(props).reduce((acc, key) => {
+    // Only include props that are valid for input elements
+    const validInputProps = [
+      'aria-label', 'aria-labelledby', 'aria-describedby', 'aria-invalid',
+      'aria-required', 'aria-checked', 'aria-disabled', 'aria-readonly',
+      'data-*', 'tabIndex', 'autoFocus', 'form', 'required', 'readOnly',
+      'placeholder', 'maxLength', 'minLength', 'pattern', 'title'
+    ];
+    
+    if (validInputProps.includes(key) || key.startsWith('data-') || key.startsWith('aria-')) {
+      acc[key] = props[key];
+    }
+    return acc;
+  }, {});
 
   return (
     <label className={toggleClass}>
@@ -38,7 +55,7 @@ const Toggle = ({
           disabled={disabled}
           id={id}
           name={name}
-          {...props}
+          {...inputProps}
         />
         <div className={trackClass} />
         <div className={circleClass} />

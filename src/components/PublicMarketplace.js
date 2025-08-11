@@ -32,15 +32,23 @@ const PublicMarketplace = () => {
   const loadCardImages = useCallback(async listingsData => {
     if (!listingsData || listingsData.length === 0) return;
 
-    const newCardImages = await MarketplaceImageService.loadCardImages(listingsData, cardImages);
-    setCardImages(newCardImages);
-  }, [cardImages]);
+    const newCardImages = await MarketplaceImageService.loadCardImages(listingsData, {});
+    setCardImages(prevImages => ({ ...prevImages, ...newCardImages }));
+  }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchListings = async () => {
       try {
+        if (!isMounted) return;
         setLoading(true);
         setError(null);
+
+        // Add timeout to prevent hanging requests
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Request timeout')), 10000);
+        });
 
         const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
 
@@ -51,35 +59,45 @@ const PublicMarketplace = () => {
             limit(50)
           );
 
-        const querySnapshot = await getDocs(marketplaceQuery);
+        const fetchPromise = getDocs(marketplaceQuery);
+        const querySnapshot = await Promise.race([fetchPromise, timeoutPromise]);
+        
+        if (!isMounted) return;
+        
         let listingsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
         }));
 
         // Sort manually on the client side
-          listingsData.sort((a, b) => {
-            const timeA =
-              a.timestampListed?.seconds || a.createdAt?.seconds || 0;
-            const timeB =
-              b.timestampListed?.seconds || b.createdAt?.seconds || 0;
-            return timeB - timeA;
-          });
+        listingsData.sort((a, b) => {
+          const timeA =
+            a.timestampListed?.seconds || a.createdAt?.seconds || 0;
+          const timeB =
+            b.timestampListed?.seconds || b.createdAt?.seconds || 0;
+          return timeB - timeA;
+        });
 
         setListings(listingsData);
 
         // Load card images after getting listings
-        await loadCardImages(listingsData);
+        if (isMounted) {
+          await loadCardImages(listingsData);
+        }
       } catch (err) {
+        if (!isMounted) return;
+        
         logger.error('Error fetching marketplace listings:', err);
         
         // Provide specific error messages for common network issues
         let errorMessage = 'Unable to load marketplace listings. Please try again later.';
         
-        if (err.code === 'failed-precondition' || err.message?.includes('offline')) {
+        if (err.message === 'Request timeout') {
+          errorMessage = 'Request timed out. This may be due to network restrictions or ad blockers.';
+        } else if (err.code === 'failed-precondition' || err.message?.includes('offline')) {
           errorMessage = 'You appear to be offline. Please check your internet connection.';
         } else if (err.message?.includes('ERR_BLOCKED_BY_CLIENT') || err.message?.includes('net::ERR_BLOCKED_BY_CLIENT')) {
-          errorMessage = 'Network request blocked. Please check if you have ad blockers or firewall restrictions that might be blocking Firebase requests.';
+          errorMessage = 'Network request blocked. This is likely due to ad blockers or browser security settings.';
         } else if (err.code === 'permission-denied') {
           errorMessage = 'Permission denied. Unable to access marketplace data.';
         } else if (err.code === 'unavailable') {
@@ -87,16 +105,53 @@ const PublicMarketplace = () => {
         }
         
         setError(errorMessage);
+        
+        // Set empty listings to show the "no listings" state instead of infinite loading
+        setListings([]);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchListings();
+
+    // Cleanup function to prevent memory leaks
+    return () => {
+      isMounted = false;
+    };
   }, [loadCardImages]);
 
   const handleSignUpPrompt = () => {
     navigate('/login');
+  };
+
+  const handleLoginSubmit = async (credentials) => {
+    try {
+      // Navigate to login page with credentials
+      navigate('/login', { 
+        state: { 
+          email: credentials.email,
+          rememberMe: credentials.rememberMe 
+        } 
+      });
+    } catch (error) {
+      logger.error('Error handling login submit:', error);
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    // Navigate to login page for Google authentication
+    navigate('/login', { state: { useGoogle: true } });
+  };
+
+  const handleForgotPassword = () => {
+    navigate('/forgot-password');
+  };
+
+  const handleSignUpClick = () => {
+    navigate('/signup');
   };
 
   const formatPrice = (price, currency = 'AUD') => {
@@ -256,12 +311,25 @@ const PublicMarketplace = () => {
               <div className="mx-auto max-w-md rounded-xl border border-red-500/20 bg-red-500/10 p-6">
                 <div className="mb-4 text-4xl text-red-400">⚠️</div>
                 <p className="mb-4 text-red-300">{error}</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
-                >
-                  Try Again
-                </button>
+                <div className="mb-4 space-y-2 text-sm text-gray-400">
+                  <p>To resolve this issue, try:</p>
+                  <ul className="text-left space-y-1">
+                    <li>• Disabling ad blockers for this site</li>
+                    <li>• Checking your browser's security settings</li>
+                    <li>• Using a different browser</li>
+                  </ul>
+                </div>
+                <div className="flex gap-2 justify-center">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
+                  >
+                    Try Again
+                  </button>
+                  <Button onClick={handleSignUpPrompt} variant="outline" size="sm">
+                    Join to Browse
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -277,6 +345,97 @@ const PublicMarketplace = () => {
                 <Button onClick={handleSignUpPrompt} variant="primary" size="md">
                   Create First Listing
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Fallback content when data can't be loaded */}
+          {!loading && error && (
+            <div className="py-12">
+              <div className="mb-8 text-center">
+                <h3 className="mb-4 text-xl font-semibold">Sample Marketplace</h3>
+                <p className="text-gray-400">
+                  Here's what you can expect to find in our marketplace
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {/* Sample cards */}
+                {[
+                  {
+                    name: 'Charizard #4 (Holo)',
+                    price: '$2,500',
+                    condition: 'PSA 10',
+                    location: 'Melbourne, VIC',
+                    image: '🔥'
+                  },
+                  {
+                    name: 'Blastoise #2 (Holo)',
+                    price: '$800',
+                    condition: 'PSA 9',
+                    location: 'Sydney, NSW',
+                    image: '💧'
+                  },
+                  {
+                    name: 'Venusaur #15 (Holo)',
+                    price: '$650',
+                    condition: 'PSA 9',
+                    location: 'Brisbane, QLD',
+                    image: '🌿'
+                  },
+                  {
+                    name: 'Pikachu #58 (Red Cheek)',
+                    price: '$150',
+                    condition: 'NM',
+                    location: 'Perth, WA',
+                    image: '⚡'
+                  },
+                  {
+                    name: 'Dark Charizard #4',
+                    price: '$1,200',
+                    condition: 'PSA 8',
+                    location: 'Adelaide, SA',
+                    image: '🔥'
+                  }
+                ].map((card, index) => (
+                  <div
+                    key={index}
+                    className="bg-white/5 hover:bg-white/10 group overflow-hidden rounded-xl transition-all duration-300"
+                  >
+                    <div className="relative aspect-square overflow-hidden">
+                      <div className="flex size-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800">
+                        <span className="text-4xl">{card.image}</span>
+                      </div>
+                      <div className="absolute right-2 top-2 rounded-lg bg-yellow-500 px-2 py-1 text-xs font-bold text-black">
+                        {card.condition}
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <h3 className="mb-2 line-clamp-2 font-semibold text-white">
+                        {card.name}
+                      </h3>
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="text-2xl font-bold text-green-400">
+                          {card.price}
+                        </span>
+                        <span className="bg-white/10 rounded-full px-2 py-1 text-xs text-gray-300">
+                          {card.condition}
+                        </span>
+                      </div>
+
+                      <p className="mb-3 text-sm text-gray-400">
+                        📍 {card.location}
+                      </p>
+
+                      <div className="space-y-2">
+                        <Button onClick={() => setShowLoginModal(true)} variant="outline" size="sm" className="w-full">
+                          Contact Seller
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -377,6 +536,10 @@ const PublicMarketplace = () => {
         <LoginModal
           isOpen={showLoginModal}
           onClose={() => setShowLoginModal(false)}
+          onLoginSubmit={handleLoginSubmit}
+          onGoogleLogin={handleGoogleLogin}
+          onForgotPasswordClick={handleForgotPassword}
+          onSignUpClick={handleSignUpClick}
           backdropClassName="fixed inset-0 bg-black/50 backdrop-blur-md"
         />
       )}

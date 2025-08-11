@@ -60,6 +60,27 @@ The Pokemon Card Tracker is a full-stack React application that helps collectors
    npm start
    ```
 
+## 🔧 Development Configuration
+
+### Logging Configuration
+The application uses a centralized logging service that filters out common noise in development. To enable verbose logging for debugging:
+
+```bash
+# Enable verbose logging (shows DEBUG and INFO level messages)
+REACT_APP_VERBOSE_LOGGING=true npm start
+
+# Normal development (only WARN and ERROR messages)
+npm start
+```
+
+**Filtered Messages:**
+- React DevTools warnings
+- Font preload warnings  
+- Cross-Origin-Opener-Policy warnings
+- Firestore connection errors (when blocked by ad blockers)
+- Subscription update messages
+- CardRepository fallback queries
+
 ## 🔧 Key Technologies
 
 - **React 18** - Frontend framework

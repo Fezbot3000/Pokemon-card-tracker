@@ -165,7 +165,7 @@ const PokemonSets = () => {
   const currentSet = pokemonSets.find(set => set.id === selectedSet);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#000' }}>
+    <div className="min-h-screen bg-[#1B2131] text-white">
       <Helmet>
         <title>
           Pokemon Card Price Checker FREE 2025 | Base Set Charizard Values Australia
@@ -220,17 +220,29 @@ const PokemonSets = () => {
       </Helmet>
       <NavigationBar />
 
-      {/* Hero Section with proper spacing */}
-      <section className="relative px-4 pb-16 pt-32 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl text-center">
-          <h1 className="mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-4xl font-bold text-transparent md:text-6xl">
-            Pokemon Card Sets Price Guide
+      {/* Hero Section */}
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
+
+        <div className="relative z-10 mx-auto max-w-4xl text-center">
+          <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
+            <span className="mr-2 size-1.5 rounded-full bg-green-400 sm:size-2"></span>
+            PSA 10 Price Guide
+          </div>
+
+          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
+            Pokemon Card
+            <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Sets Guide
+            </span>
           </h1>
-          <p className="mx-auto mb-8 max-w-3xl text-xl text-gray-300">
+
+          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
             Accurate pricing for PSA 10 (Gem Mint) holographic cards based on recent sales data through 2024-2025.
             Prices shown are from verified auction sites and price tracking services like PriceCharting.
             Ungraded or lower-graded cards sell for significantly less.
           </p>
+
           <div className="mx-auto mb-8 max-w-4xl rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4">
             <p className="text-sm text-yellow-400">
               <strong>Important:</strong> "Investment Potential" is a general
@@ -242,123 +254,130 @@ const PokemonSets = () => {
         </div>
       </section>
 
-      {/* Set Selection Tabs */}
-      <section className="px-4 pb-8 sm:px-6 lg:px-8">
+      {/* Main Content Section */}
+      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
-            {pokemonSets.map(set => (
-              <button
-                key={set.id}
-                onClick={() => setSelectedSet(set.id)}
-                className={`rounded-lg p-4 text-left transition-all ${
-                  selectedSet === set.id
-                    ? 'border-2 border-purple-500 bg-purple-500/30'
-                    : 'bg-white/5 hover:bg-white/10 border border-gray-600'
-                }`}
-              >
-                <h3 className="mb-2 font-bold text-white">{set.name}</h3>
-                <p className="text-sm text-gray-400">{set.description}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Selected Set Details */}
-      <section className="px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            {/* Set Information */}
-            <div className="space-y-6">
-              <h2 className="mb-6 text-3xl font-bold text-white">
-                {currentSet.name}
-              </h2>
-              <p className="text-lg leading-relaxed text-gray-300">
-                {currentSet.description}
-              </p>
-
-              <div className="bg-white/5 border-white/10 space-y-4 rounded-xl border p-6">
-                <div className="space-y-3">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <span className="font-medium text-gray-400">
-                      Average Price Range:
-                    </span>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-green-400">
-                        {currentSet.averagePrice}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="border-white/10 border-t pt-3">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <span className="font-medium text-gray-400">
-                        Rarity Level:
-                      </span>
-                      <span className="font-semibold text-yellow-400">
-                        {currentSet.rarity}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="border-white/10 border-t pt-3">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <span className="font-medium text-gray-400">
-                        Investment Potential:
-                      </span>
-                      <span className="font-semibold text-purple-400">
-                        {currentSet.investment}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+            {/* Sidebar Navigation */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-8">
+                <h3 className="mb-4 text-lg font-bold">Pokemon Sets</h3>
+                <nav className="space-y-2">
+                  {pokemonSets.map(set => (
+                    <button
+                      key={set.id}
+                      onClick={() => setSelectedSet(set.id)}
+                      className={`flex w-full items-center rounded-xl px-4 py-3 text-left transition-all duration-300 ${
+                        selectedSet === set.id
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white/5 hover:bg-white/10 text-gray-300'
+                      }`}
+                    >
+                      <span className="mr-3">🎴</span>
+                      {set.name}
+                    </button>
+                  ))}
+                </nav>
               </div>
             </div>
 
-            {/* Key Cards */}
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold text-white">
-                Key Cards to Track
-              </h3>
-              <div className="space-y-4">
-                {currentSet.keyCards.map((card) => (
-                  <div
-                    key={card.name || card.title}
-                    className="bg-white/5 border-white/10 rounded-lg border p-4"
-                  >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold text-white">
-                          {card.name}
+            {/* Main Content */}
+            <div className="lg:col-span-3">
+              <div className="bg-white/5 rounded-2xl p-8">
+                {/* Set Information */}
+                <div className="mb-8">
+                  <h2 className="mb-6 text-3xl font-bold">
+                    {currentSet.name}
+                  </h2>
+                  <p className="text-lg leading-relaxed text-gray-300 mb-6">
+                    {currentSet.description}
+                  </p>
+
+                  <div className="bg-white/5 border-white/10 space-y-4 rounded-xl border p-6">
+                    <div className="space-y-3">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <span className="font-medium text-gray-400">
+                          Average Price Range:
                         </span>
-                        <span className="whitespace-nowrap rounded-full bg-orange-500/20 px-3 py-1 text-sm text-orange-400">
-                          🔥 High Demand
-                        </span>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-green-400">
+                            {currentSet.averagePrice}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-400">
-                        <div className="sm:text-right">
-                          <div>
-                            1st Ed:{' '}
-                            <span className="text-green-400">
-                              {card.firstEd}
-                            </span>
-                          </div>
-                          <div>
-                            Unlimited:{' '}
-                            <span className="text-blue-400">
-                              {card.unlimited}
-                            </span>
-                          </div>
+                      <div className="border-white/10 border-t pt-3">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <span className="font-medium text-gray-400">
+                            Rarity Level:
+                          </span>
+                          <span className="font-semibold text-yellow-400">
+                            {currentSet.rarity}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="border-white/10 border-t pt-3">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <span className="font-medium text-gray-400">
+                            Investment Potential:
+                          </span>
+                          <span className="font-semibold text-purple-400">
+                            {currentSet.investment}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
 
-              <div className="rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-blue-500/20 p-6">
-                <h4 className="mb-3 font-bold text-white">💡 Collector Tip</h4>
-                <p className="text-sm text-gray-300">
-                  {currentSet.collectorTip}
-                </p>
+                {/* Key Cards */}
+                <div className="mb-8">
+                  <h3 className="mb-6 text-2xl font-bold">
+                    Key Cards to Track
+                  </h3>
+                  <div className="space-y-4">
+                    {currentSet.keyCards.map((card) => (
+                      <div
+                        key={card.name || card.title}
+                        className="bg-white/5 border-white/10 rounded-lg border p-4"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="font-semibold text-white">
+                              {card.name}
+                            </span>
+                            <span className="whitespace-nowrap rounded-full bg-orange-500/20 px-3 py-1 text-sm text-orange-400">
+                              🔥 High Demand
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-400">
+                            <div className="sm:text-right">
+                              <div>
+                                1st Ed:{' '}
+                                <span className="text-green-400">
+                                  {card.firstEd}
+                                </span>
+                              </div>
+                              <div>
+                                Unlimited:{' '}
+                                <span className="text-blue-400">
+                                  {card.unlimited}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Collector Tip */}
+                <div className="rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-blue-500/20 p-6">
+                  <h4 className="mb-3 font-bold text-white">💡 Collector Tip</h4>
+                  <p className="text-sm text-gray-300">
+                    {currentSet.collectorTip}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

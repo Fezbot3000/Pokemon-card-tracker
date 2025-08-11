@@ -7,6 +7,7 @@
 
 import logger from '../utils/logger';
 import { getPriceChartingApiKey } from '../config/secrets';
+import { getAllPokemonSets, getPokemonSetsByYear } from '../data/pokemonSets';
 
 // Price Charting API Configuration
 const PRICECHARTING_BASE_URL = 'https://www.pricecharting.com';
@@ -67,6 +68,97 @@ priceChartingCache.load();
 
 // Rate limiting tracker
 let lastRequestTime = 0;
+
+/**
+ * Find the best matching set from our dropdown options
+ * @param {string} setName - Set name from Price Charting
+ * @param {string|number} year - Year of the card
+ * @returns {Object|null} - Object with matchedValue and matchedLabel, or null if no match
+ */
+const findBestMatchingSet = (setName, year) => {
+  // First try to get sets for the specific year
+  let availableSets = [];
+  if (year) {
+    const parsedYear =
+      typeof year === 'string' ? parseInt(year.trim(), 10) : parseInt(year, 10);
+
+    if (!isNaN(parsedYear)) {
+      availableSets = getPokemonSetsByYear(parsedYear);
+    }
+  }
+
+  if (availableSets.length === 0) {
+    availableSets = getAllPokemonSets();
+  }
+
+  if (setName && typeof setName === 'string' && availableSets.length > 0) {
+    let cleanSetName = setName.toLowerCase().trim();
+    cleanSetName = cleanSetName
+      .replace(/pokemon\s+(trading\s+)?card\s+game/i, '')
+      .replace(/pokemon\s+(tcg|ccg)/i, '')
+      .replace(/^(japanese|english|jp|en)\s+/i, '')
+      .trim();
+
+    // Special case for Base Set cards from 1999
+    if (year === '1999' && cleanSetName.includes('game')) {
+      const baseSet = availableSets.find(
+        set =>
+          set.label.toLowerCase() === 'base set (en)' ||
+          set.value.toLowerCase() === 'base set (en)'
+      );
+      if (baseSet) {
+        return { matchedValue: baseSet.value, matchedLabel: baseSet.label };
+      }
+    }
+
+    // Try for exact match on label
+    const exactMatch = availableSets.find(
+      set =>
+        set.label.toLowerCase() === cleanSetName ||
+        set.value.toLowerCase() === cleanSetName
+    );
+    if (exactMatch) {
+      return { matchedValue: exactMatch.value, matchedLabel: exactMatch.label };
+    }
+
+    // Try for partial match with more aggressive matching on label
+    const partialMatches = availableSets
+      .filter(set => {
+        const setLower = set.label.toLowerCase();
+        const valueLower = set.value.toLowerCase();
+        return (
+          setLower.includes(cleanSetName) ||
+          cleanSetName.includes(setLower) ||
+          valueLower.includes(cleanSetName) ||
+          cleanSetName.includes(valueLower)
+        );
+      })
+      .sort((a, b) => {
+        // Prioritize Base Set for 1999 cards
+        if (year === '1999') {
+          const aIsBase = a.label.toLowerCase().includes('base set');
+          const bIsBase = b.label.toLowerCase().includes('base set');
+          if (aIsBase && !bIsBase) return -1;
+          if (!aIsBase && bIsBase) return 1;
+        }
+
+        const aContainsSearch = a.label.toLowerCase().includes(cleanSetName);
+        const bContainsSearch = b.label.toLowerCase().includes(cleanSetName);
+        if (aContainsSearch && !bContainsSearch) return -1;
+        if (!aContainsSearch && bContainsSearch) return 1;
+        const aLengthDiff = Math.abs(a.label.length - cleanSetName.length);
+        const bLengthDiff = Math.abs(b.label.length - cleanSetName.length);
+        return aLengthDiff - bLengthDiff;
+      });
+
+    if (partialMatches.length > 0) {
+      const bestMatch = partialMatches[0];
+      return { matchedValue: bestMatch.value, matchedLabel: bestMatch.label };
+    }
+  }
+
+  return null; // Return null if no match
+};
 
 /**
  * Get Price Charting API key using centralized secrets management
@@ -869,6 +961,24 @@ const parseCardDetailsFromName = (productName) => {
     .replace(/\b(ex|gx|v|vmax|vstar)\b/gi, '') // Remove card type suffixes
     .trim();
   
+  // Try to extract player/character name from card name
+  // For Pokemon cards, the character name is often the main part
+  if (details.cardName) {
+    // Common Pokemon character patterns
+    const pokemonPatterns = [
+      /\b(charizard|blastoise|venusaur|pikachu|mewtwo|mew|rayquaza|lugia|ho-oh|kyogre|groudon|dialga|palkia|giratina|arceus|reshiram|zekrom|kyurem|xerneas|yveltal|zygarde|solgaleo|lunala|necrozma|zacian|zamazenta|calyrex|koraidon|miraidon)\b/i,
+      /\b(ash|red|blue|green|gary|misty|brock|jessie|james|professor oak|nurse joy|officer jenny)\b/i
+    ];
+    
+    for (const pattern of pokemonPatterns) {
+      const match = details.cardName.match(pattern);
+      if (match) {
+        details.player = match[0];
+        break;
+      }
+    }
+  }
+  
   return details;
 };
 
@@ -965,7 +1075,7 @@ export const convertPriceChartingToCardData = (cardResult) => {
   }
   
   // Try to intelligently determine set from various sources and match to app's Pokemon sets
-  let setName = cardDetails.set || '';
+  let rawSetName = cardDetails.set || '';
   console.log('Set extraction debug:', {
     cardDetailsSet: cardDetails.set,
     console: cardResult.console,
@@ -976,8 +1086,8 @@ export const convertPriceChartingToCardData = (cardResult) => {
     releaseDate: cardResult.releaseDate
   });
   
-  if (!setName || setName === 'Unknown Set') {
-    // Strategy 1: Try to extract specific set name from card name using comprehensive patterns
+  // Strategy 1: Try to extract specific set name from card name using comprehensive patterns
+  if (!rawSetName || rawSetName === 'Unknown Set') {
     if (cardResult.name) {
       // Modern sets (most important for current cards)
       const modernSetPatterns = [
@@ -1010,118 +1120,103 @@ export const convertPriceChartingToCardData = (cardResult) => {
       for (const pattern of modernSetPatterns) {
         const match = cardResult.name.match(pattern);
         if (match) {
-          // Clean up the match and try to format it properly
-          let matchedSet = match[1].toLowerCase()
-            .replace(/\s+/g, ' ')
-            .trim();
-          
-          // Convert to proper format matching our Pokemon sets
-          const setMappings = {
-            'stellar crown': 'Stellar Crown',
-            'shrouded fable': 'Shrouded Fable', 
-            'twilight masquerade': 'Twilight Masquerade',
-            'temporal forces': 'Temporal Forces',
-            'paldean fates': 'Scarlet & Violet: Paldean Fates',
-            'paradox rift': 'Paradox Rift',
-            'obsidian flames': 'Obsidian Flames',
-            'paldea evolved': 'Paldea Evolved',
-            'scarlet violet': 'Scarlet & Violet',
-            'pokemon 151': 'Pokémon 151',
-            'silver tempest': 'Silver Tempest',
-            'lost origin': 'Lost Origin', 
-            'astral radiance': 'Astral Radiance',
-            'brilliant stars': 'Brilliant Stars',
-            'crown zenith': 'Crown Zenith',
-            'fusion strike': 'Fusion Strike',
-            'evolving skies': 'Evolving Skies',
-            'chilling reign': 'Chilling Reign',
-            'battle styles': 'Battle Styles',
-            'vivid voltage': 'Vivid Voltage',
-            'darkness ablaze': 'Darkness Ablaze',
-            'rebel clash': 'Rebel Clash',
-            'sword shield': 'Sword & Shield',
-            'base set': 'Base Set',
-            'jungle': 'Jungle',
-            'fossil': 'Fossil',
-            'team rocket': 'Team Rocket',
-            'gym heroes': 'Gym Heroes',
-            'gym challenge': 'Gym Challenge',
-            'neo genesis': 'Neo Genesis',
-            'neo discovery': 'Neo Discovery',
-            'neo revelation': 'Neo Revelation',
-            'neo destiny': 'Neo Destiny'
-          };
-          
-          if (setMappings[matchedSet]) {
-            setName = setMappings[matchedSet];
-            break;
-          }
+          rawSetName = match[0];
+          break;
         }
       }
     }
     
     // Strategy 2: If no specific set found, try console/genre/platform fields
-    if (!setName || setName === 'Unknown Set') {
+    if (!rawSetName || rawSetName === 'Unknown Set') {
       if (cardResult.console && cardResult.console !== 'Pokemon' && cardResult.console !== 'Pokemon Card') {
-        setName = cardResult.console;
+        rawSetName = cardResult.console;
       }
       else if (cardResult.genre && cardResult.genre !== 'Pokemon' && cardResult.genre !== 'Pokemon Card') {
-        setName = cardResult.genre;
+        rawSetName = cardResult.genre;
       }
       else if (cardResult.platform && cardResult.platform !== 'Pokemon' && cardResult.platform !== 'Pokemon Card') {
-        setName = cardResult.platform;
+        rawSetName = cardResult.platform;
       }
     }
     
     // Strategy 3: Try to infer from release date if we have it
-    if ((!setName || setName === 'Unknown Set') && cardResult.releaseDate) {
+    if ((!rawSetName || rawSetName === 'Unknown Set') && cardResult.releaseDate) {
       const year = cardResult.releaseDate.split('-')[0];
       if (year === '2024') {
-        setName = 'Stellar Crown'; // Default to recent popular set
+        rawSetName = 'Stellar Crown'; // Default to recent popular set
       } else if (year === '2023') {
-        setName = 'Obsidian Flames';
+        rawSetName = 'Obsidian Flames';
       } else if (year === '2022') {
-        setName = 'Lost Origin';
+        rawSetName = 'Lost Origin';
       } else if (year === '2021') {
-        setName = 'Evolving Skies';
+        rawSetName = 'Evolving Skies';
       }
     }
     
     // Final fallback
-    if (!setName || setName === cardDetails.set || setName === 'Pokemon' || setName === 'Pokemon Card') {
-      setName = 'Unknown Set';
+    if (!rawSetName || rawSetName === 'Pokemon' || rawSetName === 'Pokemon Card') {
+      rawSetName = 'Unknown Set';
     }
   }
   
-  console.log('Final extracted set:', setName);
+  // Now use the same set matching logic as PSA to find the best match from our dropdown options
+  const matchedSetResult = findBestMatchingSet(rawSetName, year);
+  
+  let finalSetName = rawSetName; // Default to raw set name
+  let finalSetValue = rawSetName; // Default to raw set name for the value too
+  
+  if (matchedSetResult) {
+    finalSetName = matchedSetResult.matchedLabel;
+    finalSetValue = matchedSetResult.matchedValue;
+  }
+  
+  console.log('Set matching result:', {
+    rawSetName,
+    matchedSetResult,
+    finalSetName,
+    finalSetValue
+  });
   
   const formData = {
+    // Basic card information
     cardName: cardDetails.cardName || cardResult.name || '',
-    set: setName,
+    player: cardDetails.player || '', // Player/character name if available
+    set: finalSetValue, // Use the matched set value for dropdown compatibility
+    setName: finalSetName, // Use the matched set label for display
     year: year,
+    
+    // Grading information
     grade: cardDetails.grade || '',
     gradingCompany: cardDetails.gradingCompany || '',
     condition: cardDetails.condition || '',
+    
+    // Category and type
     category: 'pokemon', // Always Pokemon since we're filtering for it
     
-    // Add current value in AUD (Price Charting returns USD, but we'll populate the USD field)
+    // Card details
+    cardNumber: cardDetails.cardNumber || '',
+    holoState: cardDetails.holofoil ? 'holo' : 'non-holo',
+    
+    // Pricing information (Price Charting returns USD, populate both fields)
     currentValueAUD: currentValue,
     currentValueUSD: currentValue,
     
-    // Additional fields from Price Charting
+    // Additional metadata from Price Charting
     releaseDate: cardResult.releaseDate || '',
     publisher: cardResult.publisher || '',
     platform: cardResult.platform || cardResult.console || '',
     upc: cardResult.upc || '',
     
-    // Include source information
+    // Source tracking
     priceChartingData: {
       productId: originalProduct?.id || cardResult.id,
       productName: cardResult.name,
       source: 'Price Charting',
       lastUpdated: new Date().toISOString(),
       allPrices: allPrices,
-      releaseDate: cardResult.releaseDate
+      releaseDate: cardResult.releaseDate,
+      rawSetName: rawSetName, // Keep original set name for reference
+      matchedSet: matchedSetResult // Keep matching result for debugging
     }
   };
   
@@ -1154,3 +1249,4 @@ export const getCacheStats = () => {
     lastUpdated: new Date().toISOString()
   };
 }; 
+
