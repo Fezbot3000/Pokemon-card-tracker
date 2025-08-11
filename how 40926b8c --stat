@@ -1,0 +1,10 @@
+[33mcommit 40926b8c6915bc88e6c1e71e9c0a7542f5bf9cd3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Fezbot3000 <matthewjakekane@icloud.com>
+Date:   Mon Aug 11 17:12:21 2025 +1000
+
+    trying to fix deployemnt that AI fucked up
+
+src/App.js
+src/components/Marketplace/ListCardModal.fixed.js
+src/components/TrialStatusBanner.js
+src/components/UpgradeModal.js
