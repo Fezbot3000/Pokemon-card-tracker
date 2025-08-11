@@ -267,20 +267,20 @@ function Dashboard() {
                 </div>
               </div>
 
-              {/* Card grid skeleton */}
-              <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
-                {Array.from({ length: 14 }, (_, index) => (
-                  <div
-                    key={`loading-skeleton-${index}`}
-                    className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
-                  >
-                    <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
-                    <div className="space-y-2 p-2">
-                      <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
-                    </div>
-                  </div>
+                  {/* Card grid skeleton */}
+                  <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+                    {Array.from({ length: 14 }, (_, index) => (
+                      <div
+                        key={`loading-skeleton-${index}`}
+                        className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
+                      >
+                        <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
+                        <div className="space-y-2 p-2">
+                          <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
+                          <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
+                          <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </>
@@ -539,7 +539,7 @@ function Dashboard() {
   // Render the dashboard content if authenticated
   return (
     <div className="relative">
-      <Outlet context={{ currentView, setCurrentView: updateCurrentView }} />
+      <Outlet context={{ currentView, setCurrentView }} />
 
       {/* Mobile Bottom Navigation - Available across all dashboard routes */}
       {!location.pathname.includes('/pricing') && (
@@ -661,7 +661,7 @@ function AppContent({ currentView, setCurrentView }) {
   });
   const [collections, setCollections] = useState({});
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const { registerAddCardCallback, checkAndStartTutorial, startTutorial } =
+  const { registerAddCardCallback, checkAndStartTutorial, startTutorial, resetTutorial } =
     useTutorial();
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -1091,7 +1091,7 @@ function AppContent({ currentView, setCurrentView }) {
             currentView={currentView}
             selectedCollection={selectedCollection}
             collections={collections}
-            onStartTutorial={startTutorial}
+            onStartTutorial={resetTutorial}
             onSignOut={logout}
             onClose={() => setCurrentView('cards')}
             onRenameCollection={(oldName, newName) => {
@@ -1123,7 +1123,7 @@ function AppContent({ currentView, setCurrentView }) {
           onClose={handleCloseSettings}
           selectedCollection={selectedCollection}
           collections={collections}
-          onStartTutorial={startTutorial}
+          onStartTutorial={resetTutorial}
           onSignOut={logout}
           onRenameCollection={(oldName, newName) => {
             collectionManager.renameCollection(oldName, newName, {

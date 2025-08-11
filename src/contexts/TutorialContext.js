@@ -48,6 +48,8 @@ export function TutorialProvider({ children }) {
     try {
       localStorage.setItem(ONBOARDING_KEY, 'true');
       setOnboardingComplete(true);
+      // Clear the isNewUser flag so tutorial doesn't show again
+      localStorage.removeItem('isNewUser');
     } catch (error) {
       LoggingService.error('Failed to save onboarding state', error);
     }
@@ -89,10 +91,24 @@ export function TutorialProvider({ children }) {
 
   // Function to check if user is new and start tutorial if needed
   const checkAndStartTutorial = useCallback(() => {
-    if (!onboardingComplete) {
+    // Check if user is new (isNewUser flag) AND tutorial hasn't been completed
+    const isNewUser = localStorage.getItem('isNewUser') === 'true';
+    if (isNewUser && !onboardingComplete) {
       startTutorial();
     }
   }, [onboardingComplete, startTutorial]);
+
+  // Function to reset tutorial state (for testing or manual restart)
+  const resetTutorial = useCallback(() => {
+    try {
+      localStorage.removeItem(ONBOARDING_KEY);
+      localStorage.setItem('isNewUser', 'true');
+      setOnboardingComplete(false);
+      startTutorial();
+    } catch (error) {
+      LoggingService.error('Failed to reset tutorial state', error);
+    }
+  }, [startTutorial]);
 
   const contextValue = {
     isTutorialActive,
@@ -103,6 +119,7 @@ export function TutorialProvider({ children }) {
     registerAddCardCallback,
     onboardingComplete,
     checkAndStartTutorial,
+    resetTutorial,
   };
 
   return (
