@@ -17,10 +17,11 @@ const TrialStatusBanner = () => {
 
   // Get subscription data - moved to top to avoid conditional hook calls
   const subscriptionData = useSubscription();
+  const isDev = process.env.NODE_ENV !== 'production';
 
   // Handle subscription data loading/error states
   if (!subscriptionData) {
-    console.info('[TrialStatusBanner] No subscriptionData yet');
+    if (isDev) console.debug('[TrialStatusBanner] Waiting for subscriptionData');
     // Fallback - show a basic banner
     return (
       <div
@@ -36,27 +37,19 @@ const TrialStatusBanner = () => {
     );
   }
 
-  const { isOnTrial, getTrialDaysRemaining, isFree, subscription } =
-    subscriptionData;
-  console.info('[TrialStatusBanner] subscriptionData', subscriptionData);
+  const { isOnTrial, getTrialDaysRemaining, isFree, subscription } = subscriptionData;
 
   // For debugging - let's force show the banner if we're on trial
   const shouldShow =
     isOnTrial || isFree || subscription?.status === 'free_trial';
-  console.info('[TrialStatusBanner] shouldShow', shouldShow, {
-    isOnTrial,
-    isFree,
-    status: subscription?.status,
-  });
 
   // Don't show banner for premium users or when loading
   if (!shouldShow) {
-    console.info('[TrialStatusBanner] Hiding banner due to shouldShow=false');
     return null;
   }
 
   const daysRemaining = getTrialDaysRemaining();
-  console.info('[TrialStatusBanner] daysRemaining', daysRemaining);
+  if (isDev) console.debug('[TrialStatusBanner] showing', { status: subscription?.status, isOnTrial, isFree, daysRemaining });
 
   // Show the actual trial banner
   return (

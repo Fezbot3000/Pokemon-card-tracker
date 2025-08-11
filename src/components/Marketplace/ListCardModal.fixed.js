@@ -6,6 +6,7 @@ import {
   where,
   getDocs,
   addDoc,
+  setDoc,
   serverTimestamp,
   updateDoc,
   doc,

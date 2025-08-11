@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
+import ModalButton from '../design-system/atoms/ModalButton';
 import Icon from '../design-system/atoms/Icon';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../design-system/contexts/AuthContext';
@@ -21,8 +22,10 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
   const { user, subscriptionData } = useAuth();
   const [loading, setLoading] = useState(false);
 
+  const isDev = process.env.NODE_ENV !== 'production';
+
   const handleUpgrade = async () => {
-    LoggingService.info('🚀 PRODUCTION DEBUG: Starting upgrade process');
+    if (isDev) LoggingService.debug('Upgrade: start');
     
     // Enhanced protection against rapid clicking and duplicate subscriptions
     if (loading) {
@@ -44,18 +47,12 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
     setLoading(true);
 
     try {
-      LoggingService.info(
-        '📡 PRODUCTION DEBUG: About to call createCheckoutSession'
-      );
-      LoggingService.info('📡 PRODUCTION DEBUG: User ID:', user?.uid);
+      if (isDev) LoggingService.debug('Upgrade: calling createCheckoutSession', { uid: user?.uid });
 
       const { httpsCallable } = await import('firebase/functions');
       const { functions } = await import('../firebase');
 
-      LoggingService.info(
-        '📡 PRODUCTION DEBUG: Functions instance:',
-        functions
-      );
+      if (isDev) LoggingService.debug('Upgrade: functions instance ready');
 
       const createCheckoutSession = httpsCallable(
         functions,
@@ -67,77 +64,47 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
         process.env.REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID ||
         'price_1RfTouGIULGXhjjBvCFuEoQH';
 
-      LoggingService.info('📡 PRODUCTION DEBUG: Calling function with data:', {
-        priceId: STRIPE_PREMIUM_PLAN_PRICE_ID,
-        userId: user?.uid,
-      });
+      if (isDev) LoggingService.debug('Upgrade: invoking function', { priceId: STRIPE_PREMIUM_PLAN_PRICE_ID, userId: user?.uid });
 
       const result = await createCheckoutSession({
         priceId: STRIPE_PREMIUM_PLAN_PRICE_ID,
         userId: user?.uid,
       });
 
-      LoggingService.info(
-        '✅ PRODUCTION DEBUG: Function call successful:',
-        result
-      );
-      LoggingService.info(
-        '✅ PRODUCTION DEBUG: Session URL:',
-        result.data?.url
-      );
-      LoggingService.info(
-        '✅ PRODUCTION DEBUG: Session ID:',
-        result.data?.sessionId
-      );
+      if (isDev) LoggingService.debug('Upgrade: function result', result);
 
       // Step 3: Load Stripe and redirect to checkout with session ID
-      LoggingService.info('📦 PRODUCTION DEBUG: Loading Stripe...');
+      if (isDev) LoggingService.debug('Upgrade: loading Stripe');
       const stripePublishableKey = getStripePublishableKey();
-      LoggingService.info(
-        '📦 PRODUCTION DEBUG: Stripe key available:',
-        !!stripePublishableKey
-      );
+      if (isDev) LoggingService.debug('Upgrade: stripe key available', !!stripePublishableKey);
 
       const { loadStripe } = await import('@stripe/stripe-js');
       const stripe = await loadStripe(stripePublishableKey);
 
       if (!stripe) {
-        LoggingService.error('❌ PRODUCTION DEBUG: Stripe failed to load');
+        LoggingService.error('Stripe failed to load');
         throw new Error('Stripe failed to load');
       }
 
-      LoggingService.info('✅ PRODUCTION DEBUG: Stripe loaded successfully');
+      if (isDev) LoggingService.debug('Upgrade: stripe loaded');
 
       // Step 4: Redirect to Stripe Checkout with session ID
-      LoggingService.info(
-        '💳 PRODUCTION DEBUG: Redirecting to Stripe Checkout...'
-      );
+      if (isDev) LoggingService.debug('Upgrade: redirecting to Stripe Checkout');
       const { error } = await stripe.redirectToCheckout({
         sessionId: result.data.sessionId,
       });
 
       if (error) {
-        LoggingService.error(
-          '❌ PRODUCTION DEBUG: Stripe redirect error:',
-          error
-        );
+        LoggingService.error('Stripe redirect error:', error);
         throw error;
       }
 
-      LoggingService.info(
-        '✅ PRODUCTION DEBUG: Successfully redirected to Stripe Checkout'
-      );
+      if (isDev) LoggingService.debug('Upgrade: redirected to Stripe');
     } catch (error) {
-      LoggingService.error('❌ PRODUCTION DEBUG: Error caught:', error);
-      LoggingService.error(
-        '❌ PRODUCTION DEBUG: Error message:',
-        error.message
-      );
-      LoggingService.error('❌ PRODUCTION DEBUG: Error code:', error.code);
-      LoggingService.error(
-        '❌ PRODUCTION DEBUG: Full error object:',
-        JSON.stringify(error, null, 2)
-      );
+      // Normalize callable/internal error messages
+      const msg = error?.message || 'Unknown error';
+      const code = error?.code || 'unknown';
+      if (isDev) LoggingService.debug('Upgrade: error', { code, msg });
 
       // More specific error messages
       let errorMessage = 'Payment system error';
@@ -149,6 +116,8 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
         errorMessage = 'Server configuration error. Please contact support.';
       } else if (error.message && error.message.includes('price')) {
         errorMessage = 'Invalid price configuration. Please contact support.';
+      } else if (error.message && error.message.includes('userDoc.exists')) {
+        errorMessage = 'Server error: please update Cloud Function to use userDoc.exists (Admin SDK) instead of userDoc.exists().';
       } else if (error.message && error.message.includes('Stripe')) {
         errorMessage = 'Payment system error. Please try again.';
       } else if (error.message && error.message.includes('network')) {
@@ -166,9 +135,14 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
       onClose={onClose}
       title="Your Plan Options"
       position="right"
-      size="lg"
+      size="modal-width-70"
       closeOnClickOutside={true}
-      className="mx-auto max-w-2xl"
+      className=""
+      footer={(
+        <div className="ml-auto flex items-center gap-2">
+          <ModalButton variant="secondary" onClick={onClose}>Close</ModalButton>
+        </div>
+      )}
     >
       <div className="space-y-6">
         <div className="text-center">

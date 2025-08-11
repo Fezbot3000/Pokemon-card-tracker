@@ -628,15 +628,12 @@ function AppContent({ currentView, setCurrentView }) {
     }
   }, []);
 
-  // Debug: verify AppContent mounts
+  // Debug: verify AppContent mounts (dev only)
   useEffect(() => {
-    console.info('[AppContent] mounted and rendering layout');
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug('[AppContent] mounted');
+    }
   }, []);
-
-  // Simple test to see if this code runs at all
-  if (typeof window !== 'undefined') {
-    window.testLog = 'AppContent is running!';
-  }
 
   // Use card modals hook
   const {
