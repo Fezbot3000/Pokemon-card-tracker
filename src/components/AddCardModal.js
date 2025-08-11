@@ -458,109 +458,112 @@ const AddCardModal = ({
         closeOnClickOutside={true}
       >
         <div className="space-y-6">
-          {/* Card Search Section */}
-          <div className="mb-6">
-            <h3 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">
-              Search for Card
-            </h3>
-            <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
-              Start typing a Pokemon card name to see live search results.
-            </p>
-            <CardSearchAutocomplete
-              onSelectCard={handleSelectCard}
-              placeholder="Type card name (e.g., Charizard, Pikachu)..."
-              className="w-full"
-            />
-            
-            {/* Price Charting Success Message */}
-            {saveMessage && saveMessage === 'Card details applied from Price Charting' && (
-              <div className="mt-4 rounded-lg bg-green-100 px-4 py-2 text-sm text-green-700 transition-all dark:bg-green-900/30 dark:text-green-400">
-                Card details applied from Price Charting
-              </div>
-            )}
-          </div>
-
-          {/* PSA Certificate Lookup Section */}
-          <div className="mb-6">
-            <h3 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">
-              PSA Certificate Lookup
-            </h3>
-            <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
-              Search your PSA serial number to pre-populate the page.
-            </p>
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={psaSerial}
-                onChange={e => setPsaSerial(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    // Optionally trigger the PSA search on Enter
-                    if (psaSerial.trim() && hasFeature('PSA_SEARCH') && !isSearching) {
-                      handlePsaLookup();
-                    }
-                  }
-                }}
-                placeholder="Enter PSA serial number"
-                className="focus:ring-primary/20 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
-                disabled={isSearching}
-              />
-              <Button
-                variant="primary"
-                onClick={handlePsaLookup}
-                disabled={
-                  isSearching || !psaSerial.trim() || !hasFeature('PSA_SEARCH')
-                }
+          {/* Search Sections - Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Card Search Section */}
+            <div>
+              <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                Search for Card
+              </h3>
+              <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
+                Type a Pokemon card name to search.
+              </p>
+              <CardSearchAutocomplete
+                onSelectCard={handleSelectCard}
+                placeholder="Type card name (e.g., Charizard, Pikachu)..."
                 className="w-full"
-                title={
-                  !hasFeature('PSA_SEARCH')
-                    ? 'PSA search requires Premium subscription'
-                    : 'Search PSA database'
-                }
-              >
-                {!hasFeature('PSA_SEARCH') ? (
-                  <>
-                    <span
-                      className="material-icons mr-1"
-                      style={{ fontSize: '16px' }}
-                    >
-                      lock
-                    </span>
-                    Premium Feature
-                  </>
-                ) : (
-                  <>
-                    <span
-                      className="material-icons mr-1"
-                      style={{ fontSize: '16px' }}
-                    >
-                      search
-                    </span>
-                    Search PSA
-                  </>
-                )}
-              </Button>
+              />
+              
+              {/* Price Charting Success Message */}
+              {saveMessage && saveMessage === 'Card details applied from Price Charting' && (
+                <div className="mt-4 rounded-lg bg-green-100 px-4 py-2 text-sm text-green-700 transition-all dark:bg-green-900/30 dark:text-green-400">
+                  Card details applied from Price Charting
+                </div>
+              )}
             </div>
 
-            {/* PSA Messages */}
-            {saveMessage && saveMessage === 'PSA data applied successfully' && (
-              <div className="mt-4 rounded-lg bg-green-100 px-4 py-2 text-sm text-green-700 transition-all dark:bg-green-900/30 dark:text-green-400">
-                PSA data applied successfully
+            {/* PSA Certificate Lookup Section */}
+            <div>
+              <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                PSA Certificate Lookup
+              </h3>
+              <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
+                Enter PSA serial number to lookup.
+              </p>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={psaSerial}
+                  onChange={e => setPsaSerial(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      // Optionally trigger the PSA search on Enter
+                      if (psaSerial.trim() && hasFeature('PSA_SEARCH') && !isSearching) {
+                        handlePsaLookup();
+                      }
+                    }
+                  }}
+                  placeholder="Enter PSA serial number"
+                  className="focus:ring-primary/20 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
+                  disabled={isSearching}
+                />
+                <Button
+                  variant="primary"
+                  onClick={handlePsaLookup}
+                  disabled={
+                    isSearching || !psaSerial.trim() || !hasFeature('PSA_SEARCH')
+                  }
+                  className="w-full"
+                  title={
+                    !hasFeature('PSA_SEARCH')
+                      ? 'PSA search requires Premium subscription'
+                      : 'Search PSA database'
+                  }
+                >
+                  {!hasFeature('PSA_SEARCH') ? (
+                    <>
+                      <span
+                        className="material-icons mr-1"
+                        style={{ fontSize: '16px' }}
+                      >
+                        lock
+                      </span>
+                      Premium Feature
+                    </>
+                  ) : (
+                    <>
+                      <span
+                        className="material-icons mr-1"
+                        style={{ fontSize: '16px' }}
+                      >
+                        search
+                      </span>
+                      Search PSA
+                    </>
+                  )}
+                </Button>
               </div>
-            )}
-            {saveMessage && saveMessage.startsWith('Searching PSA') && (
-              <div className="mt-4 rounded-lg bg-blue-100 px-4 py-2 text-sm text-blue-700 transition-all dark:bg-blue-900/30 dark:text-blue-400">
-                {saveMessage}
-              </div>
-            )}
-            {saveMessage &&
-              (saveMessage.startsWith('Failed to find PSA') ||
-                saveMessage.startsWith('Failed to search PSA')) && (
-                <div className="mt-4 rounded-lg bg-red-100 px-4 py-2 text-sm text-red-700 transition-all dark:bg-red-900/30 dark:text-red-400">
+
+              {/* PSA Messages */}
+              {saveMessage && saveMessage === 'PSA data applied successfully' && (
+                <div className="mt-4 rounded-lg bg-green-100 px-4 py-2 text-sm text-green-700 transition-all dark:bg-green-900/30 dark:text-green-400">
+                  PSA data applied successfully
+                </div>
+              )}
+              {saveMessage && saveMessage.startsWith('Searching PSA') && (
+                <div className="mt-4 rounded-lg bg-blue-100 px-4 py-2 text-sm text-blue-700 transition-all dark:bg-blue-900/30 dark:text-blue-400">
                   {saveMessage}
                 </div>
               )}
+              {saveMessage &&
+                (saveMessage.startsWith('Failed to find PSA') ||
+                  saveMessage.startsWith('Failed to search PSA')) && (
+                  <div className="mt-4 rounded-lg bg-red-100 px-4 py-2 text-sm text-red-700 transition-all dark:bg-red-900/30 dark:text-red-400">
+                    {saveMessage}
+                  </div>
+                )}
+            </div>
           </div>
 
           {/* Collection Selection */}
