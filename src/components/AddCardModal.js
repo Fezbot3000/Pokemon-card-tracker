@@ -633,6 +633,7 @@ const AddCardModal = ({
             errors={errors}
             hideCollectionField={true}
             hidePsaSearchButton={true}
+            hidePriceChartingButton={true}
             requiredFields={{
               cardName: true,
               originalInvestmentAmount: true,

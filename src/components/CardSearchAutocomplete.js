@@ -155,6 +155,35 @@ const CardSearchAutocomplete = ({ onSelectCard, placeholder = "Search for cards.
     };
   }, []);
 
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightedIndex >= 0 && dropdownRef.current) {
+      const dropdownElement = dropdownRef.current;
+      const highlightedElement = dropdownElement.querySelector(`[data-index="${highlightedIndex}"]`);
+      
+      if (highlightedElement) {
+        // Calculate if the element is outside the visible area
+        const dropdownRect = dropdownElement.getBoundingClientRect();
+        const elementRect = highlightedElement.getBoundingClientRect();
+        
+        // Check if element is below the visible area
+        if (elementRect.bottom > dropdownRect.bottom) {
+          highlightedElement.scrollIntoView({ 
+            block: 'end', 
+            behavior: 'smooth' 
+          });
+        }
+        // Check if element is above the visible area
+        else if (elementRect.top < dropdownRect.top) {
+          highlightedElement.scrollIntoView({ 
+            block: 'start', 
+            behavior: 'smooth' 
+          });
+        }
+      }
+    }
+  }, [highlightedIndex]);
+
   // Get display name for card
   const getCardDisplayName = (card) => {
     if (card.cardDetails.cardName) {
@@ -250,6 +279,7 @@ const CardSearchAutocomplete = ({ onSelectCard, placeholder = "Search for cards.
                 return (
                   <div
                     key={card.id || index}
+                    data-index={index}
                     className={`cursor-pointer px-3 py-2 transition-colors ${
                       isHighlighted
                         ? 'bg-blue-50 dark:bg-blue-900/20'

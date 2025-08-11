@@ -707,6 +707,7 @@ const CardDetailsModal = ({
                 isPsaSearching={isPsaSearching}
                 onPriceChartingSearch={handlePriceChartingSearch}
                 isPriceChartingSearching={isPriceChartingSearching}
+                hidePriceChartingButton={true}
               />
             </div>
           )}
