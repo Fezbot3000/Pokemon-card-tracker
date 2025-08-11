@@ -63,9 +63,26 @@ const PurchaseInvoices = () => {
           setInvoices(prev =>
             prev.map(inv => (inv.id === newInvoice.id ? newInvoice : inv))
           );
+          // Persist edit to Firestore/local DB
+          await db.savePurchaseInvoice({
+            ...newInvoice,
+            // Ensure normalized notes field
+            notes:
+              newInvoice.notes !== undefined
+                ? newInvoice.notes
+                : newInvoice.note || '',
+          });
         } else {
           // For new invoices, add to local state immediately
           setInvoices(prev => [newInvoice, ...prev]);
+          // Persist new invoice to Firestore/local DB
+          await db.savePurchaseInvoice({
+            ...newInvoice,
+            notes:
+              newInvoice.notes !== undefined
+                ? newInvoice.notes
+                : newInvoice.note || '',
+          });
         }
 
         setShowCreateModal(false);
