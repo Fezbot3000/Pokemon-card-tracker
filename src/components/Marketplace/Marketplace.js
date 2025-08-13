@@ -25,6 +25,7 @@ import MarketplacePagination from './MarketplacePagination'; // Import paginatio
 import LazyImage from './LazyImage'; // Import lazy image component
 import SellerProfileModal from './SellerProfileModal'; // Import seller profile modal component
 import ReportListing from './ReportListing'; // Import report listing component
+import SaleModal from '../SaleModal'; // Import SaleModal for external sales
 
 import LoggingService from '../../services/LoggingService';
 
@@ -55,6 +56,7 @@ function Marketplace({ currentView, onViewChange }) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBuyerSelectionModalOpen, setIsBuyerSelectionModalOpen] =
     useState(false);
+  const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -410,6 +412,14 @@ function Marketplace({ currentView, onViewChange }) {
     setSelectedListing(listing);
     setIsBuyerSelectionModalOpen(true);
   };
+  
+  const handleExternalSale = (listing) => {
+    // Close buyer selection modal and open sale modal for external sale
+    setIsBuyerSelectionModalOpen(false);
+    setIsSaleModalOpen(true);
+    // Ensure listing is set
+    setSelectedListing(listing);
+  };
 
   return (
           <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-1">
@@ -740,6 +750,50 @@ function Marketplace({ currentView, onViewChange }) {
           onClose={() => {
             setIsBuyerSelectionModalOpen(false);
             setSelectedListing(null);
+          }}
+          onExternalSale={handleExternalSale}
+        />
+      )}
+      
+      {/* Sale Modal for External Sales */}
+      {isSaleModalOpen && selectedListing && (
+        <SaleModal
+          isOpen={isSaleModalOpen}
+          onClose={() => {
+            setIsSaleModalOpen(false);
+            setSelectedListing(null);
+          }}
+          selectedCards={[{
+            id: selectedListing.id,
+            slabSerial: selectedListing.id,
+            card: selectedListing.cardTitle || selectedListing.card?.name,
+            name: selectedListing.cardTitle || selectedListing.card?.name,
+            player: selectedListing.card?.player,
+            set: selectedListing.card?.set,
+            investmentAUD: selectedListing.card?.investmentAUD || 0,
+            originalInvestmentAmount: selectedListing.card?.investmentAUD || 0,
+            originalInvestmentCurrency: 'AUD'
+          }]}
+          onConfirm={async (saleData) => {
+            try {
+              // Update the listing status to sold
+              const listingRef = doc(firestoreDb, 'marketplaceItems', selectedListing.id);
+              await updateDoc(listingRef, {
+                status: 'sold',
+                soldAt: new Date(),
+                updatedAt: new Date(),
+                externalSale: true,
+                soldPrice: saleData.soldPrices[selectedListing.id],
+                soldToBuyer: saleData.buyer
+              });
+              
+              toast.success('Item marked as sold');
+              setIsSaleModalOpen(false);
+              setSelectedListing(null);
+            } catch (error) {
+              logger.error('Error marking external sale:', error);
+              toast.error('Failed to mark item as sold');
+            }
           }}
         />
       )}

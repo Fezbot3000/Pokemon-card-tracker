@@ -11,6 +11,8 @@ service cloud.firestore {
     match /users/{userId} {
       // Allow owner to GET/LIST their own top-level user doc
       allow get, list: if isOwner(userId);
+      // Allow authenticated users to read user documents for marketplace purposes
+      allow get: if request.auth != null;
       // Allow owner to write
       allow write: if isOwner(userId);
     }
@@ -147,8 +149,10 @@ service cloud.firestore {
     // --- Marketplace Chats ---
     // Chat functionality for marketplace listings
     match /chats/{chatId} {
-      // Allow read if user is authenticated and is a participant
-      allow read: if request.auth.uid in resource.data.participants;
+      // Allow read if user is authenticated and is a participant OR is the seller/buyer
+      allow read: if request.auth.uid in resource.data.participants ||
+                   request.auth.uid == resource.data.sellerId ||
+                   request.auth.uid == resource.data.buyerId;
       
       // Allow creation if the authenticated user is one of the participants
       allow create: if request.auth.uid in request.resource.data.participants;
@@ -203,7 +207,7 @@ service cloud.firestore {
       allow delete: if false;
     }
     
-    // --- Marketplace Reviews ---
+    // --- Marketplace Reviews (Legacy) ---
     // Reviews for sellers in the marketplace
     match /marketplaceReviews/{reviewId} {
       // Allow any authenticated user to read reviews
@@ -215,6 +219,44 @@ service cloud.firestore {
       
       // Prevent updates and deletes
       allow update, delete: if false;
+    }
+    
+    // --- Reviews Collection (New) ---
+    // Enhanced reviews system for marketplace transactions
+    match /reviews/{reviewId} {
+      // Allow authenticated users to read reviews
+      allow read: if request.auth != null;
+      
+      // Allow creating a review if:
+      // 1. User is authenticated
+      // 2. User is the reviewer (reviewerId matches auth uid)
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.reviewerId;
+      
+      // Reviews cannot be updated or deleted once created
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // --- Notifications Collection ---
+    // User notifications for marketplace activities
+    match /notifications/{notificationId} {
+      // Users can only read their own notifications
+      allow read: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+      
+      // Allow authenticated users to create notifications
+      // (In production, this should be restricted to Cloud Functions)
+      allow create: if request.auth != null;
+      
+      // Users can update their own notifications (mark as read)
+      allow update: if request.auth != null 
+        && request.auth.uid == resource.data.userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      
+      // Users can delete their own notifications
+      allow delete: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
     }
     
     // --- Marketplace Reports ---

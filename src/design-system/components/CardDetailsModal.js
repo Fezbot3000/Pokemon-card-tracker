@@ -672,7 +672,7 @@ const CardDetailsModal = ({
 
               {/* Save Loading Overlay */}
               {isSaving && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm dark:bg-black/90">
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm dark:bg-black/90" style={{ zIndex: 70000 }}>
                   <div className="text-center">
                     <div className="mb-2 inline-block size-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
                     <p className="text-gray-600 dark:text-gray-400">
