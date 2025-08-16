@@ -344,23 +344,11 @@ const CardDetailsModal = ({
         setIsInitialLoad(false);
       }
       
-      // On mobile, only load content when the modal opens
-      if (isMobile) {
-        // Set a short delay to allow the modal animation to complete
-        const timer = setTimeout(() => {
-          if (image) {
-            setCardImage(image);
-          }
-          setContentLoaded(true); // Ensure content is marked as loaded
-        }, 150); // 150ms delay
-        return () => clearTimeout(timer);
-      } else {
-        // Desktop: Load content immediately
-        if (image) {
-          setCardImage(image);
-        }
-        setContentLoaded(true);
+      // Load content immediately for both mobile and desktop
+      if (image) {
+        setCardImage(image);
       }
+      setContentLoaded(true);
 
       // --- REVISED ERROR CLEARING LOGIC ---
       setErrors({});

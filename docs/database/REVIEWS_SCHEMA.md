@@ -230,3 +230,4 @@ Add to `firestore.indexes.json`:
 3. **Reporting System**
    - Flag inappropriate reviews
    - Admin moderation interface
+
