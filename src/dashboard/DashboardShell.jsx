@@ -37,7 +37,13 @@ function Dashboard() {
           <div className="flex-1 overflow-y-auto">
             <div className={`pb-20 sm:p-6 ${window.innerWidth <= 768 ? 'px-2 pt-2' : 'p-4'}`}>
               <div className="w-full px-1 pb-20 sm:px-2">
-                {/* Loading skeletons omitted for brevity */}
+                {/* Simple loading spinner */}
+                <div className="flex min-h-[400px] items-center justify-center">
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-400"></div>
+                    <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -72,7 +78,13 @@ function Dashboard() {
           <div className="flex-1 overflow-y-auto">
             <div className={`pb-20 sm:p-6 ${window.innerWidth <= 768 ? 'px-2 pt-2' : 'p-4'}`}>
               <div className="w-full px-1 pb-20 sm:px-2">
-                {/* Loading skeletons omitted for brevity */}
+                {/* Simple loading spinner */}
+                <div className="flex min-h-[400px] items-center justify-center">
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-400"></div>
+                    <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

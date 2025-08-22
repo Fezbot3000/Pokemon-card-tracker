@@ -81,7 +81,7 @@ function Dashboard() {
 
   // Debug tool will be rendered in AppContent with proper selectedCollection prop
 
-  // Show loading indicator while auth is loading (priority) OR while data is loading for authenticated users
+  // Show simple loading indicator while auth is loading
   if (authLoading) {
     return (
       <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
@@ -101,212 +101,24 @@ function Dashboard() {
           <div className="flex-1 overflow-y-auto">
             <div className={`pb-20 sm:p-6 ${window.innerWidth <= 768 ? 'px-2 pt-2' : 'p-4'}`}>
               <div className="w-full px-1 pb-20 sm:px-2">
-              {/* Conditional skeleton content based on currentView */}
-              {currentView === 'marketplace' || currentView === 'marketplace-selling' || currentView === 'marketplace-messages' ? (
-                <>
-                  {/* Marketplace Navigation Skeleton */}
-                  <div className="mb-4 flex gap-2">
-                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-
-                  {/* Search and Filter skeleton */}
-                  <div className="mb-6 space-y-4">
-                    <div className="flex gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F]">
-                      <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-10 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="h-8 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-8 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-8 w-16 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    </div>
-                  </div>
-
-                  {/* Marketplace card grid skeleton */}
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                    {Array.from({ length: 12 }, (_, index) => (
-                      <div
-                        key={`marketplace-skeleton-${index}`}
-                        className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
-                      >
-                        <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
-                        <div className="space-y-2 p-3">
-                          <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-6 w-full rounded bg-gray-200 dark:bg-[#333]"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : currentView === 'sold-items' || currentView === 'purchase-invoices' || currentView === 'sold' ? (
-                <>
-                  {/* Statistics Summary Skeleton */}
-                  <div className="mb-6 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]">
-                    <div className="rounded-md p-2 sm:p-4 md:p-6">
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
-                        {[
-                          { label: currentView === 'sold-items' ? 'SALES' : 'INVOICES', width: 'w-12' },
-                          { label: 'TOTAL', width: 'w-16' },
-                          { label: currentView === 'sold-items' ? 'PROFIT' : 'INVESTMENT', width: 'w-16' },
-                          { label: currentView === 'sold-items' ? 'ROI' : 'CARDS', width: 'w-12' },
-                        ].map((stat) => (
-                          <div
-                            key={stat.label}
-                            className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
-                          >
-                            <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
-                              {stat.label}
-                            </div>
-                            <div
-                              className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}
-                            ></div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Search bar skeleton */}
-                  <div className="mb-4">
-                    <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-
-                  {/* Results count skeleton */}
-                  <div className="mb-4 px-4">
-                    <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-
-                  {/* Table skeleton for desktop / Card list skeleton for mobile */}
-                  <div className="space-y-4">
-                    {/* Desktop table skeleton */}
-                    <div className="hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F] md:block">
-                      <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-black">
-                        <div className="flex justify-between">
-                          <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                        </div>
-                      </div>
-                      {Array.from({ length: 5 }, (_, index) => (
-                        <div key={`table-skeleton-${index}`} className="border-b border-gray-200 p-4 dark:border-gray-700">
-                          <div className="flex justify-between">
-                            <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Mobile card skeleton */}
-                    <div className="space-y-4 md:hidden">
-                      {Array.from({ length: 4 }, (_, index) => (
-                        <div key={`mobile-skeleton-${index}`} className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
-                          <div className="mb-3 flex items-center justify-between">
-                            <div className="h-5 w-32 rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-20 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          </div>
-                          <div className="space-y-2">
-                            <div className="h-4 w-24 rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-36 rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-28 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Default Cards page skeleton */}
-                  {/* Statistics Summary Skeleton */}
-                  <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F] sm:mb-4">
-                <div className="rounded-md p-2 sm:p-4 md:p-6">
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
-                    {[
-                      { label: 'CARDS', width: 'w-8' },
-                      { label: 'PAID', width: 'w-16' },
-                      { label: 'VALUE', width: 'w-16' },
-                      { label: 'PROFIT', width: 'w-12' },
-                    ].map((stat) => (
-                      <div
-                        key={stat.label}
-                        className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
-                      >
-                        <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
-                          {stat.label}
-                        </div>
-                        <div
-                          className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}
-                        ></div>
-                      </div>
-                    ))}
+                {/* Simple loading spinner */}
+                <div className="flex min-h-[400px] items-center justify-center">
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-400"></div>
+                    <p className="text-gray-600 dark:text-gray-300">Loading...</p>
                   </div>
                 </div>
-              </div>
-
-              {/* Search toolbar skeleton */}
-              <div className="mb-4">
-                <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F] sm:flex-row sm:items-center sm:gap-4 sm:p-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="h-10 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Collection Selector Skeleton */}
-              <div className="mb-2 flex justify-end">
-                <div className="w-48 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F]">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="size-6 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                    </div>
-                    <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-                </div>
-              </div>
-
-                  {/* Card grid skeleton */}
-                  <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
-                    {Array.from({ length: 14 }, (_, index) => (
-                      <div
-                        key={`loading-skeleton-${index}`}
-                        className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
-                      >
-                        <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
-                        <div className="space-y-2 p-2">
-                          <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
               </div>
             </div>
           </div>
         </main>
         
-        {/* Add BottomNavBar to combined loading state */}
+        {/* Add BottomNavBar to loading state */}
         <BottomNavBar 
           currentView={currentView}
           onViewChange={updateCurrentView}
           onSettingsClick={() => updateCurrentView('settings')}
         />
-
       </div>
     );
   }
@@ -316,7 +128,7 @@ function Dashboard() {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Show loading indicator for data loading (only after auth is confirmed)
+  // Show simple loading indicator for data loading (only after auth is confirmed)
   if (dataLoading) {
     return (
       <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
@@ -336,212 +148,24 @@ function Dashboard() {
           <div className="flex-1 overflow-y-auto">
             <div className={`pb-20 sm:p-6 ${window.innerWidth <= 768 ? 'px-2 pt-2' : 'p-4'}`}>
               <div className="w-full px-1 pb-20 sm:px-2">
-              {/* Conditional skeleton content based on currentView */}
-              {currentView === 'marketplace' || currentView === 'marketplace-selling' || currentView === 'marketplace-messages' ? (
-                <>
-                  {/* Marketplace Navigation Skeleton */}
-                  <div className="mb-4 flex gap-2">
-                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-
-                  {/* Search and Filter skeleton */}
-                  <div className="mb-6 space-y-4">
-                    <div className="flex gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F]">
-                      <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-10 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="h-8 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-8 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-8 w-16 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    </div>
-                  </div>
-
-                  {/* Marketplace card grid skeleton */}
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                    {Array.from({ length: 12 }, (_, index) => (
-                      <div
-                        key={`marketplace-skeleton-${index}`}
-                        className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
-                      >
-                        <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
-                        <div className="space-y-2 p-3">
-                          <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-6 w-full rounded bg-gray-200 dark:bg-[#333]"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : currentView === 'sold-items' || currentView === 'purchase-invoices' || currentView === 'sold' ? (
-                <>
-                  {/* Statistics Summary Skeleton */}
-                  <div className="mb-6 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]">
-                    <div className="rounded-md p-2 sm:p-4 md:p-6">
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
-                        {[
-                          { label: currentView === 'sold-items' ? 'SALES' : 'INVOICES', width: 'w-12' },
-                          { label: 'TOTAL', width: 'w-16' },
-                          { label: currentView === 'sold-items' ? 'PROFIT' : 'INVESTMENT', width: 'w-16' },
-                          { label: currentView === 'sold-items' ? 'ROI' : 'CARDS', width: 'w-12' },
-                        ].map((stat) => (
-                          <div
-                            key={stat.label}
-                            className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
-                          >
-                            <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
-                              {stat.label}
-                            </div>
-                            <div
-                              className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}
-                            ></div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Search bar skeleton */}
-                  <div className="mb-4">
-                    <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-
-                  {/* Results count skeleton */}
-                  <div className="mb-4 px-4">
-                    <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-
-                  {/* Table skeleton for desktop / Card list skeleton for mobile */}
-                  <div className="space-y-4">
-                    {/* Desktop table skeleton */}
-                    <div className="hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F] md:block">
-                      <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-black">
-                        <div className="flex justify-between">
-                          <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                        </div>
-                      </div>
-                      {Array.from({ length: 5 }, (_, index) => (
-                        <div key={`table-skeleton-${index}`} className="border-b border-gray-200 p-4 dark:border-gray-700">
-                          <div className="flex justify-between">
-                            <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Mobile card skeleton */}
-                    <div className="space-y-4 md:hidden">
-                      {Array.from({ length: 4 }, (_, index) => (
-                        <div key={`mobile-skeleton-${index}`} className="animate-pulse rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
-                          <div className="mb-3 flex items-center justify-between">
-                            <div className="h-5 w-32 rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-20 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          </div>
-                          <div className="space-y-2">
-                            <div className="h-4 w-24 rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-36 rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="h-4 w-28 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Default Cards page skeleton */}
-                  {/* Statistics Summary Skeleton */}
-              <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F] sm:mb-4">
-                <div className="rounded-md p-2 sm:p-4 md:p-6">
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
-                    {[
-                      { label: 'CARDS', width: 'w-8' },
-                      { label: 'PAID', width: 'w-16' },
-                      { label: 'VALUE', width: 'w-16' },
-                      { label: 'PROFIT', width: 'w-12' },
-                    ].map((stat) => (
-                      <div
-                        key={stat.label}
-                        className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
-                      >
-                        <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
-                          {stat.label}
-                        </div>
-                        <div
-                          className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}
-                        ></div>
-                      </div>
-                    ))}
+                {/* Simple loading spinner */}
+                <div className="flex min-h-[400px] items-center justify-center">
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-400"></div>
+                    <p className="text-gray-600 dark:text-gray-300">Loading...</p>
                   </div>
                 </div>
-              </div>
-
-              {/* Search toolbar skeleton */}
-              <div className="mb-4">
-                <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F] sm:flex-row sm:items-center sm:gap-4 sm:p-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="h-10 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Collection Selector Skeleton */}
-              <div className="mb-2 flex justify-end">
-                <div className="w-48 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F]">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="size-6 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                    </div>
-                    <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-                </div>
-              </div>
-
-                  {/* Card grid skeleton */}
-                  <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
-                    {Array.from({ length: 14 }, (_, index) => (
-                      <div
-                        key={`loading-skeleton-${index}`}
-                        className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
-                      >
-                        <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
-                        <div className="space-y-2 p-2">
-                          <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
               </div>
             </div>
           </div>
         </main>
         
-        {/* Add BottomNavBar to data loading state */}
+        {/* Add BottomNavBar to loading state */}
         <BottomNavBar 
           currentView={currentView}
           onViewChange={updateCurrentView}
           onSettingsClick={() => updateCurrentView('settings')}
         />
-
       </div>
     );
   }
