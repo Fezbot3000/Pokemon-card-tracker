@@ -57,7 +57,7 @@ const CollectionSelector = ({
         }}
         placeholder="Select Collection"
         fullWidth={true}
-        className={`${className} border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-700`}
+        className={`${className} rounded-lg border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-700`}
         size="md"
         showSearch={false}
       />

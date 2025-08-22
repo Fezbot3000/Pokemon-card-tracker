@@ -40,7 +40,7 @@ function Dashboard() {
                 {/* Simple loading spinner */}
                 <div className="flex min-h-[400px] items-center justify-center">
                   <div className="flex flex-col items-center space-y-4">
-                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-400"></div>
+                    <div className="size-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-400"></div>
                     <p className="text-gray-600 dark:text-gray-300">Loading...</p>
                   </div>
                 </div>
@@ -81,7 +81,7 @@ function Dashboard() {
                 {/* Simple loading spinner */}
                 <div className="flex min-h-[400px] items-center justify-center">
                   <div className="flex flex-col items-center space-y-4">
-                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-400"></div>
+                    <div className="size-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-400"></div>
                     <p className="text-gray-600 dark:text-gray-300">Loading...</p>
                   </div>
                 </div>

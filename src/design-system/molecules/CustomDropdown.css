@@ -153,11 +153,13 @@
 
 .dropdown__option:hover {
   background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-md) !important;
 }
 
 .dropdown__option:focus {
   outline: none;
   background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-md) !important;
 }
 
 .dropdown__option--selected {
