@@ -15,22 +15,22 @@ import { initializeAppService } from './services/appInitialization';
 import logger from './utils/logger';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// Defer app initialization to avoid blocking initial render
-setTimeout(() => {
-  initializeAppService()
-    .then(() => {})
-    .catch(error => {
-      logger.error('Error during app initialization:', error);
-    });
-}, 100);
+// Initialize app service immediately for better performance
+console.log('🚀 [INDEX] Starting app initialization at:', new Date().toISOString());
+initializeAppService()
+  .then(() => {
+    console.log('✅ [INDEX] App initialization completed at:', new Date().toISOString());
+  })
+  .catch(error => {
+    console.error('❌ [INDEX] App initialization failed at:', new Date().toISOString(), error);
+    logger.error('Error during app initialization:', error);
+  });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <RouterProvider router={router} />
-    </ErrorBoundary>
-  </React.StrictMode>
+  <ErrorBoundary>
+    <RouterProvider router={router} />
+  </ErrorBoundary>
 );
 
 // Only report web vitals in development mode

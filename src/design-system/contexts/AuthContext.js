@@ -3,6 +3,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useRef,
 } from 'react';
 import {
   createUserWithEmailAndPassword,
@@ -90,6 +91,22 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Add mount tracking to prevent multiple initializations
+  const mountRef = useRef(false);
+  
+  useEffect(() => {
+    if (!mountRef.current) {
+      console.log('🔐 [AUTH] AuthProvider mounted for first time');
+      mountRef.current = true;
+    } else {
+      console.log('🔐 [AUTH] AuthProvider re-mounted - potential issue');
+    }
+    
+    return () => {
+      console.log('🔐 [AUTH] AuthProvider unmounting');
+    };
+  }, []);
   const [subscriptionData, setSubscriptionData] = useState({
     status: 'loading', // 'loading', 'free_trial', 'free', 'premium', 'expired'
     planType: null,
@@ -103,6 +120,24 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     return () => setError(null);
   }, []);
+
+  // Add loading timeout protection to prevent infinite loading states
+  useEffect(() => {
+    console.log('⏱️ [AUTH] Loading state changed:', loading);
+    if (!loading) return; // Only set timeout when actually loading
+    
+    console.log('⏱️ [AUTH] Setting 10s timeout for loading state');
+    const timeout = setTimeout(() => {
+      console.log('⏱️ [AUTH] Timeout reached, setting loading to false');
+      setLoading(false);
+      setError('Loading timeout - please refresh the page');
+    }, 10000); // 10 second timeout
+    
+    return () => {
+      console.log('⏱️ [AUTH] Clearing timeout');
+      clearTimeout(timeout);
+    };
+  }, [loading]);
 
   // Check subscription status for a user
   const checkUserSubscription = async userId => {
@@ -225,6 +260,8 @@ export const AuthProvider = ({ children }) => {
       
       const unsubscribe = onAuthStateChanged(auth, async user => {
       if (!isMounted) return;
+      
+      console.log('🔐 [AUTH] Auth state changed, user:', user ? user.email : 'null');
 
       if (user) {
         try {
@@ -318,12 +355,11 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
-      // Add a small delay to prevent flashing
-      setTimeout(() => {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }, 100);
+      // Remove artificial delay for better performance
+      if (isMounted) {
+        console.log('🔐 [AUTH] Setting loading to false');
+        setLoading(false);
+      }
     });
 
       return () => {

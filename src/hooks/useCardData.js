@@ -52,6 +52,7 @@ const useCardData = () => {
   // Firestore Listener for Real-time Card Updates
   useEffect(() => {
     if (currentUser) {
+      console.log('🔥 [CARDS] Setting up Firestore listener for user:', currentUser.uid);
       setLoading(true);
       const repository = new CardRepository(currentUser.uid);
       logger.debug(
@@ -68,6 +69,7 @@ const useCardData = () => {
 
         // Set a new timeout to batch updates
         updateTimeout = setTimeout(() => {
+          console.log('🔥 [CARDS] Processing debounced update with', firestoreCards.length, 'cards');
           logger.debug(`Received card update: ${firestoreCards.length} cards`);
           // Update local state with the processed data
           const updateTime = Date.now();
@@ -85,9 +87,10 @@ const useCardData = () => {
           }
           
           setCards(firestoreCards);
+          console.log('🔥 [CARDS] Setting loading to false, cards updated');
           setLoading(false);
           setError(null); // Clear any previous error on successful fetch
-        }, 500); // 500ms debounce time
+        }, 300); // 300ms debounce time - balanced performance
       };
 
       const unsubscribe = repository.subscribeToAllCards(
@@ -111,6 +114,7 @@ const useCardData = () => {
       };
     } else {
       // No user logged in, clear cards and potentially load from localStorage (optional)
+      console.log('🔥 [CARDS] No user logged in, clearing cards and setting loading to false');
       logger.debug('No user logged in, clearing cards.');
       setCards([]);
       setLoading(false);
