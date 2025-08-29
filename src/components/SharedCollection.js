@@ -3,76 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db as firestoreDb } from '../services/firebase-unified';
-import { Card, Button, formatCurrency } from '../design-system';
+import { Card, Button, Avatar, Spinner, Badge, TextField, SelectField } from '../design-system';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import sharingService from '../services/sharingService';
 import LoggingService from '../services/LoggingService';
 
-// Simple components to replace missing design system components
-const Spinner = ({ size = 'medium' }) => (
-  <div
-    className={`animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 ${
-      size === 'large' ? 'size-12' : 'size-6'
-    }`}
-  ></div>
-);
-
-const Badge = ({ children, variant = 'primary', className = '' }) => {
-  const variants = {
-    primary: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    success:
-      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    warning:
-      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-    danger: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    secondary: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variants[variant]} ${className}`}
-    >
-      {children}
-    </span>
-  );
-};
-
-const Input = ({ className = '', ...props }) => (
-  <input
-    className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white ${className}`}
-    {...props}
-  />
-);
-
-const Select = ({ className = '', children, ...props }) => (
-  <select
-    className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white ${className}`}
-    {...props}
-  >
-    {children}
-  </select>
-);
-
-const Avatar = ({ src, alt, size = 'medium', fallback }) => {
-  const sizeClasses = {
-    small: 'h-8 w-8',
-    medium: 'h-10 w-10',
-    large: 'h-12 w-12',
-  };
-
-  return (
-    <div
-      className={`${sizeClasses[size]} flex items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-gray-600`}
-    >
-      {src ? (
-        <img src={src} alt={alt} className="size-full object-cover" />
-      ) : (
-        <span className="font-medium text-gray-600 dark:text-gray-300">
-          {fallback || alt?.charAt(0) || '?'}
-        </span>
-      )}
-    </div>
-  );
-};
+// Using design-system components for Spinner, Badge, TextField, SelectField, and Avatar
 
 const SharedCollection = () => {
   const { shareId } = useParams();
@@ -90,6 +26,7 @@ const SharedCollection = () => {
   });
   const [stats, setStats] = useState(null);
   const [metaTags, setMetaTags] = useState({});
+  const { formatAmountForDisplay } = useUserPreferences();
   
   // Define loadSharedCollection at the top of the component
   const loadSharedCollection = useCallback(async () => {
@@ -299,7 +236,7 @@ const SharedCollection = () => {
             <div className="flex items-center justify-between">
               <div className="text-left">
                 <div className="text-xl font-bold text-gray-900 dark:text-white">
-                  {stats && formatCurrency(stats.totalValue, 'AUD')}
+                  {stats && formatAmountForDisplay(stats.totalValue, 'AUD')}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-500">
                   Total Value
@@ -350,7 +287,7 @@ const SharedCollection = () => {
               </Button>
               <div className="text-right">
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats && formatCurrency(stats.totalValue, 'AUD')}
+                  {stats && formatAmountForDisplay(stats.totalValue, 'AUD')}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-500">
                   Total Collection Value
@@ -391,7 +328,7 @@ const SharedCollection = () => {
             </Card>
             <Card className="p-3 text-center sm:p-4">
               <div className="text-lg font-bold text-gray-900 dark:text-white sm:text-2xl">
-                {formatCurrency(Math.round(stats.averageValue), 'AUD')}
+                {formatAmountForDisplay(Math.round(stats.averageValue), 'AUD')}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-500 sm:text-sm">
                 Avg. Card Value
@@ -403,14 +340,16 @@ const SharedCollection = () => {
           <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F] sm:mb-6 sm:p-4">
             {/* Mobile Layout */}
             <div className="block space-y-3 sm:hidden">
-              <Input
+              <TextField
+                name="search"
                 placeholder="Search cards..."
                 value={filters.search}
                 onChange={e => handleFilterChange('search', e.target.value)}
                 className="w-full border-gray-300 bg-white text-sm text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
               />
               <div className="grid grid-cols-2 gap-2">
-                <Select
+                <SelectField
+                  name="category"
                   value={filters.category}
                   onChange={e => handleFilterChange('category', e.target.value)}
                   className="w-full border-gray-300 bg-white text-sm text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
@@ -421,8 +360,9 @@ const SharedCollection = () => {
                       {category}
                     </option>
                   ))}
-                </Select>
-                <Select
+                </SelectField>
+                <SelectField
+                  name="grading"
                   value={filters.grading}
                   onChange={e => handleFilterChange('grading', e.target.value)}
                   className="w-full border-gray-300 bg-white text-sm text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
@@ -430,10 +370,11 @@ const SharedCollection = () => {
                   <option value="all">All Cards</option>
                   <option value="graded">Graded Only</option>
                   <option value="ungraded">Ungraded Only</option>
-                </Select>
+                </SelectField>
               </div>
               <div className="flex items-center justify-between">
-                <Select
+                <SelectField
+                  name="sortBy"
                   value={filters.sortBy}
                   onChange={e => handleFilterChange('sortBy', e.target.value)}
                   className="mr-3 flex-1 border-gray-300 bg-white text-sm text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
@@ -444,7 +385,7 @@ const SharedCollection = () => {
                   <option value="year">Year</option>
                   <option value="grade">Grade</option>
                   <option value="dateAdded">Date Added</option>
-                </Select>
+                </SelectField>
                 <span className="whitespace-nowrap text-xs text-gray-500 dark:text-gray-300">
                   {filteredCards.length}/{cards.length}
                 </span>
@@ -453,13 +394,15 @@ const SharedCollection = () => {
 
             {/* Desktop Layout */}
             <div className="hidden grid-cols-1 gap-4 sm:grid md:grid-cols-5">
-              <Input
+              <TextField
+                name="search"
                 placeholder="Search cards..."
                 value={filters.search}
                 onChange={e => handleFilterChange('search', e.target.value)}
                 className="w-full border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
               />
-              <Select
+              <SelectField
+                name="category"
                 value={filters.category}
                 onChange={e => handleFilterChange('category', e.target.value)}
                 className="w-full border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
@@ -470,8 +413,9 @@ const SharedCollection = () => {
                     {category}
                   </option>
                 ))}
-              </Select>
-              <Select
+              </SelectField>
+              <SelectField
+                name="grading"
                 value={filters.grading}
                 onChange={e => handleFilterChange('grading', e.target.value)}
                 className="w-full border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
@@ -479,8 +423,9 @@ const SharedCollection = () => {
                 <option value="all">All Cards</option>
                 <option value="graded">Graded Only</option>
                 <option value="ungraded">Ungraded Only</option>
-              </Select>
-              <Select
+              </SelectField>
+              <SelectField
+                name="sortBy"
                 value={filters.sortBy}
                 onChange={e => handleFilterChange('sortBy', e.target.value)}
                 className="w-full border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
@@ -491,7 +436,7 @@ const SharedCollection = () => {
                 <option value="year">Sort by Year</option>
                 <option value="grade">Sort by Grade</option>
                 <option value="dateAdded">Sort by Date Added</option>
-              </Select>
+              </SelectField>
               <div className="flex items-center justify-center">
                 <span className="text-sm text-gray-300 dark:text-gray-300">
                   {filteredCards.length} of {cards.length} cards
@@ -548,11 +493,11 @@ const SharedCollection = () => {
                     card.currentValueAUD > 0 ||
                     card.currentValue > 0) && (
                     <p className="mt-1 text-sm font-bold text-gray-900 dark:text-white sm:mt-2 sm:text-lg">
-                      {formatCurrency(
+                      {formatAmountForDisplay(
                         card.originalCurrentValueAmount ||
                           card.currentValueAUD ||
                           card.currentValue,
-                        'AUD'
+                        card.originalCurrentValueCurrency || 'AUD'
                       )}
                     </p>
                   )}

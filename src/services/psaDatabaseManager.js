@@ -121,12 +121,12 @@ export const getAllPSARecords = async (collectionName, limitCount = null) => {
     return records;
   } catch (error) {
     logger.error(`Error fetching PSA records from ${collectionName}:`, error);
-    console.error(`🔍 Debug: Error fetching from ${collectionName}:`, error);
+    logger.error(`🔍 Debug: Error fetching from ${collectionName}:`, error);
     
     // If this is a permission error, return empty array instead of throwing
     if (error.code === 'permission-denied') {
       logger.warn(`Permission denied for collection ${collectionName}, returning empty result`);
-      console.warn(`🔍 Debug: Permission denied for ${collectionName}, returning empty array`);
+      logger.warn(`🔍 Debug: Permission denied for ${collectionName}, returning empty array`);
       return [];
     }
     
@@ -141,7 +141,7 @@ export const getAllPSARecords = async (collectionName, limitCount = null) => {
 export const getPSADatabaseStatistics = async () => {
   try {
     logger.debug('Calculating PSA database statistics...');
-    console.log('🔍 Debug: Getting statistics for both collections...');
+    logger.debug('🔍 Debug: Getting statistics for both collections...');
     
     // Get counts from both collections
     const [psaCardsSnapshot, psa_cardsSnapshot] = await Promise.all([
@@ -152,13 +152,13 @@ export const getPSADatabaseStatistics = async () => {
     const psaCardsCount = psaCardsSnapshot.size;
     const psa_cardsCount = psa_cardsSnapshot.size;
     
-    console.log(`🔍 Debug: Statistics found ${psaCardsCount} records in ${PSA_CARDS_HYPHEN}`);
-    console.log(`🔍 Debug: Statistics found ${psa_cardsCount} records in ${PSA_CARDS_UNDERSCORE}`);
+    logger.debug(`🔍 Debug: Statistics found ${psaCardsCount} records in ${PSA_CARDS_HYPHEN}`);
+    logger.debug(`🔍 Debug: Statistics found ${psa_cardsCount} records in ${PSA_CARDS_UNDERSCORE}`);
     
     // Debug: Log first few document IDs from psa_cards
     const psa_cardsDocIds = [];
     psa_cardsSnapshot.forEach(doc => psa_cardsDocIds.push(doc.id));
-    console.log(`🔍 Debug: psa_cards document IDs:`, psa_cardsDocIds.slice(0, 10));
+    logger.debug(`🔍 Debug: psa_cards document IDs:`, psa_cardsDocIds.slice(0, 10));
     
     // Get all cert numbers to find duplicates
     const psaCardsIds = new Set();
@@ -508,25 +508,25 @@ const previewBulkMerge = async (fromCollection, toCollection) => {
     logger.info(`Generating bulk merge preview from ${fromCollection} to ${toCollection}`);
     
     // Add detailed debugging
-    console.log(`🔍 Debug: Starting preview for ${fromCollection} -> ${toCollection}`);
+    logger.debug(`🔍 Debug: Starting preview for ${fromCollection} -> ${toCollection}`);
     
     const [fromRecords, toRecords] = await Promise.all([
       getAllPSARecords(fromCollection),
       getAllPSARecords(toCollection)
     ]);
     
-    console.log(`🔍 Debug: Found ${fromRecords.length} records in ${fromCollection}`);
-    console.log(`🔍 Debug: Found ${toRecords.length} records in ${toCollection}`);
-    console.log(`🔍 Debug: Sample from records:`, fromRecords.slice(0, 3));
-    console.log(`🔍 Debug: Sample to records:`, toRecords.slice(0, 3));
+    logger.debug(`🔍 Debug: Found ${fromRecords.length} records in ${fromCollection}`);
+    logger.debug(`🔍 Debug: Found ${toRecords.length} records in ${toCollection}`);
+    logger.debug(`🔍 Debug: Sample from records:`, fromRecords.slice(0, 3));
+    logger.debug(`🔍 Debug: Sample to records:`, toRecords.slice(0, 3));
     
     const existingCertNumbers = new Set(toRecords.map(record => record.certNumber));
     const uniqueRecords = fromRecords.filter(record => !existingCertNumbers.has(record.certNumber));
     const duplicateRecords = fromRecords.filter(record => existingCertNumbers.has(record.certNumber));
     
-    console.log(`🔍 Debug: Unique records: ${uniqueRecords.length}`);
-    console.log(`🔍 Debug: Duplicate records: ${duplicateRecords.length}`);
-    console.log(`🔍 Debug: Existing cert numbers sample:`, [...existingCertNumbers].slice(0, 5));
+    logger.debug(`🔍 Debug: Unique records: ${uniqueRecords.length}`);
+    logger.debug(`🔍 Debug: Duplicate records: ${duplicateRecords.length}`);
+    logger.debug(`🔍 Debug: Existing cert numbers sample:`, [...existingCertNumbers].slice(0, 5));
     
     const preview = {
       fromCollection,
@@ -548,12 +548,12 @@ const previewBulkMerge = async (fromCollection, toCollection) => {
     };
     
     logger.info('Bulk merge preview generated:', preview);
-    console.log(`🔍 Debug: Final preview:`, preview);
+    logger.debug(`🔍 Debug: Final preview:`, preview);
     return preview;
     
   } catch (error) {
     logger.error('Error generating bulk merge preview:', error);
-    console.error(`🔍 Debug: Preview error:`, error);
+    logger.error(`🔍 Debug: Preview error:`, error);
     throw error;
   }
 };

@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
 import { searchCardsByName } from '../services/priceChartingService';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
-import logger from '../services/LoggingService';
+import logger from '../utils/logger';
 
 const CardSearchAutocomplete = ({ onSelectCard, placeholder = "Search for cards...", className = "" }) => {
   const [query, setQuery] = useState('');
@@ -43,28 +43,27 @@ const CardSearchAutocomplete = ({ onSelectCard, placeholder = "Search for cards.
       const searchResults = await searchCardsByName(searchQuery.trim(), 12); // Limit to 12 for dropdown
       logger.info(`Search completed. Found ${searchResults?.length || 0} results`);
       
-      console.log('Search results received:', { 
+      logger.debug('Search results received:', { 
         searchQuery, 
         resultsLength: searchResults?.length || 0, 
         results: searchResults 
       });
       
       if (searchResults && searchResults.length > 0) {
-        console.log('Setting results and opening dropdown:', searchResults);
+        logger.debug('Setting results and opening dropdown:', searchResults);
         setResults(searchResults);
         setIsOpen(true);
         setHighlightedIndex(-1);
         setError(null); // Clear any previous errors
       } else {
         logger.warn(`No results found for: "${searchQuery}"`);
-        console.log('No results - setting error state');
+        logger.debug('No results - setting error state');
         setResults([]);
         setIsOpen(false);
         setError(`No cards found for "${searchQuery}"`);
       }
     } catch (err) {
       logger.error('Autocomplete search error:', err);
-      console.error('Full autocomplete error:', err); // Also log to console for debugging
       setError(`Search failed: ${err.message || 'Unknown error'}`);
       setResults([]);
       setIsOpen(false);

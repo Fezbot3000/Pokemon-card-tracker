@@ -13,6 +13,7 @@ import {
   onAuthStateChanged,
   updateProfile,
   signInWithPopup,
+  signInWithRedirect,
   setPersistence,
   browserLocalPersistence,
 } from 'firebase/auth';
@@ -27,6 +28,7 @@ import {
 import { db } from '../../firebase-lazy';
 import { getFirebaseAuth, getGoogleProvider } from '../../firebase-lazy';
 import { toast } from 'react-hot-toast';
+import logger from '../../utils/logger';
 import LoggingService from '../../services/LoggingService';
 
 /**
@@ -39,7 +41,7 @@ const AuthContext = createContext();
 
 // Helper function to handle Firebase errors
 const handleFirebaseError = error => {
-  LoggingService.error('Firebase authentication error:', error);
+  logger.error('Firebase authentication error:', error);
 
   // Standard error messages
   const errorMessages = {
@@ -97,14 +99,14 @@ export const AuthProvider = ({ children }) => {
   
   useEffect(() => {
     if (!mountRef.current) {
-      console.log('🔐 [AUTH] AuthProvider mounted for first time');
+      logger.debug('🔐 [AUTH] AuthProvider mounted for first time');
       mountRef.current = true;
     } else {
-      console.log('🔐 [AUTH] AuthProvider re-mounted - potential issue');
+      logger.debug('🔐 [AUTH] AuthProvider re-mounted - potential issue');
     }
     
     return () => {
-      console.log('🔐 [AUTH] AuthProvider unmounting');
+      logger.debug('🔐 [AUTH] AuthProvider unmounting');
     };
   }, []);
   const [subscriptionData, setSubscriptionData] = useState({
@@ -123,18 +125,18 @@ export const AuthProvider = ({ children }) => {
 
   // Add loading timeout protection to prevent infinite loading states
   useEffect(() => {
-    console.log('⏱️ [AUTH] Loading state changed:', loading);
+    logger.debug('⏱️ [AUTH] Loading state changed:', loading);
     if (!loading) return; // Only set timeout when actually loading
     
-    console.log('⏱️ [AUTH] Setting 10s timeout for loading state');
+    logger.debug('⏱️ [AUTH] Setting 10s timeout for loading state');
     const timeout = setTimeout(() => {
-      console.log('⏱️ [AUTH] Timeout reached, setting loading to false');
+      logger.debug('⏱️ [AUTH] Timeout reached, setting loading to false');
       setLoading(false);
       setError('Loading timeout - please refresh the page');
     }, 10000); // 10 second timeout
     
     return () => {
-      console.log('⏱️ [AUTH] Clearing timeout');
+      logger.debug('⏱️ [AUTH] Clearing timeout');
       clearTimeout(timeout);
     };
   }, [loading]);
@@ -261,7 +263,7 @@ export const AuthProvider = ({ children }) => {
       const unsubscribe = onAuthStateChanged(auth, async user => {
       if (!isMounted) return;
       
-      console.log('🔐 [AUTH] Auth state changed, user:', user ? user.email : 'null');
+      logger.debug('🔐 [AUTH] Auth state changed, user:', user ? user.email : 'null');
 
       if (user) {
         try {
@@ -278,7 +280,7 @@ export const AuthProvider = ({ children }) => {
               if (doc.exists()) {
                 const userData = doc.data();
                 if (userData.subscriptionStatus || userData.planType) {
-                  LoggingService.info('🔄 Subscription updated in real-time', {
+                  logger.info('🔄 Subscription updated in real-time', {
                     status: userData.subscriptionStatus,
                     planType: userData.planType
                   });
@@ -331,7 +333,7 @@ export const AuthProvider = ({ children }) => {
               }
             },
             error => {
-              LoggingService.error('Subscription listener error:', error);
+              logger.error('Subscription listener error:', error);
             }
           );
         } catch (err) {
@@ -357,7 +359,7 @@ export const AuthProvider = ({ children }) => {
 
       // Remove artificial delay for better performance
       if (isMounted) {
-        console.log('🔐 [AUTH] Setting loading to false');
+        logger.debug('🔐 [AUTH] Setting loading to false');
         setLoading(false);
       }
     });
@@ -474,6 +476,8 @@ export const AuthProvider = ({ children }) => {
       // LoggingService.info("Starting Google sign-in process...");
 
       // Use popup for Google sign-in
+      // Ensure persistence is LOCAL for SSO flows
+      await setPersistence(auth, browserLocalPersistence);
       const result = await signInWithPopup(auth, googleProvider);
       // LoggingService.info("Google sign-in successful:", result.user?.email);
 
@@ -516,6 +520,23 @@ export const AuthProvider = ({ children }) => {
       return result.user;
     } catch (err) {
       LoggingService.error('Google sign-in error:', err);
+      // Fallback to redirect if popup is blocked or environment prevents popup flow (e.g., COOP/COEP)
+      const coopBlocked = (err?.message || '').includes('Cross-Origin-Opener-Policy');
+      const envNotSupported = err?.code === 'auth/operation-not-supported-in-this-environment';
+      const popupAutoCancelled = err?.code === 'auth/cancelled-popup-request';
+
+      if (coopBlocked || envNotSupported || popupAutoCancelled) {
+        try {
+          await setPersistence(auth, browserLocalPersistence);
+          await signInWithRedirect(auth, googleProvider);
+          // Redirect will take over; no need to throw or toast here
+          return null;
+        } catch (redirectErr) {
+          LoggingService.error('Google sign-in redirect fallback failed:', redirectErr);
+          // Fall through to standard error handling below
+        }
+      }
+
       if (err.code !== 'auth/popup-closed-by-user') {
         const errorMessage = handleFirebaseError(err);
         setError(errorMessage);

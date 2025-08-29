@@ -131,6 +131,7 @@ const PurchaseInvoicePDF = ({
   notes,
   totalAmount,
   profile,
+  formatAmountForDisplay,
 }) => {
   return (
     <Document>
@@ -248,7 +249,9 @@ const PurchaseInvoicePDF = ({
                         price = parseFloat(totalAmount) / cards.length;
                       }
 
-                      return price > 0 ? `$${price.toFixed(2)}` : 'N/A';
+                      return price > 0
+                        ? formatAmountForDisplay(price, 'AUD')
+                        : 'N/A';
                     })()}
                   </Text>
                 </View>
@@ -264,7 +267,7 @@ const PurchaseInvoicePDF = ({
               Total Amount:
             </Text>
             <Text style={[styles.summaryValue, styles.totalAmount]}>
-              ${totalAmount.toFixed(2)}
+              {formatAmountForDisplay(totalAmount, 'AUD')}
             </Text>
           </View>
         </View>

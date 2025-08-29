@@ -15,7 +15,6 @@ const useCardDataCompatible = () => {
   
   // Local state for properties that CardContext doesn't manage
   const [selectedCard, setSelectedCard] = useState(null);
-  const [exchangeRate, setExchangeRate] = useState(1.5);
 
   // API-compatible wrapper functions
   
@@ -120,11 +119,6 @@ const useCardDataCompatible = () => {
     }
   }, [cardContextData]);
 
-  // Exchange rate management
-  const updateExchangeRate = useCallback((newRate) => {
-    setExchangeRate(newRate);
-  }, []);
-
   // Error setter (for compatibility)
   const setError = cardContextData.setError || (() => {
     logger.warn('setError called but not available in CardContext');
@@ -139,7 +133,6 @@ const useCardDataCompatible = () => {
     loading: cardContextData.loading,
     error: cardContextData.error,
     selectedCard,
-    exchangeRate,
     
     // Functions  
     importCsvData,
@@ -148,7 +141,6 @@ const useCardDataCompatible = () => {
     updateCard,
     addCard,
     deleteCard,
-    updateExchangeRate,
     setSelectedCard,
     setError,
   };

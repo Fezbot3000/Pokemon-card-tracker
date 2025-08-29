@@ -16,6 +16,7 @@ import {
 } from '../../data/pokemonSets';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { useSubscription } from '../../hooks/useSubscription';
+import logger from '../../utils/logger';
 
 const cardCategories = [
   { value: 'pokemon', label: 'Pokemon' },
@@ -610,7 +611,7 @@ const CardDetailsForm = ({
 
   // Handle PSA card selection from autocomplete
   const handlePSACardSelect = (psaCard) => {
-    console.log('🔍 PSA Card Selected:', psaCard);
+    logger.debug('🔍 PSA Card Selected:', psaCard);
     
     // Extract data from PSA card using the same structure as PSA search
     const psaData = psaCard.originalData;
@@ -644,7 +645,7 @@ const CardDetailsForm = ({
       // Note: We deliberately exclude certificationNumber/slabSerial so user can enter their own
     };
 
-    console.log('🔍 Updated Card Data:', updatedCard);
+    logger.debug('🔍 Updated Card Data:', updatedCard);
     
     // Trigger the onChange callback to update parent component
     onChange(updatedCard);

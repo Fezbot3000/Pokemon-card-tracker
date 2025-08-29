@@ -47,7 +47,6 @@ import logger from '../services/LoggingService';
 
 const CardList = ({
   cards,
-  exchangeRate,
   onCardClick,
   onDeleteCard,
   onDeleteCards,
@@ -1642,7 +1641,6 @@ const CardList = ({
           }}
           onUpdate={handleCardUpdate} // Uses the local update handler
           onDelete={handleCardDelete} // CHANGED: Use local handleCardDelete instead of onDeleteCard
-          exchangeRate={exchangeRate}
         />
       )}
 

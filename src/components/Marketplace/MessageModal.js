@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
@@ -32,6 +33,7 @@ const MessageModal = ({
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { formatAmountForDisplay } = useUserPreferences();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -459,7 +461,11 @@ const MessageModal = ({
     listing?.card?.img ||
     null;
   const price = listing?.listingPrice || listing?.price;
-  const currency = listing?.currency || 'AUD';
+  const currency =
+    listing?.currency ||
+    listing?.currencyCode ||
+    listing?.originalCurrencyCode ||
+    'AUD';
 
   return createPortal(
     <Modal
@@ -468,7 +474,7 @@ const MessageModal = ({
       title="Send Message"
       position="right"
       size="modal-width-50"
-      closeOnClickOutside={false}
+      closeOnClickOutside={true}
       footer={
         <div className="flex w-full items-center justify-between">
           <ModalButton variant="secondary" onClick={onClose}>
@@ -516,7 +522,7 @@ const MessageModal = ({
               </p>
               {!listing?.isGeneralChat && price && (
                 <p className="font-medium text-gray-600 dark:text-gray-400">
-                  ${price} {currency}
+                  {formatAmountForDisplay(price, currency)}
                 </p>
               )}
               {listing?.location && (

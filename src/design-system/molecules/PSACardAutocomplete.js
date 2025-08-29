@@ -52,16 +52,13 @@ const PSACardAutocomplete = ({
 
       try {
         setIsLoading(true);
-        console.log(`🔍 PSA Autocomplete: Searching for "${searchValue}"`);
         logger.debug(`PSA Autocomplete: Searching for "${searchValue}"`);
         
         const results = await searchPSACardsByName(searchValue, 10);
-        console.log(`🔍 PSA Autocomplete: Found ${results.length} results:`, results);
         
         setPsaCards(results);
         logger.debug(`PSA Autocomplete: Found ${results.length} results`);
       } catch (error) {
-        console.error('🚨 PSA Autocomplete search error:', error);
         logger.error('PSA Autocomplete search error:', error);
         setPsaCards([]);
       } finally {
@@ -74,7 +71,7 @@ const PSACardAutocomplete = ({
   // Handle input changes
   const handleInputChange = (e) => {
     const inputValue = e.target.value;
-    console.log(`🔍 PSA Autocomplete: Input changed to "${inputValue}"`);
+    logger.debug(`PSA Autocomplete: Input changed to "${inputValue}"`);
     setSearchTerm(inputValue);
     
     // Notify parent of input change
@@ -84,11 +81,11 @@ const PSACardAutocomplete = ({
 
     // Open dropdown when typing
     if (inputValue.length >= 2) {
-      console.log(`🔍 PSA Autocomplete: Opening dropdown and searching...`);
+      logger.debug(`PSA Autocomplete: Opening dropdown and searching...`);
       setIsOpen(true);
       debouncedSearch(inputValue);
     } else {
-      console.log(`🔍 PSA Autocomplete: Closing dropdown (too short)`);
+      logger.debug(`PSA Autocomplete: Closing dropdown (too short)`);
       setIsOpen(false);
       setPsaCards([]);
     }

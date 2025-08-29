@@ -14,41 +14,14 @@ import {
 import { db as firestoreDb } from '../services/firebase-unified';
 import { useAuth } from '../design-system';
 import { useCards } from '../contexts/CardContext';
-import { Card, Button, TextField, Toggle, Modal } from '../design-system';
+import { Card, Button, TextField, Toggle, Modal, Spinner, Badge } from '../design-system';
 import CustomDropdown from '../design-system/molecules/CustomDropdown';
 import { toast } from 'react-hot-toast';
 import SharingQuickStart from './SharingQuickStart';
 import sharingService from '../services/sharingService';
 import logger from '../services/LoggingService';
 
-// Simple components to replace missing design system components
-const Spinner = ({ size = 'medium' }) => (
-  <div
-    className={`animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 ${
-      size === 'large' ? 'size-12' : 'size-6'
-    }`}
-  ></div>
-);
-
-const Badge = ({ children, variant = 'primary', className = '' }) => {
-  const variants = {
-    primary: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    success:
-      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    warning:
-      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-    danger: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    secondary: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variants[variant]} ${className}`}
-    >
-      {children}
-    </span>
-  );
-};
+// Using centralized design-system Spinner and Badge
 
 const CollectionSharing = ({ isInModal = false }) => {
   const { currentUser } = useAuth();

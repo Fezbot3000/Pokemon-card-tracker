@@ -22,6 +22,7 @@ import MarketplaceNavigation from './MarketplaceNavigation';
 import SellerProfileModal from './SellerProfileModal';
 import MarketplaceImageService from '../../services/MarketplaceImageService';
 import LoggingService from '../../services/LoggingService';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 
 function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   const [conversations, setConversations] = useState([]);
@@ -37,6 +38,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   const [cardImages, setCardImages] = useState({});
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
+  const { formatAmountForDisplay } = useUserPreferences();
 
   useEffect(() => {
     if (!user) return;
@@ -821,12 +823,32 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400">
-                          {(activeChat.listingPrice || activeChat.priceAUD) && (
-                            <span className="font-semibold">
-                              ${activeChat.listingPrice || activeChat.priceAUD}{' '}
-                              {activeChat.currency || 'AUD'}
-                            </span>
-                          )}
+                          {(() => {
+                            // Determine the original amount and currency from multiple possible fields
+                            const originalAmount =
+                              activeChat?.listingPrice ??
+                              activeChat?.price ??
+                              activeChat?.priceAUD ??
+                              activeChat?.listingData?.priceAUD ??
+                              null;
+
+                            // Prefer explicit currency fields; if only AUD-denominated fields exist, default to 'AUD'
+                            const detectedCurrency =
+                              activeChat?.currency ||
+                              activeChat?.currencyCode ||
+                              activeChat?.originalCurrencyCode ||
+                              activeChat?.listingData?.currency ||
+                              activeChat?.listingData?.currencyCode ||
+                              activeChat?.listingData?.originalCurrencyCode ||
+                              (activeChat?.priceAUD || activeChat?.listingData?.priceAUD ? 'AUD' : 'AUD');
+
+                            if (originalAmount == null) return null;
+                            return (
+                              <span className="font-semibold">
+                                {formatAmountForDisplay(originalAmount, detectedCurrency)}
+                              </span>
+                            );
+                          })()}
                           {activeChat.location && (
                             <>
                               <span>•</span>

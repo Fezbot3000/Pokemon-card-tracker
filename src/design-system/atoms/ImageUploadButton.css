@@ -37,7 +37,7 @@
 /* Dragging state */
 .image-upload-button__btn--dragging {
   border-color: var(--color-primary-500);
-  background-color: rgb(230 24 92 / 0.1);
+  background-color: var(--color-primary-500-10);
   color: var(--color-primary-500);
 }
 

@@ -21,7 +21,7 @@
 .number-field__input:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgb(230 24 92 / 0.2);
+  box-shadow: var(--ring-shadow-primary);
 }
 
 .number-field__input:disabled {
@@ -36,7 +36,7 @@
 
 .number-field__input--error:focus {
   border-color: var(--color-error);
-  box-shadow: 0 0 0 3px rgb(239 68 68 / 0.2);
+  box-shadow: var(--ring-shadow-error);
 }
 
 /* With prefix */

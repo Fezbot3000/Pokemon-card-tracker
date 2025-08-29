@@ -16,13 +16,12 @@ import logger from './utils/logger';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Initialize app service immediately for better performance
-console.log('🚀 [INDEX] Starting app initialization at:', new Date().toISOString());
+logger.debug('🚀 [INDEX] Starting app initialization at:', new Date().toISOString());
 initializeAppService()
   .then(() => {
-    console.log('✅ [INDEX] App initialization completed at:', new Date().toISOString());
+    logger.debug('✅ [INDEX] App initialization completed at:', new Date().toISOString());
   })
   .catch(error => {
-    console.error('❌ [INDEX] App initialization failed at:', new Date().toISOString(), error);
     logger.error('Error during app initialization:', error);
   });
 

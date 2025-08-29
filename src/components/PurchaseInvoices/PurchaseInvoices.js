@@ -5,12 +5,12 @@ import {
   SimpleSearchBar,
   ConfirmDialog,
 } from '../../design-system';
-import { formatCurrency } from '../../design-system/utils/formatters';
 import db from '../../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
 import CreateInvoiceModal from './CreateInvoiceModal';
 import { pdf } from '@react-pdf/renderer';
 import PurchaseInvoicePDF from '../PurchaseInvoicePDF';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { formatDateForDisplay } from '../../utils/dateUtils';
 import { doc, getDoc, collection, query, getDocs } from 'firebase/firestore';
 import {
@@ -46,6 +46,7 @@ const PurchaseInvoices = () => {
     invoice: null,
   });
   const { currentUser } = useAuth();
+  const { formatAmountForDisplay } = useUserPreferences();
 
   // Move ALL remaining hooks to the top
   const handleModalClose = useCallback(() => {
@@ -518,6 +519,7 @@ const PurchaseInvoices = () => {
           notes={invoice.notes}
           totalAmount={invoice.totalAmount}
           profile={profile}
+          formatAmountForDisplay={formatAmountForDisplay}
         />
       );
 
@@ -770,7 +772,7 @@ const PurchaseInvoices = () => {
                           </div>
                         </td>
                         <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900 dark:text-white">
-                          {formatCurrency(invoice.totalAmount)}
+                          {formatAmountForDisplay(invoice.totalAmount, 'AUD')}
                         </td>
                         <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
                           {invoice.cardCount}
@@ -846,7 +848,7 @@ const PurchaseInvoices = () => {
                           Amount
                         </p>
                         <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {formatCurrency(invoice.totalAmount)}
+                          {formatAmountForDisplay(invoice.totalAmount, 'AUD')}
                         </p>
                       </div>
                     </div>

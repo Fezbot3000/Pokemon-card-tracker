@@ -49,6 +49,16 @@
   --color-warning: #f59e0b; /* amber-500 */
   --color-info: #3b82f6; /* blue-500 */
 
+  /* Opacity helpers for semantic colors */
+  --color-primary-500-10: rgba(239, 68, 68, 0.1);
+  --color-primary-500-20: rgba(239, 68, 68, 0.2);
+  --color-error-500-10: rgba(239, 68, 68, 0.1);
+  --color-error-500-20: rgba(239, 68, 68, 0.2);
+
+  /* Focus ring shadows */
+  --ring-shadow-primary: 0 0 0 3px var(--color-primary-500-20);
+  --ring-shadow-error: 0 0 0 3px var(--color-error-500-20);
+
   /* ==================== SPACING TOKENS ==================== */
   --space-0: 0;
   --space-0-5: 0.125rem; /* 2px */

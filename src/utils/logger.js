@@ -6,21 +6,22 @@
 
 import LoggingService from '../services/LoggingService';
 
-// Determine if we're in production environment
+// Determine environment and desired log level
 const isProduction = process.env.NODE_ENV === 'production';
+const envLevel = (process.env.REACT_APP_LOG_LEVEL || '').toLowerCase();
 
-// Force silence certain logs even in development mode
-// This is set to true for production readiness
-const forceSilence = true; // Disable debug logging in production
+// Priority mapping (lower is more verbose)
+const LEVELS = { debug: 10, info: 20, warn: 30, error: 40, silent: 100 };
+const defaultLevel = isProduction ? 'error' : 'warn';
+const activeLevel = LEVELS[envLevel] ?? LEVELS[defaultLevel];
 
-// Configure logging levels
-// Set to true to show that type of log, false to hide
+// Configure logging visibility based on activeLevel
 const config = {
-  showDebugLogs: !isProduction && !forceSilence, // Hide debug logs in production and when forceSilence is true
-  showInfoLogs: !isProduction && !forceSilence, // Hide info logs in production and when forceSilence is true
-  showWarnLogs: !forceSilence, // Show warnings unless forceSilence is true
-  showErrorLogs: true, // Always show errors
-  showCriticalLogs: true, // Always show critical logs
+  showDebugLogs: activeLevel <= LEVELS.debug,
+  showInfoLogs: activeLevel <= LEVELS.info,
+  showWarnLogs: activeLevel <= LEVELS.warn,
+  showErrorLogs: activeLevel <= LEVELS.error,
+  showCriticalLogs: true,
 };
 
 // Note: Console overrides are handled by LoggingService.js
@@ -31,7 +32,7 @@ const logger = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   debug: (..._args) => {
     if (config.showDebugLogs) {
-      // LoggingService.info(..._args);
+      LoggingService.debug(..._args);
     }
   },
 
@@ -60,7 +61,7 @@ const logger = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   critical: (..._args) => {
     if (config.showCriticalLogs) {
-      // LoggingService.info('[CRITICAL]', ..._args);
+      LoggingService.info('[CRITICAL]', ..._args);
     }
   },
 
@@ -68,7 +69,7 @@ const logger = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   log: (..._args) => {
     if (config.showDebugLogs) {
-      // LoggingService.info(..._args);
+      LoggingService.debug(..._args);
     }
   },
 };

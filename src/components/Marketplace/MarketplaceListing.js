@@ -6,6 +6,7 @@ import { db as firestoreDb } from '../../services/firebase-unified';
 import { useAuth } from '../../design-system';
 import ListingDetailModal from './ListingDetailModal';
 import logger from '../../utils/logger';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 
 function MarketplaceListing() {
   const { listingId } = useParams();
@@ -14,6 +15,27 @@ function MarketplaceListing() {
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { formatAmountForDisplay } = useUserPreferences();
+  
+  // Consistent, robust price display for meta tags and elsewhere
+  const getPriceDisplay = listingObj => {
+    if (!listingObj) return 'Price on request';
+    const amountPrimary =
+      listingObj?.listingPrice != null ? listingObj.listingPrice : listingObj?.price;
+    const currencyPrimary =
+      listingObj?.currency || listingObj?.currencyCode || listingObj?.originalCurrencyCode;
+
+    if (amountPrimary != null) {
+      const code = currencyPrimary || 'AUD';
+      return formatAmountForDisplay(amountPrimary, code);
+    }
+
+    if (listingObj?.priceAUD != null) {
+      return formatAmountForDisplay(listingObj.priceAUD, 'AUD');
+    }
+
+    return 'Price on request';
+  };
 
   useEffect(() => {
     const loadListing = async () => {
@@ -83,7 +105,7 @@ function MarketplaceListing() {
 
     const card = listing.card || {};
     const cardName = card.name || listing.title || 'Trading Card';
-    const price = listing.price ? `$${listing.price}` : 'Price on request';
+    const price = getPriceDisplay(listing);
     const location = listing.location || 'Australia';
     const condition = card.condition || 'Unknown condition';
     const image = getListingImage();

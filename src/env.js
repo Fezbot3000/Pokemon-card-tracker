@@ -1,19 +1,9 @@
-// This file pre-loads environment variables and validates they exist
-// Import this file before any Firebase initialization
+// Environment bootstrap
+// This file ensures environment setup runs before Firebase initialization.
+// All configuration is sourced from process.env (REACT_APP_* variables)
+// injected at build time by the tooling. No runtime mutation happens here.
 
-// We're no longer checking for Firebase config variables since they're hardcoded in firebase.js
+// Intentionally empty: configuration is validated where it is used
+// (see src/config/secrets.js:getFirebaseConfig()).
 
-const validateEnvironment = () => {
-  // Environment validation is now simplified since we use hardcoded Firebase config
-
-  // Only log in development mode and not in production
-  if (process.env.NODE_ENV !== 'production') {
-    // No console logs for production readiness
-  }
-
-  return true;
-};
-
-validateEnvironment();
-
-export default validateEnvironment;
+export {};

@@ -1401,9 +1401,6 @@ class CardRepository {
         throw new Error(validation.error);
       }
 
-      // Use a default exchange rate
-      const exchangeRate = 1.5;
-
       // For price update mode, get existing cards
       let existingCards = [];
       if (importMode === 'priceUpdate') {
@@ -1417,12 +1414,10 @@ class CardRepository {
         }));
       }
 
-      // Process imported data
+      // Process imported data (legacy exchange rate logic removed)
       const processedData = processImportedData(
         parsedData,
-        existingCards,
-        exchangeRate,
-        importMode
+        existingCards
       );
 
       // If no cards to process, return success

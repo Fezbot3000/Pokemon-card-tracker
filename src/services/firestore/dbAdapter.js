@@ -34,6 +34,13 @@ class DatabaseAdapter {
     return Promise.resolve();
   }
 
+  async silentInitialize() {
+    // No-op for Firestore: kept for backward compatibility with old db.js API
+    // This allows callers (e.g., App.js) to perform a "silent" initialization
+    // step without needing to change their logic.
+    return Promise.resolve();
+  }
+
   getCurrentUserId() {
     return firestoreService.getCurrentUserId();
   }

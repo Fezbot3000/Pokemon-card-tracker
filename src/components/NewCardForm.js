@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { formatValue } from '../utils/formatters';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useTheme } from '../design-system';
 import { toast } from 'react-hot-toast';
 import { parseCSVFile, validateCSVStructure } from '../utils/dataProcessor';
@@ -10,10 +10,24 @@ import logger from '../services/LoggingService';
 const NewCardForm = ({
   onSubmit,
   onClose,
-  exchangeRate = 1.5,
   collections = {},
   selectedCollection,
 }) => {
+  const {
+    formatAmountForDisplay,
+    convertToUserCurrency,
+    convertFromUserCurrency,
+  } = useUserPreferences();
+
+  // Helper to convert between any two currencies using the context API
+  const convertBetween = (amount, fromCode, toCode) => {
+    if (amount === '' || amount === null || amount === undefined) return '';
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    // Bridge through user's preferred currency to leverage public API
+    const inUser = convertToUserCurrency(num, fromCode);
+    const toTarget = convertFromUserCurrency(inUser, toCode);
+    return Number.isFinite(toTarget) ? Number(toTarget.toFixed(2)) : '';
+  };
   const [formData, setFormData] = useState({
     player: '',
     card: '',
@@ -163,14 +177,14 @@ const NewCardForm = ({
             ...prev,
             investmentAUD: numValue,
             investmentUSD:
-              numValue !== '' ? (numValue / exchangeRate).toFixed(2) : '',
+              numValue !== '' ? convertBetween(numValue, 'AUD', 'USD') : '',
           };
         } else if (name === 'currentValueAUD') {
           return {
             ...prev,
             currentValueAUD: numValue,
             currentValueUSD:
-              numValue !== '' ? (numValue / exchangeRate).toFixed(2) : '',
+              numValue !== '' ? convertBetween(numValue, 'AUD', 'USD') : '',
           };
         }
       } else {
@@ -180,14 +194,14 @@ const NewCardForm = ({
             ...prev,
             investmentUSD: numValue,
             investmentAUD:
-              numValue !== '' ? (numValue * exchangeRate).toFixed(2) : '',
+              numValue !== '' ? convertBetween(numValue, 'USD', 'AUD') : '',
           };
         } else if (name === 'currentValueUSD') {
           return {
             ...prev,
             currentValueUSD: numValue,
             currentValueAUD:
-              numValue !== '' ? (numValue * exchangeRate).toFixed(2) : '',
+              numValue !== '' ? convertBetween(numValue, 'USD', 'AUD') : '',
           };
         }
       }
@@ -380,8 +394,8 @@ const NewCardForm = ({
 
         // Calculate derived fields
         const potentialProfit = currentValueAUD - investmentAUD;
-        const investmentUSD = investmentAUD / exchangeRate;
-        const currentValueUSD = currentValueAUD / exchangeRate;
+        const investmentUSD = convertBetween(investmentAUD, 'AUD', 'USD');
+        const currentValueUSD = convertBetween(currentValueAUD, 'AUD', 'USD');
 
         // Create card object
         const cardData = {
@@ -662,7 +676,7 @@ const NewCardForm = ({
                     <span
                       className={`mt-1 block text-xl font-bold ${profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}
                     >
-                      {formatValue(profit, 'AUD', exchangeRate)}
+                      {formatAmountForDisplay(profit, 'AUD')}
                     </span>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
@@ -60,8 +60,20 @@ const Modal = ({
   const modalRef = useRef(null);
   const scrollPosRef = useRef(null);
   const modalIdRef = useRef(null);
+  const justOpenedRef = useRef(false);
 
   const [animationClass, setAnimationClass] = useState('');
+
+  // Ensure the enter animation class is applied before the first paint when opening
+  useLayoutEffect(() => {
+    if (isOpen && !showAsStatic) {
+      if (position === 'right') {
+        setAnimationClass('animate-modal-slide-in-right');
+      } else {
+        setAnimationClass('animate-modal-scale-in');
+      }
+    }
+  }, [isOpen, position, showAsStatic]);
 
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
@@ -82,8 +94,6 @@ const Modal = ({
         x: window.scrollX,
         y: window.scrollY,
       };
-
-
 
       // Use requestAnimationFrame to delay DOM modifications until after the current frame
       requestAnimationFrame(() => {
@@ -131,8 +141,20 @@ const Modal = ({
           window.scrollTo(0, scrollY || scrollPosRef.current.y || 0);
         }
       }
+      // Reset animation class so a stale exit class doesn't flash on next open
+      setAnimationClass('');
     }
   }, [isOpen, position, showAsStatic]);
+
+  // Track the first 300ms after opening to ignore accidental backdrop clicks
+  useEffect(() => {
+    if (!isOpen) return;
+    justOpenedRef.current = true;
+    const t = setTimeout(() => {
+      justOpenedRef.current = false;
+    }, 300);
+    return () => clearTimeout(t);
+  }, [isOpen]);
 
   // Custom close handler with animation
   const handleClose = useCallback(() => {
@@ -228,6 +250,8 @@ const Modal = ({
                                   e.target.classList.contains('md:p-6');
     
     if (closeOnClickOutside && onClose && (isBackdropClick || isMarginContainerClick)) {
+      // Guard against the opening click immediately closing the modal
+      if (justOpenedRef.current) return;
       handleAnimatedClose();
     }
   }, [closeOnClickOutside, onClose, handleAnimatedClose]);

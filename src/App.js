@@ -13,17 +13,9 @@ import {
   useOutletContext,
 } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import {
-  Header,
-  useAuth,
-  SettingsModal,
-  toastService,
-} from './design-system';
+import { Header, useAuth, toastService } from './design-system';
 
-import CardList from './components/CardList';
-import CardDetails from './components/CardDetails';
-import AddCardModal from './components/AddCardModal';
-import ProfitChangeModal from './components/ProfitChangeModal';
+// Removed inline modal/view imports after refactor
 import useCardsSource from './hooks/useCardsSource';
 import db from './services/firestore/dbAdapter';
 import { useTutorial } from './contexts/TutorialContext';
@@ -31,33 +23,22 @@ import LoggingService from './services/LoggingService';
 import './styles/globals.css';
 import './styles/utilities.css';
 
-import SalesView from './dashboard/views/SalesView';
-import SettingsView from './dashboard/views/SettingsView';
-import MarketplaceView from './dashboard/views/MarketplaceView';
-import Settings from './components/Settings';
+// Views are now imported inside DashboardViewRouter
+// import Settings from './components/Settings';
 import BottomNavBar from './components/BottomNavBar';
 import TrialStatusBanner from './components/TrialStatusBanner';
 
 import logger from './utils/logger';
-
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 
 import TutorialModal from './components/TutorialModal';
 import { settingsManager } from './utils/settingsManager';
 import { useCardModals } from './hooks/useCardModals';
 import { collectionManager } from './utils/collectionManager';
-import CardsView from './dashboard/views/CardsView';
+import DashboardViewRouter from './dashboard/containers/DashboardViewRouter';
+import DashboardModals from './dashboard/containers/DashboardModals';
 
-// Suppress React DevTools warning in development
-if (process.env.NODE_ENV === 'development') {
-  const originalWarn = console.warn;
-  console.warn = (...args) => {
-    if (args[0] && typeof args[0] === 'string' && args[0].includes('Download the React DevTools')) {
-      return; // Suppress React DevTools warning
-    }
-    originalWarn.apply(console, args);
-  };
-}
+// LoggingService already filters external noise and manages console output.
 
 // Main Dashboard Component
 function Dashboard() {
@@ -264,9 +245,7 @@ function AppContent({ currentView, setCurrentView }) {
 
   // Debug: verify AppContent mounts (dev only)
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.debug('[AppContent] mounted');
-    }
+    logger.debug('[AppContent] mounted');
   }, []);
 
   // Use card modals hook
@@ -319,7 +298,6 @@ function AppContent({ currentView, setCurrentView }) {
   const {
     cards,
     loading,
-    exchangeRate,
     updateCard,
     deleteCard,
     addCard,
@@ -694,71 +672,29 @@ function AppContent({ currentView, setCurrentView }) {
         />
       )}
 
-      <main className={getMainLayoutClasses()}>
-        {/* Subscription/Trial banner */}
-        <div className="mt-2">
-          <TrialStatusBanner />
-        </div>
-        {currentView === 'cards' ? (
-          <CardsView
-            isMobile={isMobile}
-            cards={cards}
-            exchangeRate={exchangeRate}
-            selectedCollection={selectedCollection}
-            collections={collections}
-            setCollections={setCollections}
-            selectedCards={selectedCards}
-            openNewCardForm={openNewCardForm}
-            openCardDetails={openCardDetails}
-            deleteCard={deleteCard}
-            updateCard={updateCard}
-            setSelectedCollection={setSelectedCollection}
-          />
-        ) : currentView === 'purchase-invoices' || currentView === 'sold' ? (
-          <SalesView currentView={currentView} />
-        ) : (currentView === 'marketplace' || currentView === 'marketplace-selling' || currentView === 'marketplace-messages') ? (
-          <MarketplaceView currentView={currentView} onViewChange={setCurrentView} />
-        ) : currentView === 'sold-items' ? (
-          <SalesView currentView={currentView} />
-        ) : (currentView === 'settings' || currentView === 'settings-account' || currentView === 'settings-marketplace' || currentView === 'settings-sharing') ? (
-          <SettingsView
-            currentView={currentView}
-            selectedCollection={selectedCollection}
-            collections={collections}
-            onStartTutorial={resetTutorial}
-            onSignOut={logout}
-            onClose={() => setCurrentView('cards')}
-            onRenameCollection={(oldName, newName) => {
-              collectionManager.renameCollection(oldName, newName, {
-                collections,
-                setCollections,
-                selectedCollection,
-                setSelectedCollection,
-                user,
-              });
-            }}
-            onDeleteCollection={(collectionName) => {
-              collectionManager.deleteCollection(collectionName, {
-                collections,
-                setCollections,
-                selectedCollection,
-                setSelectedCollection,
-                user,
-              });
-            }}
-          />
-        ) : null}
-      </main>
+      {/* Subscription/Trial banner (globally mounted below Header) */}
+      <div className="mt-2">
+        <TrialStatusBanner />
+      </div>
 
-      {/* Settings Modal - Available for all views */}
-      {showSettings && !isMobile && (
-        <SettingsModal
-          isOpen={showSettings}
-          onClose={handleCloseSettings}
+      <main className={getMainLayoutClasses()}>
+        <DashboardViewRouter
+          currentView={currentView}
+          isMobile={isMobile}
+          cards={cards}
           selectedCollection={selectedCollection}
           collections={collections}
-          onStartTutorial={resetTutorial}
-          onSignOut={logout}
+          setCollections={setCollections}
+          selectedCards={selectedCards}
+          openNewCardForm={openNewCardForm}
+          openCardDetails={openCardDetails}
+          deleteCard={deleteCard}
+          updateCard={updateCard}
+          setSelectedCollection={setSelectedCollection}
+          resetTutorial={resetTutorial}
+          logout={logout}
+          onViewChange={setCurrentView}
+          user={user}
           onRenameCollection={(oldName, newName) => {
             collectionManager.renameCollection(oldName, newName, {
               collections,
@@ -768,83 +704,68 @@ function AppContent({ currentView, setCurrentView }) {
               user,
             });
           }}
-          onDeleteCollection={async name => {
-            await collectionManager.deleteCollection(name, {
+          onDeleteCollection={(collectionName) => {
+            collectionManager.deleteCollection(collectionName, {
               collections,
-              user,
-              selectedCollection,
               setCollections,
+              selectedCollection,
               setSelectedCollection,
+              user,
             });
           }}
         />
-      )}
+      </main>
 
-      {showNewCardForm && (
-        <AddCardModal
-          isOpen={showNewCardForm}
-          onClose={() => closeNewCardForm()}
-          onSave={async (cardData, imageFile) => {
-            try {
-              await addCard(cardData, imageFile);
-              
-              // Navigate to the target collection after successful add
-              if (cardData.collection && cardData.collection !== selectedCollection) {
-                setSelectedCollection(cardData.collection);
-                localStorage.setItem('selectedCollection', cardData.collection);
-              }
-            } catch (error) {
-              // Let the modal handle the error display
-              throw error;
-            }
-          }}
-          collections={Object.keys(collections)}
-          onNewCollectionCreated={handleNewCollectionCreation}
-          defaultCollection={
-            selectedCollection !== 'All Cards' && selectedCollection !== 'Sold'
-              ? selectedCollection
-              : ''
+      <DashboardModals
+        showSettings={showSettings}
+        isMobile={isMobile}
+        handleCloseSettings={handleCloseSettings}
+        selectedCollection={selectedCollection}
+        collections={collections}
+        resetTutorial={resetTutorial}
+        logout={logout}
+        onRenameCollection={(oldName, newName) => {
+          collectionManager.renameCollection(oldName, newName, {
+            collections,
+            setCollections,
+            selectedCollection,
+            setSelectedCollection,
+            user,
+          });
+        }}
+        onDeleteCollection={async name => {
+          await collectionManager.deleteCollection(name, {
+            collections,
+            user,
+            selectedCollection,
+            setCollections,
+            setSelectedCollection,
+          });
+        }}
+        showNewCardForm={showNewCardForm}
+        closeNewCardForm={() => closeNewCardForm()}
+        addCard={async (cardData, imageFile) => {
+          await addCard(cardData, imageFile);
+          if (cardData.collection && cardData.collection !== selectedCollection) {
+            setSelectedCollection(cardData.collection);
+            localStorage.setItem('selectedCollection', cardData.collection);
           }
-        />
-      )}
-
-      {selectedCard && (
-        <CardDetails
-          card={{
-            ...selectedCard,
-            // Ensure these fields are explicitly set to avoid undefined values
-            collection: selectedCard.collection || initialCardCollection,
-            collectionId:
-              selectedCard.collectionId ||
-              selectedCard.collection ||
-              initialCardCollection,
-            set: selectedCard.set || selectedCard.setName || '',
-            setName: selectedCard.setName || selectedCard.set || '',
-            // Ensure numeric fields are properly formatted
-            investmentUSD: selectedCard.investmentUSD || 0,
-            currentValueUSD: selectedCard.currentValueUSD || 0,
-            investmentAUD: parseFloat(selectedCard.investmentAUD) || 0,
-            currentValueAUD: parseFloat(selectedCard.currentValueAUD) || 0,
-          }}
-          onClose={handleCloseDetailsModal}
-          initialCollectionName={initialCardCollection}
-          onUpdateCard={handleCardUpdate}
-          onDelete={deleteCard}
-          exchangeRate={exchangeRate}
-          collections={collections ? Object.keys(collections) : []}
-        />
-      )}
-
-      {showProfitModal && (
-        <ProfitChangeModal
-          isOpen={showProfitModal}
-          onClose={() => setShowProfitModal(false)}
-          profitChangeData={{
-            previousProfit: profitChangeData.oldProfit,
-            newProfit: profitChangeData.newProfit,
-          }}
-        />
-      )}
+        }}
+        handleNewCollectionCreation={handleNewCollectionCreation}
+        defaultCollection={
+          selectedCollection !== 'All Cards' && selectedCollection !== 'Sold'
+            ? selectedCollection
+            : ''
+        }
+        selectedCard={selectedCard}
+        initialCardCollection={initialCardCollection}
+        handleCloseDetailsModal={handleCloseDetailsModal}
+        handleCardUpdate={handleCardUpdate}
+        deleteCard={deleteCard}
+        showProfitModal={showProfitModal}
+        setShowProfitModal={setShowProfitModal}
+        profitChangeData={profitChangeData}
+      />
 
 
 

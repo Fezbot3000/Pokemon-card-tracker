@@ -3,7 +3,8 @@
  *
  * These utilities help format values consistently across the component library
  */
-
+ import { formatCurrency as baseFormatCurrency, formatCurrencyK as baseFormatCurrencyK, formatNumber as baseFormatNumber } from '../../utils/formatters';
+ import { formatDate as baseFormatDate } from '../../utils/dateUtils';
 /**
  * Format a number as currency
  * @param {number} value - The value to format
@@ -12,14 +13,7 @@
  * @returns {string} The formatted currency string
  */
 export const formatCurrency = (value, currency = 'AUD', locale = 'en-AU') => {
-  if (value === null || value === undefined) return '';
-
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: currency === 'JPY' ? 0 : 2,
-    maximumFractionDigits: currency === 'JPY' ? 0 : 2,
-  }).format(value);
+  return baseFormatCurrency(value, currency, locale);
 };
 
 /**
@@ -30,33 +24,7 @@ export const formatCurrency = (value, currency = 'AUD', locale = 'en-AU') => {
  * @returns {string} The formatted currency string with appropriate suffix
  */
 export const formatCurrencyK = (value, currency = 'AUD', locale = 'en-AU') => {
-  if (value === null || value === undefined) return '';
-
-  const absValue = Math.abs(value);
-
-  if (absValue >= 1000000000) {
-    return (
-      formatCurrency(value / 1000000000, currency, locale).replace(
-        /\.00$/,
-        ''
-      ) + 'B'
-    );
-  }
-
-  if (absValue >= 1000000) {
-    return (
-      formatCurrency(value / 1000000, currency, locale).replace(/\.00$/, '') +
-      'M'
-    );
-  }
-
-  if (absValue >= 1000) {
-    return (
-      formatCurrency(value / 1000, currency, locale).replace(/\.00$/, '') + 'K'
-    );
-  }
-
-  return formatCurrency(value, currency, locale);
+  return baseFormatCurrencyK(value, currency, locale);
 };
 
 /**
@@ -67,20 +35,7 @@ export const formatCurrencyK = (value, currency = 'AUD', locale = 'en-AU') => {
  * @returns {string} The formatted date string
  */
 export const formatDate = (date, locale = 'en-US', options = {}) => {
-  if (!date) return '';
-
-  const defaultOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  };
-
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-
-  return new Intl.DateTimeFormat(locale, {
-    ...defaultOptions,
-    ...options,
-  }).format(dateObj);
+  return baseFormatDate(date, locale, options);
 };
 
 /**
@@ -91,10 +46,5 @@ export const formatDate = (date, locale = 'en-US', options = {}) => {
  * @returns {string} The formatted number string
  */
 export const formatNumber = (value, decimals = 0, locale = 'en-US') => {
-  if (value === null || value === undefined) return '';
-
-  return new Intl.NumberFormat(locale, {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(value);
+  return baseFormatNumber(value, decimals, locale);
 };

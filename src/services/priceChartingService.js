@@ -433,7 +433,7 @@ const makeApiRequest = async (endpoint, params = {}) => {
     
      } catch (error) {
      logger.error('Price Charting API request failed:', error);
-     console.error('API request error details:', {
+     logger.error('API request error details:', {
        error: error,
        message: error.message,
        url: url.toString(),
@@ -471,7 +471,7 @@ export const searchProducts = async (query, limit = 20) => {
   
   try {
          logger.debug('Making API request for query:', query);
-     console.log('About to make API request:', {
+     logger.debug('About to make API request:', {
        endpoint: '/api/products',
        query: query,
        limit: limit,
@@ -489,17 +489,17 @@ export const searchProducts = async (query, limit = 20) => {
      let lastError;
      for (const endpoint of endpoints) {
        try {
-         console.log(`Trying endpoint: ${endpoint}`);
+         logger.debug(`Trying endpoint: ${endpoint}`);
          response = await makeApiRequest(endpoint, {
            q: query,
            limit,
            format: 'json'
          });
-         console.log(`Success with endpoint: ${endpoint}`);
+         logger.debug(`Success with endpoint: ${endpoint}`);
          break;
        } catch (err) {
-         console.log(`Failed with endpoint ${endpoint}:`, err.message);
-         console.error(`Full error for ${endpoint}:`, err);
+         logger.error(`Failed with endpoint ${endpoint}:`, err.message);
+         logger.error(`Full error for ${endpoint}:`, err);
          lastError = err;
          continue;
        }
@@ -515,7 +515,7 @@ export const searchProducts = async (query, limit = 20) => {
        responseKeys: Object.keys(response || {})
      });
      
-     console.log('Full API response structure:', {
+     logger.debug('Full API response structure:', {
        response: response,
        responseKeys: Object.keys(response || {}),
        hasProducts: !!response.products,
@@ -533,7 +533,7 @@ export const searchProducts = async (query, limit = 20) => {
     priceChartingCache.set(cacheKey, products);
     
     logger.info(`Price Charting search found ${products.length} results for: "${query}"`);
-    console.log(`Price Charting API response for "${query}":`, { 
+    logger.debug(`Price Charting API response for "${query}":`, { 
       productCount: products.length, 
       firstProduct: products[0],
       response 
@@ -543,7 +543,7 @@ export const searchProducts = async (query, limit = 20) => {
     
   } catch (error) {
     logger.error('Price Charting search failed:', error);
-    console.error('Full product search error:', error);
+    logger.error('Full product search error:', error);
     throw error;
   }
 };
@@ -749,20 +749,20 @@ export const searchCardsByName = async (cardName, limit = 10) => {
         });
       } catch (err) {
         logger.warn(`Search failed for query "${query}":`, err);
-        console.error(`Search error for "${query}":`, err); // Also log to console
+        logger.error(`Search error for "${query}":`, err); // Also log to console
       }
     }
     
     logger.debug(`Total products before filtering: ${allProducts.length}`);
     
     // Process and clean up results for card selection
-    console.log('About to filter products:', { 
+    logger.debug('About to filter products:', { 
       allProductsCount: allProducts.length, 
       cardName: cardName.toLowerCase(),
       allProducts: allProducts 
     });
     
-    console.log('Sample product structure:', {
+    logger.debug('Sample product structure:', {
       firstProduct: allProducts[0] ? JSON.stringify(allProducts[0], null, 2) : 'No products',
       availableFields: allProducts[0] ? Object.keys(allProducts[0]) : []
     });
@@ -778,7 +778,7 @@ export const searchCardsByName = async (cardName, limit = 10) => {
          
          // Only log first few products to avoid console spam
          if (allProducts.indexOf(product) < 3) {
-           console.log('Filtering product (sample):', { 
+           logger.debug('Filtering product (sample):', { 
              name: productName, 
              category, 
              id: product.id,
@@ -852,7 +852,7 @@ export const searchCardsByName = async (cardName, limit = 10) => {
     
     logger.info(`Found ${cardResults.length} card results for: "${cardName}"`);
     
-    console.log('Final card results:', {
+    logger.debug('Final card results:', {
       cardName,
       allProductsCount: allProducts.length,
       cardResultsCount: cardResults.length,
@@ -862,7 +862,7 @@ export const searchCardsByName = async (cardName, limit = 10) => {
     
     if (cardResults.length === 0) {
       logger.warn(`No cards found after filtering. All products: ${allProducts.length}, Filtered: ${cardResults.length}`);
-      console.warn('No cards found after filtering:', { 
+      logger.warn('No cards found after filtering:', { 
         allProducts: allProducts.length, 
         cardResults: cardResults.length,
         searchTerms,
@@ -999,7 +999,7 @@ const parseCardDetailsFromName = (productName) => {
 export const convertPriceChartingToCardData = (cardResult) => {
   if (!cardResult) return {};
   
-  console.log('Converting card result to form data:', {
+  logger.debug('Converting card result to form data:', {
     cardResult,
     cardDetails: cardResult.cardDetails,
     bestPrice: cardResult.bestPrice,
@@ -1020,7 +1020,7 @@ export const convertPriceChartingToCardData = (cardResult) => {
   // Extract the best available price value
   // IMPORTANT: Price Charting API returns prices in PENNIES, not dollars
   let currentValue = '';
-  console.log('Price extraction debug:', {
+  logger.debug('Price extraction debug:', {
     bestPrice,
     allPrices,
     originalPriceFields: {
@@ -1072,7 +1072,7 @@ export const convertPriceChartingToCardData = (cardResult) => {
     }
   }
   
-  console.log('Final extracted price (converted from pennies to dollars):', currentValue);
+  logger.debug('Final extracted price (converted from pennies to dollars):', currentValue);
   
   // Extract year from release date if not in cardDetails
   let year = cardDetails.year || '';
@@ -1085,7 +1085,7 @@ export const convertPriceChartingToCardData = (cardResult) => {
   
   // Try to intelligently determine set from various sources and match to app's Pokemon sets
   let rawSetName = cardDetails.set || '';
-  console.log('Set extraction debug:', {
+  logger.debug('Set extraction debug:', {
     cardDetailsSet: cardDetails.set,
     console: cardResult.console,
     consoleName: cardResult._debugProductData?.['console-name'], // Add console-name field
@@ -1097,11 +1097,11 @@ export const convertPriceChartingToCardData = (cardResult) => {
   });
   
   // COMPREHENSIVE LOGGING - Log the complete Price Charting response
-  console.log('=== PRICE CHARTING COMPLETE RESPONSE ===');
-  console.log('Full cardResult object:', JSON.stringify(cardResult, null, 2));
-  console.log('Card Details object:', JSON.stringify(cardDetails, null, 2));
-  console.log('Original Product:', JSON.stringify(originalProduct, null, 2));
-  console.log('=== END PRICE CHARTING RESPONSE ===');
+  logger.debug('=== PRICE CHARTING COMPLETE RESPONSE ===');
+  logger.debug('Full cardResult object:', JSON.stringify(cardResult, null, 2));
+  logger.debug('Card Details object:', JSON.stringify(cardDetails, null, 2));
+  logger.debug('Original Product:', JSON.stringify(originalProduct, null, 2));
+  logger.debug('=== END PRICE CHARTING RESPONSE ===');
   
   // Strategy 1: Try to extract specific set name from card name using comprehensive patterns
   if (!rawSetName || rawSetName === 'Unknown Set') {
@@ -1149,7 +1149,7 @@ export const convertPriceChartingToCardData = (cardResult) => {
       const consoleName = cardResult._debugProductData?.['console-name'];
       if (consoleName && consoleName !== 'Pokemon' && consoleName !== 'Pokemon Card') {
         rawSetName = consoleName;
-        console.log('Found set from console-name field:', consoleName);
+        logger.debug('Found set from console-name field:', consoleName);
       }
       else if (cardResult.console && cardResult.console !== 'Pokemon' && cardResult.console !== 'Pokemon Card') {
         rawSetName = cardResult.console;
@@ -1193,7 +1193,7 @@ export const convertPriceChartingToCardData = (cardResult) => {
     finalSetValue = matchedSetResult.matchedValue;
   }
   
-  console.log('Set matching result:', {
+  logger.debug('Set matching result:', {
     rawSetName,
     matchedSetResult,
     finalSetName,
@@ -1243,7 +1243,7 @@ export const convertPriceChartingToCardData = (cardResult) => {
     }
   };
   
-  console.log('Generated form data:', formData);
+  logger.debug('Generated form data:', formData);
   return formData;
 };
 

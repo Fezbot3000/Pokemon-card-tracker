@@ -4,7 +4,6 @@ import CardList from '../../components/CardList';
 function CardsView({
   isMobile,
   cards,
-  exchangeRate,
   selectedCollection,
   collections,
   setCollections,
@@ -41,7 +40,6 @@ function CardsView({
           // eslint-disable-next-line react/jsx-no-undef
           <CardList
             cards={cards}
-            exchangeRate={exchangeRate}
             onCardClick={card => {
               let actualCollectionName = selectedCollection;
               if (selectedCollection === 'All Cards') {

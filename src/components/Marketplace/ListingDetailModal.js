@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Modal, Icon, toastService, ConfirmDialog } from '../../design-system';
 import ModalButton from '../../design-system/atoms/ModalButton';
 import { useAuth } from '../../design-system';
+import ReviewSystem from './ReviewSystem';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import {
   doc,
@@ -40,6 +41,25 @@ function ListingDetailModal({
 
   const { user } = useAuth();
   const { formatAmountForDisplay } = useUserPreferences();
+
+  // Helper: determine original amount and currency from listing
+  const getListingPriceInfo = listingObj => {
+    if (!listingObj) return null;
+    const amountPrimary =
+      listingObj?.listingPrice != null ? listingObj.listingPrice : listingObj?.price;
+    const currencyPrimary =
+      listingObj?.currency || listingObj?.currencyCode || listingObj?.originalCurrencyCode;
+
+    if (amountPrimary != null) {
+      return { amount: amountPrimary, currency: currencyPrimary || 'AUD' };
+    }
+
+    if (listingObj?.priceAUD != null) {
+      return { amount: listingObj.priceAUD, currency: 'AUD' };
+    }
+
+    return null;
+  };
   const navigate = useNavigate();
   const [imageIndex, setImageIndex] = useState(0);
   const [sellerProfile, setSellerProfile] = useState(null);
@@ -615,7 +635,12 @@ function ListingDetailModal({
                 </h1>
                 <div className="mb-2 flex items-center gap-3">
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {formatAmountForDisplay(listing.listingPrice, listing.currency || 'AUD')}
+                    {(() => {
+                      const info = getListingPriceInfo(listing);
+                      return info
+                        ? formatAmountForDisplay(info.amount, info.currency)
+                        : 'Price on request';
+                    })()}
                   </p>
                   {/* Status Tag */}
                   <div
@@ -821,8 +846,8 @@ function ListingDetailModal({
                   <MapView
                     location={listing.location}
                     cardName={card.name || card.cardName || 'Pokemon Card'}
-                    price={listing.listingPrice}
-                    currency={listing.currency || 'AUD'}
+                    price={getListingPriceInfo(listing)?.amount}
+                    currency={getListingPriceInfo(listing)?.currency}
                   />
                 </div>
               )}

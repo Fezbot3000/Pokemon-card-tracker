@@ -2,6 +2,8 @@
 
 /* Import the design system first to establish variables */
 @import './design-system.css';
+/* Import animations used across the design system (e.g., modals) */
+@import '../design-system/styles/animations.css';
 
 @tailwind base;
 @tailwind components;

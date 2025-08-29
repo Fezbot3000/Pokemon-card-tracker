@@ -14,12 +14,35 @@ import { db as firestoreDb } from '../../services/firebase-unified';
 import logger from '../../utils/logger';
 import LazyImage from './LazyImage';
 import ReviewSystem from './ReviewSystem';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 
 function SellerProfile({ sellerId, onClose, onViewListing }) {
   const [sellerProfile, setSellerProfile] = useState(null);
   const [sellerListings, setSellerListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('listings');
+  const { formatAmountForDisplay } = useUserPreferences();
+
+  // Consistent, robust price display using user's preferred currency
+  const getPriceDisplay = listing => {
+    if (!listing) return 'Price on request';
+    const amountPrimary =
+      listing?.listingPrice != null ? listing.listingPrice : listing?.price;
+    const currencyPrimary =
+      listing?.currency || listing?.currencyCode || listing?.originalCurrencyCode;
+
+    if (amountPrimary != null) {
+      const code = currencyPrimary || 'AUD';
+      return formatAmountForDisplay(amountPrimary, code);
+    }
+
+    // Fallback to AUD-denominated fields only if primary not available
+    if (listing?.priceAUD != null) {
+      return formatAmountForDisplay(listing.priceAUD, 'AUD');
+    }
+
+    return 'Price on request';
+  };
 
   useEffect(() => {
     if (!sellerId) return;
@@ -219,7 +242,7 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
                       </h3>
                       <div className="mt-2 flex items-center justify-between">
                         <span className="text-lg font-bold text-purple-600">
-                          ${listing.price}
+                          {getPriceDisplay(listing)}
                         </span>
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           {listing.location || 'Local'}
