@@ -221,7 +221,7 @@ const PokemonSets = () => {
       <NavigationBar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 md:pb-24 md:pt-32 sm:px-6 sm:pb-20 sm:pt-28 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
 
         <div className="relative z-10 mx-auto max-w-4xl text-center">
@@ -230,14 +230,14 @@ const PokemonSets = () => {
             PSA 10 Price Guide
           </div>
 
-          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
+          <h1 className="mb-4 text-3xl font-bold leading-tight md:text-5xl sm:mb-6 sm:text-4xl lg:text-6xl">
             Pokemon Card
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Sets Guide
             </span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
+          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 md:text-xl sm:mb-12 sm:text-lg lg:text-2xl">
             Accurate pricing for PSA 10 (Gem Mint) holographic cards based on recent sales data through 2024-2025.
             Prices shown are from verified auction sites and price tracking services like PriceCharting.
             Ungraded or lower-graded cards sell for significantly less.
@@ -255,7 +255,7 @@ const PokemonSets = () => {
       </section>
 
       {/* Main Content Section */}
-      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+      <section className="bg-black px-4 py-12 md:py-24 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
             {/* Sidebar Navigation */}
@@ -289,7 +289,7 @@ const PokemonSets = () => {
                   <h2 className="mb-6 text-3xl font-bold">
                     {currentSet.name}
                   </h2>
-                  <p className="text-lg leading-relaxed text-gray-300 mb-6">
+                  <p className="mb-6 text-lg leading-relaxed text-gray-300">
                     {currentSet.description}
                   </p>
 
@@ -491,48 +491,48 @@ const PokemonSets = () => {
       {/* Related Resources Section */}
       <section className="px-4 py-16 sm:px-6 lg:px-8" style={{ backgroundColor: '#0A0A0A' }}>
         <div className="mx-auto max-w-7xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-white">
               Take Your Pokemon Collection Further
             </h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            <p className="mx-auto max-w-2xl text-lg text-gray-400">
               Discover investment strategies and find rare cards to add to your collection
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <Link 
               to="/pokemon-investment-guide"
-              className="group bg-gradient-to-br from-green-500/20 to-blue-500/20 border border-green-500/30 rounded-xl p-8 hover:from-green-500/30 hover:to-blue-500/30 transition-all duration-300"
+              className="group rounded-xl border border-green-500/30 bg-gradient-to-br from-green-500/20 to-blue-500/20 p-8 transition-all duration-300 hover:from-green-500/30 hover:to-blue-500/30"
             >
-              <div className="flex items-center mb-4">
-                <span className="text-3xl mr-3">💰</span>
-                <h3 className="text-xl font-bold text-white group-hover:text-green-400 transition-colors">
+              <div className="mb-4 flex items-center">
+                <span className="mr-3 text-3xl">💰</span>
+                <h3 className="text-xl font-bold text-white transition-colors group-hover:text-green-400">
                   Investment Guide
                 </h3>
               </div>
-              <p className="text-gray-300 mb-4">
+              <p className="mb-4 text-gray-300">
                 Learn which Pokemon cards made 1000%+ returns and discover the best investment strategies for 2025.
               </p>
-              <span className="text-green-400 font-semibold group-hover:underline">
+              <span className="font-semibold text-green-400 group-hover:underline">
                 Maximize Your ROI →
               </span>
             </Link>
 
             <Link 
               to="/marketplace"
-              className="group bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-8 hover:from-purple-500/30 hover:to-pink-500/30 transition-all duration-300"
+              className="group rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-500/20 to-pink-500/20 p-8 transition-all duration-300 hover:from-purple-500/30 hover:to-pink-500/30"
             >
-              <div className="flex items-center mb-4">
-                <span className="text-3xl mr-3">🏪</span>
-                <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">
+              <div className="mb-4 flex items-center">
+                <span className="mr-3 text-3xl">🏪</span>
+                <h3 className="text-xl font-bold text-white transition-colors group-hover:text-purple-400">
                   Card Marketplace
                 </h3>
               </div>
-              <p className="text-gray-300 mb-4">
+              <p className="mb-4 text-gray-300">
                 Find rare Pokemon cards from trusted sellers across Australia. Base Set Charizard, PSA 10s and more.
               </p>
-              <span className="text-purple-400 font-semibold group-hover:underline">
+              <span className="font-semibold text-purple-400 group-hover:underline">
                 Shop Pokemon Cards →
               </span>
             </Link>

@@ -813,7 +813,7 @@ const PurchaseInvoices = () => {
                 {getSortedInvoices().map(invoice => (
                   <div
                     key={invoice.id}
-                    className="bg-white dark:bg-[#0F0F0F] border-gray-200 dark:border-gray-700 rounded-xl border p-4"
+                    className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
                   >
                     {/* Header with Invoice Number and Date */}
                     <div className="mb-3 flex items-start justify-between">
@@ -854,7 +854,7 @@ const PurchaseInvoices = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="border-gray-200 dark:border-gray-700 flex justify-end space-x-2 border-t pt-3">
+                    <div className="flex justify-end space-x-2 border-t border-gray-200 pt-3 dark:border-gray-700">
                       <button
                         className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
                         onClick={() => handleDownloadInvoice(invoice)}

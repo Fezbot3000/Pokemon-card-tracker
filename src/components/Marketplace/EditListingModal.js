@@ -281,7 +281,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
                 variant="destructive"
                 onClick={() => setShowDeleteConfirmation(true)}
                 disabled={isSubmitting || isDeleting}
-                className="p-2 min-w-0"
+                className="min-w-0 p-2"
               >
                 <Icon name="delete" />
               </ModalButton>

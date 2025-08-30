@@ -256,7 +256,7 @@ const PublicMarketplace = () => {
       <NavigationBar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 md:pb-24 md:pt-32 sm:px-6 sm:pb-20 sm:pt-28 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
 
         <div className="relative z-10 mx-auto max-w-4xl text-center">
@@ -265,14 +265,14 @@ const PublicMarketplace = () => {
             Secure Trading Platform
           </div>
 
-          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
+          <h1 className="mb-4 text-3xl font-bold leading-tight md:text-5xl sm:mb-6 sm:text-4xl lg:text-6xl">
             Pokemon Card
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Marketplace
             </span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
+          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 md:text-xl sm:mb-12 sm:text-lg lg:text-2xl">
             Discover rare Pokemon cards, graded collectibles, and vintage
             treasures from trusted sellers across Australia.
           </p>
@@ -289,7 +289,7 @@ const PublicMarketplace = () => {
       </section>
 
       {/* Marketplace Content */}
-      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+      <section className="bg-black px-4 py-12 md:py-24 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8">
             <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
@@ -313,13 +313,13 @@ const PublicMarketplace = () => {
                 <p className="mb-4 text-red-300">{error}</p>
                 <div className="mb-4 space-y-2 text-sm text-gray-400">
                   <p>To resolve this issue, try:</p>
-                  <ul className="text-left space-y-1">
+                  <ul className="space-y-1 text-left">
                     <li>• Disabling ad blockers for this site</li>
                     <li>• Checking your browser's security settings</li>
                     <li>• Using a different browser</li>
                   </ul>
                 </div>
-                <div className="flex gap-2 justify-center">
+                <div className="flex justify-center gap-2">
                   <button
                     onClick={() => window.location.reload()}
                     className="rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
@@ -359,7 +359,7 @@ const PublicMarketplace = () => {
                 </p>
               </div>
               
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
                 {/* Sample cards */}
                 {[
                   {
@@ -441,7 +441,7 @@ const PublicMarketplace = () => {
           )}
 
           {!loading && !error && listings.length > 0 && (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
               {listings.map(listing => (
                 <div
                   key={listing.id}

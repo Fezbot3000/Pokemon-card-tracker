@@ -131,7 +131,7 @@ const SearchToolbar = ({
             }}
             placeholder="Sort By"
             fullWidth={false}
-            className="rounded-lg border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-[#111] min-w-[140px]"
+            className="min-w-[140px] rounded-lg border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-[#111]"
             size="md"
             showSearch={false}
           />

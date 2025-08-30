@@ -131,7 +131,7 @@ const TutorialModal = () => {
             {/* Image Section - Much larger */}
             <div className="order-2 md:order-1">
               {content.imageSrc ? (
-                <div className="dark:bg-[#0F0F0F] overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-lg dark:border-gray-700">
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-lg dark:border-gray-700 dark:bg-[#0F0F0F]">
                   <img
                     src={content.imageSrc}
                     alt={content.imageAlt}
@@ -156,7 +156,7 @@ const TutorialModal = () => {
                   />
                 </div>
               ) : (
-                <div className="dark:bg-[#0F0F0F] flex h-64 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700">
+                <div className="flex h-64 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-[#0F0F0F]">
                   <div className="text-center text-gray-400 dark:text-gray-600">
                     <div className="mb-4 text-4xl">🚀</div>
                     <p className="text-lg">{content.imageAlt}</p>
@@ -175,7 +175,7 @@ const TutorialModal = () => {
         </div>
 
         {/* Modal Footer with Fixed Buttons */}
-        <div className="dark:border-gray-700 dark:bg-[#0F0F0F] flex justify-between border-t border-gray-200 bg-gray-50 px-6 pb-6 pt-4">
+        <div className="flex justify-between border-t border-gray-200 bg-gray-50 px-6 pb-6 pt-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
           <button
             onClick={endTutorial}
             className="px-6 py-3 font-medium text-gray-600 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"

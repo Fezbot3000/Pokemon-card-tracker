@@ -164,7 +164,7 @@ const PSACardAutocomplete = ({
     const dropdownContent = (
       <div
         ref={portalRef}
-        className="fixed z-[60000] bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-80 overflow-y-auto"
+        className="fixed z-[60000] max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-[#0F0F0F]"
         style={{
           top: `${dropdownPosition.top}px`,
           left: `${dropdownPosition.left}px`,
@@ -175,7 +175,7 @@ const PSACardAutocomplete = ({
         {isLoading && (
           <div className="p-3 text-center text-gray-500 dark:text-gray-400">
             <div className="flex items-center justify-center space-x-2">
-              <div className="animate-spin rounded-full size-4 border-b-2 border-blue-500"></div>
+              <div className="size-4 animate-spin rounded-full border-b-2 border-blue-500"></div>
               <span>Searching PSA database...</span>
             </div>
           </div>
@@ -189,13 +189,13 @@ const PSACardAutocomplete = ({
         
         {!isLoading && psaCards.length > 0 && (
           <div className="p-1">
-            <div className="text-xs text-gray-500 dark:text-gray-400 px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+            <div className="border-b border-gray-200 px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
               Found {psaCards.length} PSA cards
             </div>
             {psaCards.map((psaCard, index) => (
               <button
                 key={`${psaCard.certNumber}-${index}`}
-                className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors"
+                className="w-full border-b border-gray-100 p-3 text-left transition-colors last:border-b-0 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
                 onClick={() => handleCardSelect(psaCard)}
                 type="button"
               >
@@ -203,7 +203,7 @@ const PSACardAutocomplete = ({
                   <div className="font-medium text-gray-900 dark:text-white">
                     {psaCard.cardName}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-4">
+                  <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                     <span className="font-medium">PSA {psaCard.grade}</span>
                     <span>{psaCard.brand}</span>
                     {psaCard.totalPopulation > 0 && (
@@ -229,10 +229,10 @@ const PSACardAutocomplete = ({
       {label && (
         <label
           htmlFor={id || name}
-          className={`block text-sm font-medium mb-1 ${error ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-white'}`}
+          className={`mb-1 block text-sm font-medium ${error ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-white'}`}
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </label>
       )}
       
@@ -250,15 +250,15 @@ const PSACardAutocomplete = ({
           className={`
             relative flex items-center justify-between border rounded-lg cursor-text transition-colors
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-            ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-400 dark:hover:border-gray-600'}
-            ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white'}
+            ${disabled ? 'cursor-not-allowed opacity-50' : 'hover:border-gray-400 dark:hover:border-gray-600'}
+            ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-200 bg-white text-gray-900 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white'}
             w-full h-10 text-base px-3 pr-10
           `}
           {...props}
         />
         
         {/* Search icon */}
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
           <svg 
             className="size-4 text-gray-400" 
             fill="none" 

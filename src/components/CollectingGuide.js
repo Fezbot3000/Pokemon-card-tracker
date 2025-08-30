@@ -184,7 +184,7 @@ const CollectingGuide = () => {
                   </div>
                 </div>
 
-                <div className="bg-amber-600/10 border border-amber-600/20 rounded-lg p-4">
+                <div className="rounded-lg border border-amber-600/20 bg-amber-600/10 p-4">
                   <h4 className="mb-2 font-semibold text-amber-400">💡 Grading Tips</h4>
                   <ul className="space-y-1 text-sm">
                     <li>• Inspect cards with good lighting before submission</li>
@@ -207,7 +207,7 @@ const CollectingGuide = () => {
                 </p>
                 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                  <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-red-600/20 bg-red-600/10 p-4">
                     <h4 className="mb-3 font-semibold text-red-400">PSA (Professional Sports Authenticator)</h4>
                     <ul className="space-y-2 text-sm text-gray-300">
                       <li><strong>Scale:</strong> 1-10, no half grades</li>
@@ -219,7 +219,7 @@ const CollectingGuide = () => {
                     </ul>
                   </div>
 
-                  <div className="bg-yellow-600/10 border border-yellow-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-yellow-600/20 bg-yellow-600/10 p-4">
                     <h4 className="mb-3 font-semibold text-yellow-400">BGS (Beckett Grading Services)</h4>
                     <ul className="space-y-2 text-sm text-gray-300">
                       <li><strong>Scale:</strong> 1-10 with sub-grades</li>
@@ -231,7 +231,7 @@ const CollectingGuide = () => {
                     </ul>
                   </div>
 
-                  <div className="bg-blue-600/10 border border-blue-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-blue-600/20 bg-blue-600/10 p-4">
                     <h4 className="mb-3 font-semibold text-blue-400">CGC (Certified Guaranty Company)</h4>
                     <ul className="space-y-2 text-sm text-gray-300">
                       <li><strong>Scale:</strong> 1-10 with half grades</li>
@@ -257,28 +257,28 @@ const CollectingGuide = () => {
                 </p>
                 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="bg-green-600/10 border border-green-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-green-600/20 bg-green-600/10 p-4">
                     <h4 className="mb-2 font-semibold text-green-400">Near Mint (NM)</h4>
                     <p className="text-sm text-gray-300">
                       Cards have minimal wear and appear almost unplayed; may show slight edge wear or minor scratches but no major defects.
                     </p>
                   </div>
 
-                  <div className="bg-yellow-600/10 border border-yellow-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-yellow-600/20 bg-yellow-600/10 p-4">
                     <h4 className="mb-2 font-semibold text-yellow-400">Slightly Played (SP)</h4>
                     <p className="text-sm text-gray-300">
                       Cards show minor imperfections such as light border or corner wear, scuffs or small scratches but no structural damage.
                     </p>
                   </div>
 
-                  <div className="bg-orange-600/10 border border-orange-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-orange-600/20 bg-orange-600/10 p-4">
                     <h4 className="mb-2 font-semibold text-orange-400">Moderately Played (MP)</h4>
                     <p className="text-sm text-gray-300">
                       Cards show noticeable wear including edge or corner wear, scratches, scuffing, creases or whitening affecting small areas.
                     </p>
                   </div>
 
-                  <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-red-600/20 bg-red-600/10 p-4">
                     <h4 className="mb-2 font-semibold text-red-400">Played (PL)</h4>
                     <p className="text-sm text-gray-300">
                       Cards exhibit major wear and creasing and may have flaws impacting structural integrity, but remain playable in a sleeve.
@@ -347,7 +347,7 @@ const CollectingGuide = () => {
             </div>
 
             {/* Section 6: Summary */}
-            <div className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-600/20 rounded-xl p-6">
+            <div className="rounded-xl border border-blue-600/20 bg-gradient-to-r from-blue-600/10 to-purple-600/10 p-6">
               <h3 className="mb-4 text-xl font-bold text-blue-400">
                 📈 Summary and Outlook
               </h3>
@@ -404,7 +404,7 @@ const CollectingGuide = () => {
                   </div>
                 </div>
                 
-                <div className="bg-blue-600/10 border border-blue-600/20 rounded-lg p-4">
+                <div className="rounded-lg border border-blue-600/20 bg-blue-600/10 p-4">
                   <p className="text-sm">
                     <strong>Key Takeaway:</strong> The collectible-card grading industry is now driven by Pokémon and TCGs. Modern promos dominate submissions, but vintage cards maintain premium pricing due to scarcity.
                   </p>
@@ -423,7 +423,7 @@ const CollectingGuide = () => {
                 </p>
                 
                 <div className="grid grid-cols-1 gap-4">
-                  <div className="bg-green-600/10 border border-green-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-green-600/20 bg-green-600/10 p-4">
                     <h4 className="mb-2 font-semibold text-green-400">Top 30-Day Gainers (Under $30)</h4>
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                       <div className="space-y-2 text-sm">
@@ -462,7 +462,7 @@ const CollectingGuide = () => {
                     </div>
                   </div>
 
-                  <div className="bg-yellow-600/10 border border-yellow-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-yellow-600/20 bg-yellow-600/10 p-4">
                     <h4 className="mb-2 font-semibold text-yellow-400">High-Value Gainers (Over $30)</h4>
                     <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-3">
                       <div>
@@ -503,7 +503,7 @@ const CollectingGuide = () => {
                 📉 Price Declines and Volatility
               </h3>
               <div className="space-y-4">
-                <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-4">
+                <div className="rounded-lg border border-red-600/20 bg-red-600/10 p-4">
                   <h4 className="mb-3 font-semibold text-red-400">Prismatic Evolutions: Eeveelution Hype Cools</h4>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2 text-sm">
@@ -542,7 +542,7 @@ const CollectingGuide = () => {
                   </div>
                 </div>
 
-                <div className="bg-orange-600/10 border border-orange-600/20 rounded-lg p-4">
+                <div className="rounded-lg border border-orange-600/20 bg-orange-600/10 p-4">
                   <h4 className="mb-2 font-semibold text-orange-400">Other Trend Reversals</h4>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     <div className="text-sm">
@@ -572,7 +572,7 @@ const CollectingGuide = () => {
               </h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="bg-purple-600/10 border border-purple-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-purple-600/20 bg-purple-600/10 p-4">
                     <h4 className="mb-3 font-semibold text-purple-400">New Japanese Expansions</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
@@ -592,7 +592,7 @@ const CollectingGuide = () => {
                     </p>
                   </div>
 
-                  <div className="bg-amber-600/10 border border-amber-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-amber-600/20 bg-amber-600/10 p-4">
                     <h4 className="mb-3 font-semibold text-amber-400">Vintage Set Performance</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
@@ -671,7 +671,7 @@ const CollectingGuide = () => {
             </div>
 
             {/* Practical Guidance */}
-            <div className="bg-gradient-to-r from-green-600/10 to-blue-600/10 border border-green-600/20 rounded-xl p-6">
+            <div className="rounded-xl border border-green-600/20 bg-gradient-to-r from-green-600/10 to-blue-600/10 p-6">
               <h3 className="mb-4 text-xl font-bold text-green-400">
                 💡 Practical Guidance for Collectors and Investors
               </h3>
@@ -711,7 +711,7 @@ const CollectingGuide = () => {
             </div>
 
             {/* Conclusion */}
-            <div className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-600/20 rounded-xl p-6">
+            <div className="rounded-xl border border-blue-600/20 bg-gradient-to-r from-blue-600/10 to-purple-600/10 p-6">
               <h3 className="mb-4 text-xl font-bold text-blue-400">
                 📈 Market Outlook Conclusion
               </h3>
@@ -749,7 +749,7 @@ const CollectingGuide = () => {
                 <p>
                   Collectors risk financial loss, market erosion and gameplay disruption when fakes circulate. Professional authentication therefore underpins both consumer confidence and the broader market: third-party graders encapsulated 7.5 million trading-card-game (TCG) cards in 2023—1.4 million more than the previous year—and eBay shipped 2.3 million authenticated singles through its Authenticity Guarantee service.
                 </p>
-                <p className="text-amber-300 font-semibold">
+                <p className="font-semibold text-amber-300">
                   A $2.1 million fake "Black Lotus" bust in early 2024 further galvanised demand for trusted verification.
                 </p>
               </div>
@@ -767,7 +767,7 @@ const CollectingGuide = () => {
                 <p>
                   This surge is driven by record grading submissions, high-value auction results and improved technology. Collectors and fractional-ownership platforms now insist on serialised slabs and public-API verification before trading high-value cards.
                 </p>
-                <div className="bg-green-600/10 border border-green-600/20 rounded-lg p-4">
+                <div className="rounded-lg border border-green-600/20 bg-green-600/10 p-4">
                   <h4 className="mb-2 font-semibold text-green-400">📊 Market Growth</h4>
                   <ul className="space-y-1 text-sm">
                     <li>• 2024: $2.24 billion market size</li>
@@ -788,8 +788,8 @@ const CollectingGuide = () => {
                 <p>
                   Advances in machine vision are reducing grading turnaround times and increasing consistency. PSA's average turnaround fell from 25 days in early 2023 to nine days by March 2024 thanks to machine-learning image processing and ultraviolet fluorescence mapping.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-purple-600/10 border border-purple-600/20 rounded-lg p-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="rounded-lg border border-purple-600/20 bg-purple-600/10 p-4">
                     <h4 className="mb-2 font-semibold text-purple-400">🔬 Advanced Technology</h4>
                     <ul className="space-y-1 text-sm">
                       <li>• Beckett's VisionPRO: 450 cards/hour batch scanning</li>
@@ -798,7 +798,7 @@ const CollectingGuide = () => {
                       <li>• Blockchain-anchored audit logs</li>
                     </ul>
                   </div>
-                  <div className="bg-blue-600/10 border border-blue-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-blue-600/20 bg-blue-600/10 p-4">
                     <h4 className="mb-2 font-semibold text-blue-400">🚀 AI-Powered Services</h4>
                     <ul className="space-y-1 text-sm">
                       <li>• TCGrader: AI grading platform</li>
@@ -817,12 +817,12 @@ const CollectingGuide = () => {
                 🕵️ Practical Techniques for Detecting Counterfeit Pokémon Cards
               </h3>
               <div className="space-y-6 text-gray-300">
-                <p className="text-amber-300 font-semibold">
+                <p className="font-semibold text-amber-300">
                   Collectors can perform several checks before sending a card for professional authentication. These methods are not foolproof—counterfeiters continually improve—but they provide an important first line of defence.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-4">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="rounded-lg border border-red-600/20 bg-red-600/10 p-4">
                     <h4 className="mb-3 font-semibold text-red-400">🎨 Examine Print Quality and Colour</h4>
                     <ul className="space-y-2 text-sm">
                       <li>• Check for crisp, clear text and artwork</li>
@@ -833,7 +833,7 @@ const CollectingGuide = () => {
                     </ul>
                   </div>
 
-                  <div className="bg-orange-600/10 border border-orange-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-orange-600/20 bg-orange-600/10 p-4">
                     <h4 className="mb-3 font-semibold text-orange-400">📏 Check Dimensions and Cardstock</h4>
                     <ul className="space-y-2 text-sm">
                       <li>• Standard size: 2.5 × 3.5 inches</li>
@@ -844,7 +844,7 @@ const CollectingGuide = () => {
                     </ul>
                   </div>
 
-                  <div className="bg-yellow-600/10 border border-yellow-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-yellow-600/20 bg-yellow-600/10 p-4">
                     <h4 className="mb-3 font-semibold text-yellow-400">💡 Perform the Light Test</h4>
                     <ul className="space-y-2 text-sm">
                       <li>• Hold card up to flashlight</li>
@@ -855,7 +855,7 @@ const CollectingGuide = () => {
                     </ul>
                   </div>
 
-                  <div className="bg-cyan-600/10 border border-cyan-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-cyan-600/20 bg-cyan-600/10 p-4">
                     <h4 className="mb-3 font-semibold text-cyan-400">🔍 Compare with Known Genuine Card</h4>
                     <ul className="space-y-2 text-sm">
                       <li>• Side-by-side comparison with authentic example</li>
@@ -867,7 +867,7 @@ const CollectingGuide = () => {
                   </div>
                 </div>
 
-                <div className="bg-green-600/10 border border-green-600/20 rounded-lg p-4">
+                <div className="rounded-lg border border-green-600/20 bg-green-600/10 p-4">
                   <h4 className="mb-3 font-semibold text-green-400">📦 Inspect Packaging and Sealed Products</h4>
                   <ul className="space-y-2 text-sm">
                     <li>• Examine packaging quality and seals</li>
@@ -889,8 +889,8 @@ const CollectingGuide = () => {
                 <p>
                   The safest path for valuable cards is to use recognised grading services. PSA, BGS and CGC employ advanced forensic techniques and maintain expert connections with printing facilities. CGC, for example, leverages printing-quality experts to verify rare error cards.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-indigo-600/10 border border-indigo-600/20 rounded-lg p-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="rounded-lg border border-indigo-600/20 bg-indigo-600/10 p-4">
                     <h4 className="mb-2 font-semibold text-indigo-400">🛡️ Professional Authentication</h4>
                     <ul className="space-y-1 text-sm">
                       <li>• PSA, BGS, CGC advanced forensics</li>
@@ -899,7 +899,7 @@ const CollectingGuide = () => {
                       <li>• Encrypted photo archives</li>
                     </ul>
                   </div>
-                  <div className="bg-violet-600/10 border border-violet-600/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-violet-600/20 bg-violet-600/10 p-4">
                     <h4 className="mb-2 font-semibold text-violet-400">🛒 Safe Buying Practices</h4>
                     <ul className="space-y-1 text-sm">
                       <li>• Check seller ratings and reviews</li>
@@ -924,7 +924,7 @@ const CollectingGuide = () => {
                 <p>
                   The Pokémon Company has taken legal action against graders who fail to prevent fake slabs, highlighting the serious legal risks of negligence. In response, graders maintain encrypted photo archives and tamper-evident sleeves.
                 </p>
-                <div className="bg-blue-600/10 border border-blue-600/20 rounded-lg p-4">
+                <div className="rounded-lg border border-blue-600/20 bg-blue-600/10 p-4">
                   <h4 className="mb-2 font-semibold text-blue-400">🤝 Community Vigilance</h4>
                   <ul className="space-y-1 text-sm">
                     <li>• Educate yourself on current counterfeiting methods</li>
@@ -934,7 +934,7 @@ const CollectingGuide = () => {
                     <li>• Share knowledge through forums</li>
                   </ul>
                 </div>
-                <p className="text-blue-300 font-semibold">
+                <p className="font-semibold text-blue-300">
                   With improved technology, robust market infrastructure and an informed community, collectors can continue enjoying Pokémon cards while safeguarding their investments.
                 </p>
               </div>
@@ -1035,7 +1035,7 @@ const CollectingGuide = () => {
       <NavigationBar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 md:pb-24 md:pt-32 sm:px-6 sm:pb-20 sm:pt-28 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
 
         <div className="relative z-10 mx-auto max-w-4xl text-center">
@@ -1044,14 +1044,14 @@ const CollectingGuide = () => {
             Expert Knowledge Base
           </div>
 
-          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
+          <h1 className="mb-4 text-3xl font-bold leading-tight md:text-5xl sm:mb-6 sm:text-4xl lg:text-6xl">
             Collecting
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Guide
             </span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
+          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 md:text-xl sm:mb-12 sm:text-lg lg:text-2xl">
             Everything you need to know about collecting, grading, and
             protecting your valuable Pokémon cards.
           </p>
@@ -1059,7 +1059,7 @@ const CollectingGuide = () => {
       </section>
 
       {/* Navigation & Content */}
-      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+      <section className="bg-black px-4 py-12 md:py-24 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
             {/* Sidebar Navigation */}

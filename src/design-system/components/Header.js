@@ -449,7 +449,7 @@ const Header = ({
                   {availableCurrencies.map(currency => (
                     <button
                       key={currency.code}
-                      className={`w-full flex items-center justify-between px-4 py-2 text-left text-sm transition-all duration-200 ${currency.code === preferredCurrency.code ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800 font-medium' : 'hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm'}`}
+                      className={`flex w-full items-center justify-between px-4 py-2 text-left text-sm transition-all duration-200 ${currency.code === preferredCurrency.code ? 'bg-blue-50 font-medium text-blue-600 shadow-sm ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800' : 'hover:bg-gray-100 hover:shadow-sm dark:hover:bg-gray-800'}`}
                       onClick={() => {
                         updatePreferredCurrency(currency);
                         setCurrencyDropdownOpen(false);

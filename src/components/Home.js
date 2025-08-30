@@ -125,13 +125,13 @@ function Home() {
       {/* Full Screen Modal for enlarged images */}
       {modalImage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm"
+          className="bg-black/95 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
           onClick={closeModal}
         >
           <div className="relative size-full">
             <button
               onClick={closeModal}
-              className="absolute right-4 top-4 z-10 rounded-full bg-black/50 p-2 text-2xl font-bold text-white/70 transition-colors hover:bg-black/70 hover:text-white sm:right-6 sm:top-6"
+              className="bg-black/50 text-white/70 hover:bg-black/70 absolute right-4 top-4 z-10 rounded-full p-2 text-2xl font-bold transition-colors hover:text-white sm:right-6 sm:top-6"
             >
               ✕
             </button>
@@ -168,7 +168,7 @@ function Home() {
           </div>
 
           {/* Main Headline */}
-          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl">
+          <h1 className="mb-4 text-3xl font-bold leading-tight md:text-5xl sm:mb-6 sm:text-4xl lg:text-6xl xl:text-7xl">
             Track, Value & Trade
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Your Trading Cards
@@ -176,7 +176,7 @@ function Home() {
           </h1>
 
           {/* Subheadline */}
-          <p className="mx-auto mb-8 max-w-3xl px-4 text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
+          <p className="mx-auto mb-8 max-w-3xl px-4 text-base leading-relaxed text-gray-300 md:text-xl sm:mb-12 sm:text-lg lg:text-2xl">
             The ultimate platform for serious collectors. Track your collection,
             monitor investments, and trade with verified collectors.
           </p>
@@ -233,13 +233,13 @@ function Home() {
       </section>
 
       {/* Screenshots Section */}
-      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+      <section className="bg-black px-4 py-12 md:py-24 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-12 text-center sm:mb-16 md:mb-20">
-            <h2 className="mb-4 text-2xl font-bold sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl">
+          <div className="mb-12 text-center md:mb-20 sm:mb-16">
+            <h2 className="mb-4 text-2xl font-bold md:text-4xl sm:mb-6 sm:text-3xl lg:text-5xl">
               See it in action
             </h2>
-            <p className="mx-auto max-w-2xl px-4 text-base text-gray-300 sm:text-lg md:text-xl">
+            <p className="mx-auto max-w-2xl px-4 text-base text-gray-300 md:text-xl sm:text-lg">
               Real screenshots from the Collectibles Tracker platform
             </p>
           </div>
@@ -320,18 +320,18 @@ function Home() {
           </div>
 
           {/* Everything you need in one platform section */}
-          <div className="mb-12 text-center sm:mb-16 md:mb-20">
-            <h2 className="mb-4 text-2xl font-bold sm:mb-6 sm:text-3xl md:text-4xl lg:text-5xl">
+          <div className="mb-12 text-center md:mb-20 sm:mb-16">
+            <h2 className="mb-4 text-2xl font-bold md:text-4xl sm:mb-6 sm:text-3xl lg:text-5xl">
               Everything you need in
               <span className="block text-blue-400">one platform</span>
             </h2>
-            <p className="mx-auto max-w-2xl px-4 text-base text-gray-300 sm:text-lg md:text-xl">
+            <p className="mx-auto max-w-2xl px-4 text-base text-gray-300 md:text-xl sm:text-lg">
               Professional tools for serious collectors and investors
             </p>
           </div>
 
-          <div className="mb-16 overflow-x-auto mobile-scroll scrollbar-hide sm:grid sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
-            <div className="flex gap-4 pb-4 pl-4 pr-8 sm:contents sm:gap-0 sm:pb-0 sm:px-0">
+          <div className="mobile-scroll scrollbar-hide mb-16 overflow-x-auto sm:grid sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
+            <div className="flex gap-4 pb-4 pl-4 pr-8 sm:contents sm:gap-0 sm:px-0 sm:pb-0">
             {[
               {
                 icon: (
@@ -402,9 +402,9 @@ function Home() {
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="group w-[calc(100vw-5rem)] max-w-[260px] shrink-0 rounded-2xl border border-[rgba(255,255,255,0.1)] bg-gradient-to-br from-[rgba(255,255,255,0.1)] to-[rgba(255,255,255,0.05)] p-4 backdrop-blur-sm transition-all duration-300 hover:border-[rgba(255,255,255,0.2)] sm:w-auto sm:max-w-none sm:shrink sm:p-6 text-center"
+                className="group w-[calc(100vw-5rem)] max-w-[260px] shrink-0 rounded-2xl border border-[rgba(255,255,255,0.1)] bg-gradient-to-br from-[rgba(255,255,255,0.1)] to-[rgba(255,255,255,0.05)] p-4 text-center backdrop-blur-sm transition-all duration-300 hover:border-[rgba(255,255,255,0.2)] sm:w-auto sm:max-w-none sm:shrink sm:p-6"
               >
-                <div className="mb-3 transition-transform duration-300 group-hover:scale-110 sm:mb-4 flex justify-center">
+                <div className="mb-3 flex justify-center transition-transform duration-300 group-hover:scale-110 sm:mb-4">
                   {feature.icon}
                 </div>
                 <h3 className="mb-2 text-lg font-bold sm:mb-3 sm:text-xl">

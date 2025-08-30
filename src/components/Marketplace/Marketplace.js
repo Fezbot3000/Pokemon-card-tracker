@@ -22,7 +22,6 @@ import BuyerSelectionModal from './BuyerSelectionModal'; // Import the BuyerSele
 import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navigation component
 import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
 import MarketplacePagination from './MarketplacePagination'; // Import pagination component
-import LazyImage from './LazyImage'; // Import lazy image component
 import SellerProfileModal from './SellerProfileModal'; // Import seller profile modal component
 import ReportListing from './ReportListing'; // Import report listing component
 import SaleModal from '../SaleModal'; // Import SaleModal for external sales
@@ -541,14 +540,14 @@ function Marketplace({ currentView, onViewChange }) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
-            {paginatedListings.map(listing => (
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+            {paginatedListings.map((listing, idx) => (
               <div
                 key={listing.id}
                 className="flex h-full flex-col overflow-hidden rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
               >
                 <div className="relative aspect-square grow">
-                  <LazyImage
+                  <img
                     src={
                       cardImages[
                         listing.card?.slabSerial ||
@@ -559,6 +558,8 @@ function Marketplace({ currentView, onViewChange }) {
                     alt={listing.card?.name || 'Pokemon Card'}
                     className="size-full cursor-pointer object-cover"
                     onClick={() => handleCardClick(listing)}
+                    loading={idx < 12 ? 'eager' : 'lazy'}
+                    fetchpriority={idx < 12 ? 'high' : 'auto'}
                   />
                   {listing.card?.grade && (
                     <span className="bg-black/70 absolute right-2 top-2 rounded px-2 py-1 text-xs text-white">

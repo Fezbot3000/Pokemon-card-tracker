@@ -83,18 +83,18 @@ const PokemonInvestmentGuide = () => {
                   </p>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div className="bg-white/5 rounded-lg p-4 text-center">
-                      <div className="text-2xl font-bold text-green-400 mb-2">60%</div>
-                      <div className="font-semibold mb-2">Blue Chip Cards</div>
+                      <div className="mb-2 text-2xl font-bold text-green-400">60%</div>
+                      <div className="mb-2 font-semibold">Blue Chip Cards</div>
                       <div className="text-sm">Established vintage cards with stable long-term outlooks (Base Set holos, 1st Edition cards in PSA 9-10)</div>
                     </div>
                     <div className="bg-white/5 rounded-lg p-4 text-center">
-                      <div className="text-2xl font-bold text-yellow-400 mb-2">30%</div>
-                      <div className="font-semibold mb-2">Growth Picks</div>
+                      <div className="mb-2 text-2xl font-bold text-yellow-400">30%</div>
+                      <div className="mb-2 font-semibold">Growth Picks</div>
                       <div className="text-sm">Up-and-coming cards believed to be undervalued (modern chase cards, key promos, underrated sets)</div>
                     </div>
                     <div className="bg-white/5 rounded-lg p-4 text-center">
-                      <div className="text-2xl font-bold text-purple-400 mb-2">10%</div>
-                      <div className="font-semibold mb-2">Speculative Plays</div>
+                      <div className="mb-2 text-2xl font-bold text-purple-400">10%</div>
+                      <div className="mb-2 font-semibold">Speculative Plays</div>
                       <div className="text-sm">High-risk, high-reward items (Japanese exclusives, error cards, ultra-low pop variants)</div>
                     </div>
                   </div>
@@ -275,7 +275,7 @@ const PokemonInvestmentGuide = () => {
                   
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="bg-white/5 rounded-lg p-4">
-                      <h5 className="text-lg font-bold text-green-400 mb-3">Bullish Factors:</h5>
+                      <h5 className="mb-3 text-lg font-bold text-green-400">Bullish Factors:</h5>
                       <ul className="space-y-2 text-sm">
                         <li><strong>30th Anniversary Hype (2026):</strong> The Pokémon franchise's 30th anniversary is on the horizon, and anticipation tends to build in the TCG world in the lead-up. Collectors often "buy the rumor", meaning 2025 could see price upticks in key cards.</li>
                         <li><strong>Continued Celebrity/Influencer Involvement:</strong> High-profile figures have not lost interest. Logan Paul, Steve Aoki, and social media influencers continue showcasing rare cards, keeping Pokémon cards in the pop culture conversation.</li>
@@ -285,7 +285,7 @@ const PokemonInvestmentGuide = () => {
                     </div>
 
                     <div className="bg-white/5 rounded-lg p-4">
-                      <h5 className="text-lg font-bold text-red-400 mb-3">Bearish Risks:</h5>
+                      <h5 className="mb-3 text-lg font-bold text-red-400">Bearish Risks:</h5>
                       <ul className="space-y-2 text-sm">
                         <li><strong>Macro-Economic Downturn:</strong> Collectibles are alternative assets and somewhat luxury purchases. If a global recession or major economic stress hits, people's disposable income for cards could drop significantly.</li>
                         <li><strong>Overproduction of Modern Cards:</strong> The Pokémon Company ramped up printing enormously. 2023 saw a record 11.9 billion cards printed worldwide – by far the largest yearly print run ever. This "print to demand" approach means most modern sets are not truly scarce.</li>
@@ -367,33 +367,33 @@ const PokemonInvestmentGuide = () => {
                   
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="bg-white/5 rounded-lg p-4">
-                      <h5 className="font-bold text-yellow-400 mb-2">Grade rarity and popularity:</h5>
+                      <h5 className="mb-2 font-bold text-yellow-400">Grade rarity and popularity:</h5>
                       <p className="text-sm">Generally, it's worth grading cards that are valuable raw or could be valuable if they score a 9 or 10. For vintage, almost any holo or significant card in nice condition is a grading candidate due to the potential premium. For modern, consider grading only the top hits (e.g. the chase Secret Rares, Full Arts) since grading fees might exceed the card's value if it's an ordinary ultra-rare.</p>
                     </div>
                     
                     <div className="bg-white/5 rounded-lg p-4">
-                      <h5 className="font-bold text-yellow-400 mb-2">Pre-screen your cards:</h5>
+                      <h5 className="mb-2 font-bold text-yellow-400">Pre-screen your cards:</h5>
                       <p className="text-sm">Examine centering, corners, edges, and surface carefully. Only submit cards that you think have a real shot at Gem Mint (10) or at least Mint (9). The biggest gains come from landing that top grade. Sending in a card that will likely get PSA 6–7 usually isn't smart – the graded card might be worth little more than the grading fee.</p>
                     </div>
                     
                     <div className="bg-white/5 rounded-lg p-4">
-                      <h5 className="font-bold text-yellow-400 mb-2">Factor in grading costs and time:</h5>
+                      <h5 className="mb-2 font-bold text-yellow-400">Factor in grading costs and time:</h5>
                       <p className="text-sm">Grading isn't free – as of 2024, bulk grading with PSA costs around USD $15–20 per card (if you have membership and send a lot at once) and can take a few months. There are quicker services at higher fees. Make sure the potential value increase warrants it.</p>
                     </div>
                     
                     <div className="bg-white/5 rounded-lg p-4">
-                      <h5 className="font-bold text-yellow-400 mb-2">Population count matters:</h5>
+                      <h5 className="mb-2 font-bold text-yellow-400">Population count matters:</h5>
                       <p className="text-sm">Always check how many of that card are already graded in PSA 10 (via PSA's Population Report). If thousands of PSA 10s exist for a modern card, the price may not stay high as more hit the market. Part of grading impact is about population scarcity.</p>
                     </div>
                   </div>
 
-                  <div className="mt-4 bg-white/5 rounded-lg p-4">
-                    <h5 className="font-bold text-red-400 mb-2">The PSA 9 dilemma:</h5>
+                  <div className="bg-white/5 mt-4 rounded-lg p-4">
+                    <h5 className="mb-2 font-bold text-red-400">The PSA 9 dilemma:</h5>
                     <p className="text-sm">Note that PSA 9s, while still valuable, often don't see nearly the jump that 10s do. In some cases a PSA 9 is only worth about the same as a raw near-mint card. This is especially true for modern cards where many will grade 10, making a 9 undesirable. However, for older cards, PSA 9s can still be quite valuable (e.g., a PSA 9 1st Ed Charizard is worth several tens of thousands).</p>
                   </div>
 
-                  <div className="mt-4 bg-white/5 rounded-lg p-4">
-                    <h5 className="font-bold text-blue-400 mb-2">Buy PSA 10s directly vs. grading yourself:</h5>
+                  <div className="bg-white/5 mt-4 rounded-lg p-4">
+                    <h5 className="mb-2 font-bold text-blue-400">Buy PSA 10s directly vs. grading yourself:</h5>
                     <p className="text-sm">An ongoing debate is whether to buy graded (10) cards outright or try to buy raw and grade them. For investors with less experience, buying an already-graded PSA 10 of a key card removes uncertainty – you know you have the best grade, and you paid the market price for it. On the other hand, the biggest profit margins can come from finding an undervalued raw card, grading it, and getting a 9 or 10.</p>
                   </div>
 
@@ -420,7 +420,7 @@ const PokemonInvestmentGuide = () => {
                   <h4 className="mb-4 text-xl font-bold text-blue-400">
                     1. Define Goals & Budget
                   </h4>
-                  <div className="space-y-3 text-gray-300 text-sm">
+                  <div className="space-y-3 text-sm text-gray-300">
                     <p>• Clarify your investment timeline (1-3 years vs 5-10+ years)</p>
                     <p>• Allocate 5-10% of total portfolio to alternative assets</p>
                     <p>• Set budget limits to avoid overextending during hype cycles</p>
@@ -433,7 +433,7 @@ const PokemonInvestmentGuide = () => {
                   <h4 className="mb-4 text-xl font-bold text-green-400">
                     2. Research & Selection
                   </h4>
-                  <div className="space-y-3 text-gray-300 text-sm">
+                  <div className="space-y-3 text-sm text-gray-300">
                     <p>• Use price databases (PriceCharting, eBay sold listings)</p>
                     <p>• Study historical price trends and patterns</p>
                     <p>• Follow collecting communities and reputable channels</p>
@@ -446,7 +446,7 @@ const PokemonInvestmentGuide = () => {
                   <h4 className="mb-4 text-xl font-bold text-purple-400">
                     3. Smart Acquisition
                   </h4>
-                  <div className="space-y-3 text-gray-300 text-sm">
+                  <div className="space-y-3 text-sm text-gray-300">
                     <p>• eBay: Largest marketplace, watch for fakes</p>
                     <p>• Card shows: Build dealer relationships</p>
                     <p>• Auctions: Heritage, Goldin for high-end cards</p>
@@ -459,7 +459,7 @@ const PokemonInvestmentGuide = () => {
                   <h4 className="mb-4 text-xl font-bold text-yellow-400">
                     4. Diversification Mix
                   </h4>
-                  <div className="space-y-3 text-gray-300 text-sm">
+                  <div className="space-y-3 text-sm text-gray-300">
                     <p>• Avoid concentration risk (max 20% in one card)</p>
                     <p>• Mix vintage base-era with modern stunners</p>
                     <p>• Include various Pokémon, not just Charizard</p>
@@ -472,7 +472,7 @@ const PokemonInvestmentGuide = () => {
                   <h4 className="mb-4 text-xl font-bold text-orange-400">
                     5. Tracking & Monitoring
                   </h4>
-                  <div className="space-y-3 text-gray-300 text-sm">
+                  <div className="space-y-3 text-sm text-gray-300">
                     <p>• Track purchase price, grading fees, current value</p>
                     <p>• Use portfolio tracking tools and apps</p>
                     <p>• Monitor auction results and market trends</p>
@@ -485,7 +485,7 @@ const PokemonInvestmentGuide = () => {
                   <h4 className="mb-4 text-xl font-bold text-red-400">
                     6. Exit Strategy
                   </h4>
-                  <div className="space-y-3 text-gray-300 text-sm">
+                  <div className="space-y-3 text-sm text-gray-300">
                     <p>• Take profits periodically on speculative items</p>
                     <p>• Private sales save fees but require trust</p>
                     <p>• Auction houses: best for rare pieces (10-20% fees)</p>
@@ -501,24 +501,24 @@ const PokemonInvestmentGuide = () => {
                 </h4>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div className="text-center">
-                    <div className="text-2xl mb-2">🔒</div>
-                    <h5 className="font-bold text-blue-400 mb-2">Secure Storage</h5>
+                    <div className="mb-2 text-2xl">🔒</div>
+                    <h5 className="mb-2 font-bold text-blue-400">Secure Storage</h5>
                     <p className="text-sm text-gray-300">Bank vaults for $5k+ cards, home safes, climate control, fire/flood protection</p>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl mb-2">🛡️</div>
-                    <h5 className="font-bold text-green-400 mb-2">Insurance</h5>
+                    <div className="mb-2 text-2xl">🛡️</div>
+                    <h5 className="mb-2 font-bold text-green-400">Insurance</h5>
                     <p className="text-sm text-gray-300">Collectible insurance specialists, homeowner policy riders for valuable collections</p>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl mb-2">📋</div>
-                    <h5 className="font-bold text-purple-400 mb-2">Documentation</h5>
+                    <div className="mb-2 text-2xl">📋</div>
+                    <h5 className="mb-2 font-bold text-purple-400">Documentation</h5>
                     <p className="text-sm text-gray-300">Keep invoices, grading certificates, photos for insurance and provenance</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-500/30 p-6">
+              <div className="rounded-xl border border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-purple-500/20 p-6">
                 <h4 className="mb-4 text-xl font-bold text-blue-400">
                   💡 Key Portfolio Principles
                 </h4>
@@ -637,7 +637,7 @@ const PokemonInvestmentGuide = () => {
       <NavigationBar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 md:pb-24 md:pt-32 sm:px-6 sm:pb-20 sm:pt-28 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
 
         <div className="relative z-10 mx-auto max-w-4xl text-center">
@@ -646,21 +646,21 @@ const PokemonInvestmentGuide = () => {
             Investment Strategy Guide
           </div>
 
-          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
+          <h1 className="mb-4 text-3xl font-bold leading-tight md:text-5xl sm:mb-6 sm:text-4xl lg:text-6xl">
             Investment
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Guide
             </span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
+          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 md:text-xl sm:mb-12 sm:text-lg lg:text-2xl">
             Master Pokemon card investing with proven strategies, market analysis, and portfolio building techniques for maximum ROI.
           </p>
         </div>
       </section>
 
       {/* Navigation & Content */}
-      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+      <section className="bg-black px-4 py-12 md:py-24 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
             {/* Sidebar Navigation */}

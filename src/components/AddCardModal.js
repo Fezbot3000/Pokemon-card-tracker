@@ -459,7 +459,7 @@ const AddCardModal = ({
       >
         <div className="space-y-6">
           {/* Search Sections - Side by Side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Card Search Section */}
             <div>
               <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">

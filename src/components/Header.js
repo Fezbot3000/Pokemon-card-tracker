@@ -164,10 +164,10 @@ const Header = ({
                       .map(collection => (
                         <div
                           key={collection}
-                          className={`cursor-pointer flex items-center justify-between px-4 py-2 transition-all duration-200 min-h-[44px] rounded-md mx-1 my-0.5 ${
+                          className={`mx-1 my-0.5 flex min-h-[44px] cursor-pointer items-center justify-between rounded-md px-4 py-2 transition-all duration-200 ${
                             selectedCollection === collection
                               ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800'
-                              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800 hover:shadow-sm'
+                              : 'text-gray-700 hover:bg-gray-100 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-800'
                           }`}
                           onClick={() => handleCollectionSelect(collection)}
                         >
@@ -185,7 +185,7 @@ const Header = ({
                       ))}
                     <div className="my-1 h-px bg-gray-100 dark:bg-gray-800" />
                     <div
-                      className="flex cursor-pointer items-center justify-between px-4 py-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 min-h-[44px] rounded-md mx-1 my-0.5 hover:shadow-sm"
+                      className="mx-1 my-0.5 flex min-h-[44px] cursor-pointer items-center justify-between rounded-md px-4 py-2 text-primary transition-all duration-200 hover:bg-gray-100 hover:shadow-sm dark:hover:bg-gray-800"
                       onClick={handleAddNewCollection}
                     >
                       <span className="font-medium">New Collection</span>
@@ -227,7 +227,7 @@ const Header = ({
                 {/* Theme and Settings buttons */}
                 <button
                   onClick={toggleTheme}
-                  className="dark:hover:bg-[#252B3B] flex size-10 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-300"
+                  className="flex size-10 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-[#252B3B]"
                   aria-label="Toggle theme"
                 >
                   <span className="material-icons">
@@ -237,7 +237,7 @@ const Header = ({
 
                 <button
                   onClick={onSettingsClick}
-                  className="dark:hover:bg-[#252B3B] hidden size-10 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-300 lg:flex"
+                  className="hidden size-10 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-[#252B3B] lg:flex"
                   aria-label="Settings"
                   type="button"
                 >
@@ -254,9 +254,9 @@ const Header = ({
         <div className="bg-black/50 fixed inset-0 z-[55000] flex items-center justify-center">
           <div
             ref={newCollectionModalRef}
-            className="mx-4 w-full max-w-md rounded-xl bg-white dark:bg-[#0F0F0F] shadow-2xl border border-gray-200/20 dark:border-gray-700/20 overflow-hidden"
+            className="border-gray-200/20 dark:border-gray-700/20 mx-4 w-full max-w-md overflow-hidden rounded-xl border bg-white shadow-2xl dark:bg-[#0F0F0F]"
           >
-            <div className="dark:border-gray-700/50 flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6 rounded-t-xl">
+            <div className="dark:border-gray-700/50 flex items-center justify-between rounded-t-xl border-b border-gray-200 px-6 pb-4 pt-6">
               <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">
                 New Collection
               </h2>
@@ -278,13 +278,13 @@ const Header = ({
                 value={newCollectionName}
                 onChange={e => setNewCollectionName(e.target.value)}
                 onKeyDown={handleNewCollectionKeyDown}
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-gray-700/50 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
+                className="focus:ring-primary/20 dark:border-gray-700/50 w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                 placeholder="Enter collection name"
                 autoFocus
               />
             </div>
 
-            <div className="dark:border-gray-700/50 flex justify-between gap-2 border-t border-gray-200 px-6 pb-6 pt-4 rounded-b-xl">
+            <div className="dark:border-gray-700/50 flex justify-between gap-2 rounded-b-xl border-t border-gray-200 px-6 pb-6 pt-4">
               <button
                 className="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-[#323B4B]"
                 onClick={() => setIsNewCollectionModalOpen(false)}

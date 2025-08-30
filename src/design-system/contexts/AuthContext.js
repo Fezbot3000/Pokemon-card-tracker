@@ -469,10 +469,13 @@ export const AuthProvider = ({ children }) => {
 
   // Google sign in function
   const signInWithGoogle = async () => {
+    // Declare in outer scope so catch/fallback can access them
+    let auth;
+    let googleProvider;
     try {
       setError(null);
-      const auth = await getFirebaseAuth();
-      const googleProvider = await getGoogleProvider();
+      auth = await getFirebaseAuth();
+      googleProvider = await getGoogleProvider();
       // LoggingService.info("Starting Google sign-in process...");
 
       // Use popup for Google sign-in

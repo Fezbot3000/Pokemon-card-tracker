@@ -419,7 +419,7 @@ function ListingDetailModal({
           <ModalButton variant="secondary" onClick={onClose}>
             Close
           </ModalButton>
-          <div className="flex items-center space-x-2 justify-end">
+          <div className="flex items-center justify-end space-x-2">
             <ModalButton
               variant="secondary"
               onClick={handlePendingClick}
@@ -431,7 +431,7 @@ function ListingDetailModal({
             <ModalButton
               variant="secondary"
               onClick={handlePendingClick}
-              className="flex sm:hidden p-2 min-w-0"
+              className="flex min-w-0 p-2 sm:hidden"
             >
               <Icon name={isPending ? "check" : "schedule"} />
             </ModalButton>
@@ -454,7 +454,7 @@ function ListingDetailModal({
             <ModalButton
               variant="primary"
               onClick={handleEditListing}
-              className="flex sm:hidden p-2 min-w-0 rounded-lg"
+              className="flex min-w-0 rounded-lg p-2 sm:hidden"
             >
               <Icon name="edit" />
             </ModalButton>

@@ -253,8 +253,8 @@ function MarketplaceSearchFilters({
               className={`
                 transition-all duration-200
                 ${filters.following 
-                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white border-purple-500 hover:from-purple-600 hover:to-blue-600' 
-                  : 'bg-white border-purple-300 text-purple-600 hover:bg-purple-50 hover:border-purple-400 dark:bg-gray-800 dark:text-purple-400 dark:border-purple-400 dark:hover:bg-purple-900/20'
+                  ? 'border-purple-500 bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600' 
+                  : 'border-purple-300 bg-white text-purple-600 hover:border-purple-400 hover:bg-purple-50 dark:border-purple-400 dark:bg-gray-800 dark:text-purple-400 dark:hover:bg-purple-900/20'
                 }
               `}
             >

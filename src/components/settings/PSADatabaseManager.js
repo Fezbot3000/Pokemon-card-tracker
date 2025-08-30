@@ -434,14 +434,14 @@ const PSADatabaseManager = () => {
                   </h5>
                   <div className="space-y-4">
                     {results.successful.filter(success => success && success.cardName).slice(0, 5).map((success, index) => (
-                      <div key={index} className="border border-green-300 rounded-lg p-3 bg-white dark:bg-green-900/10">
-                        <div className="font-medium text-green-800 dark:text-green-200 mb-2">
+                      <div key={index} className="rounded-lg border border-green-300 bg-white p-3 dark:bg-green-900/10">
+                        <div className="mb-2 font-medium text-green-800 dark:text-green-200">
                           {success.cardName} (#{success.serial})
                         </div>
                         {success.changes ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                          <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
                             <div>
-                              <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">Before:</div>
+                              <div className="mb-1 font-medium text-gray-700 dark:text-gray-300">Before:</div>
                               <div className="space-y-1 text-gray-600 dark:text-gray-400">
                                 <div>• Grade: {success.changes.before.grade}</div>
                                 <div>• Condition: {success.changes.before.condition}</div>
@@ -450,7 +450,7 @@ const PSADatabaseManager = () => {
                               </div>
                             </div>
                             <div>
-                              <div className="font-medium text-green-700 dark:text-green-300 mb-1">After:</div>
+                              <div className="mb-1 font-medium text-green-700 dark:text-green-300">After:</div>
                               <div className="space-y-1 text-green-600 dark:text-green-400">
                                 <div>• Grade: {success.changes.after.grade}</div>
                                 <div>• Condition: {success.changes.after.condition}</div>
@@ -467,7 +467,7 @@ const PSADatabaseManager = () => {
                       </div>
                     ))}
                     {results.successful.length > 5 && (
-                      <div className="text-sm text-green-600 dark:text-green-400 text-center">
+                      <div className="text-center text-sm text-green-600 dark:text-green-400">
                         ... and {results.successful.length - 5} more cards successfully normalised
                       </div>
                     )}

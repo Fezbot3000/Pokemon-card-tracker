@@ -98,7 +98,7 @@ const Terms = () => {
       <NavigationBar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 md:pb-24 md:pt-32 sm:px-6 sm:pb-20 sm:pt-28 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
 
         <div className="relative z-10 mx-auto max-w-4xl text-center">
@@ -107,14 +107,14 @@ const Terms = () => {
             Last Updated: January 2024
           </div>
 
-          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
+          <h1 className="mb-4 text-3xl font-bold leading-tight md:text-5xl sm:mb-6 sm:text-4xl lg:text-6xl">
             Terms of
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Service
             </span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
+          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 md:text-xl sm:mb-12 sm:text-lg lg:text-2xl">
             Please read these terms carefully before using our service. By using
             Collectibles Tracker, you agree to these terms.
           </p>
@@ -122,7 +122,7 @@ const Terms = () => {
       </section>
 
       {/* Navigation & Content */}
-      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+      <section className="bg-black px-4 py-12 md:py-24 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
             {/* Sidebar Navigation */}
@@ -304,12 +304,12 @@ const Terms = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+      <section className="bg-black px-4 py-12 md:py-24 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="mb-4 text-2xl font-bold sm:mb-6 sm:text-3xl md:text-4xl">
+          <h2 className="mb-4 text-2xl font-bold md:text-4xl sm:mb-6 sm:text-3xl">
             Questions About Our Terms?
           </h2>
-          <p className="mx-auto mb-8 max-w-2xl text-base text-gray-300 sm:mb-12 sm:text-lg md:text-xl">
+          <p className="mx-auto mb-8 max-w-2xl text-base text-gray-300 md:text-xl sm:mb-12 sm:text-lg">
             Our legal team is available to help clarify any questions about our
             terms of service.
           </p>

@@ -26,7 +26,7 @@ function MarketplaceNavigation({
   };
 
   return (
-    <div className="mb-6 hidden sm:flex items-center space-x-6">
+    <div className="mb-6 hidden items-center space-x-6 sm:flex">
       <button
         onClick={() => handleNavigation('marketplace')}
         className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${

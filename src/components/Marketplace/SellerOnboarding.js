@@ -39,20 +39,20 @@ function SellerOnboarding({ onComplete }) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+    <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
           Enable Instant Payments
         </h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
+        <p className="mb-4 text-gray-600 dark:text-gray-400">
           Set up your payment account to receive instant payouts when buyers purchase your items.
         </p>
         
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-4">
-          <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+        <div className="mb-4 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+          <h4 className="mb-2 font-medium text-blue-900 dark:text-blue-100">
             ✨ Benefits of Payment Setup:
           </h4>
-          <ul className="text-sm text-blue-800 dark:text-blue-200 text-left space-y-1">
+          <ul className="space-y-1 text-left text-sm text-blue-800 dark:text-blue-200">
             <li>• Instant payouts when items sell</li>
             <li>• Secure payment processing</li>
             <li>• Buyer protection and trust</li>
@@ -70,7 +70,7 @@ function SellerOnboarding({ onComplete }) {
           {loading ? 'Setting up...' : 'Set Up Payments'}
         </Button>
         
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           Powered by Stripe Connect - Secure & Trusted
         </p>
       </div>

@@ -25,7 +25,7 @@ const Spinner = ({ size = 'medium', variant = 'primary', className = '' }) => {
   const colorClasses = colorMap[variant] || colorMap.primary;
   return (
     <div
-      className={`inline-block animate-spin rounded-full border-gray-300 border-t-4 ${colorClasses} ${sizeClasses} dark:border-gray-700 ${className}`}
+      className={`inline-block animate-spin rounded-full border-t-4 border-gray-300 ${colorClasses} ${sizeClasses} dark:border-gray-700 ${className}`}
       role="status"
       aria-live="polite"
       aria-busy="true"

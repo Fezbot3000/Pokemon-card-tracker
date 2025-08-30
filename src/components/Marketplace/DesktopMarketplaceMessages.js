@@ -587,7 +587,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
         currentView={currentView}
         onViewChange={onViewChange}
       />
-      <div className="-mx-4 flex h-[calc(100vh-16rem)] overflow-hidden sm:h-[calc(100vh-12rem)] sm:-mx-6">
+      <div className="-mx-4 flex h-[calc(100vh-16rem)] overflow-hidden sm:-mx-6 sm:h-[calc(100vh-12rem)]">
         {/* Chat list - 1/3 width on desktop */}
         <div className="flex w-1/3 flex-col overflow-hidden border-r border-gray-200 dark:border-gray-700">
 
@@ -929,7 +929,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
               ) : (
                 <form
                   onSubmit={handleSendMessage}
-                  className="absolute bottom-0 inset-x-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
+                  className="absolute inset-x-0 bottom-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
                 >
                   <div className="flex items-center space-x-2">
                     <TextField

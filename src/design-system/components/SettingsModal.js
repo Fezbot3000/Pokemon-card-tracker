@@ -719,7 +719,7 @@ const SettingsModal = ({
             </div>
           }
           position="right"
-          className={`w-full max-w-screen-xl sm:w-4/5 md:w-[70%] ${className}`}
+          className={`w-full max-w-screen-xl md:w-[70%] sm:w-4/5 ${className}`}
           ariaLabel="Settings"
           size="modal-width-70"
           closeOnClickOutside={true}

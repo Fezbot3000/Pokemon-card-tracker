@@ -260,7 +260,7 @@ const CardSearchAutocomplete = ({ onSelectCard, placeholder = "Search for cards.
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute z-[60000] mt-1 w-full max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+          className="absolute z-[60000] mt-1 max-h-80 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
         >
           {error ? (
             <div className="p-3 text-sm text-red-600 dark:text-red-400">
@@ -288,11 +288,11 @@ const CardSearchAutocomplete = ({ onSelectCard, placeholder = "Search for cards.
                     onMouseEnter={() => setHighlightedIndex(index)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 dark:text-white truncate">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium text-gray-900 dark:text-white">
                           {card.name || cardName}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        <div className="truncate text-sm text-gray-500 dark:text-gray-400">
                           <span className="font-medium">Set:</span> {card.console || card.genre || card.platform || setDisplay}
                           {card.releaseDate && (
                             <span className="ml-2">• <span className="font-medium">Year:</span> {card.releaseDate.split('-')[0]}</span>
@@ -306,7 +306,7 @@ const CardSearchAutocomplete = ({ onSelectCard, placeholder = "Search for cards.
                         
                         {/* Additional price breakdown */}
                         {getPriceBreakdown(card) && (
-                          <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                             {getPriceBreakdown(card).join(' • ')}
                           </div>
                         )}
@@ -319,7 +319,7 @@ const CardSearchAutocomplete = ({ onSelectCard, placeholder = "Search for cards.
                         )}
                       </div>
                       
-                      <div className="ml-3 text-right shrink-0">
+                      <div className="ml-3 shrink-0 text-right">
                         {price > 0 ? (
                           <div className="text-sm font-semibold text-green-600 dark:text-green-400">
                             {formatAmountForDisplay(price, 'USD')}

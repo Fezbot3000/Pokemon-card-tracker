@@ -393,7 +393,7 @@ const SharedCollection = () => {
             </div>
 
             {/* Desktop Layout */}
-            <div className="hidden grid-cols-1 gap-4 sm:grid md:grid-cols-5">
+            <div className="hidden grid-cols-1 gap-4 md:grid-cols-5 sm:grid">
               <TextField
                 name="search"
                 placeholder="Search cards..."

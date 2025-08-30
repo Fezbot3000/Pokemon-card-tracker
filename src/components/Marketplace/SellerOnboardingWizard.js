@@ -129,13 +129,13 @@ function SellerOnboardingWizard({ onComplete }) {
   const renderStep1 = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
           Business Information
         </h3>
         
         {/* Business Type */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Are you selling as an individual or business?
           </label>
           <div className="flex gap-4">
@@ -166,7 +166,7 @@ function SellerOnboardingWizard({ onComplete }) {
         {formData.businessType === 'company' && (
           <>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Business Name *
               </label>
               <input
@@ -179,7 +179,7 @@ function SellerOnboardingWizard({ onComplete }) {
             </div>
             
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Business Website *
               </label>
               <input
@@ -196,7 +196,7 @@ function SellerOnboardingWizard({ onComplete }) {
         {/* Personal Name */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               First Name *
             </label>
             <input
@@ -207,7 +207,7 @@ function SellerOnboardingWizard({ onComplete }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Last Name *
             </label>
             <input
@@ -222,7 +222,7 @@ function SellerOnboardingWizard({ onComplete }) {
         {/* Email & Phone */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Email *
             </label>
             <input
@@ -233,7 +233,7 @@ function SellerOnboardingWizard({ onComplete }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Phone Number
             </label>
             <input
@@ -249,7 +249,7 @@ function SellerOnboardingWizard({ onComplete }) {
         {/* Date of Birth (for individuals) */}
         {formData.businessType === 'individual' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Date of Birth *
             </label>
             <input
@@ -267,12 +267,12 @@ function SellerOnboardingWizard({ onComplete }) {
   const renderStep2 = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
           Address Information
         </h3>
         
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Street Address *
           </label>
           <input
@@ -285,7 +285,7 @@ function SellerOnboardingWizard({ onComplete }) {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Address Line 2 (Optional)
           </label>
           <input
@@ -299,7 +299,7 @@ function SellerOnboardingWizard({ onComplete }) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               City *
             </label>
             <input
@@ -310,7 +310,7 @@ function SellerOnboardingWizard({ onComplete }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               State/Territory *
             </label>
             <select
@@ -332,7 +332,7 @@ function SellerOnboardingWizard({ onComplete }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Postal Code *
           </label>
           <input
@@ -350,15 +350,15 @@ function SellerOnboardingWizard({ onComplete }) {
   const renderStep3 = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
           Bank Account Information
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
           This is where you'll receive payments from sales. All information is securely encrypted.
         </p>
         
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Account Holder Name *
           </label>
           <input
@@ -371,7 +371,7 @@ function SellerOnboardingWizard({ onComplete }) {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
             BSB Number *
           </label>
           <input
@@ -385,7 +385,7 @@ function SellerOnboardingWizard({ onComplete }) {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Account Number *
           </label>
           <input
@@ -399,7 +399,7 @@ function SellerOnboardingWizard({ onComplete }) {
 
         {formData.businessType === 'company' && (
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               ABN (Australian Business Number)
             </label>
             <input
@@ -418,14 +418,14 @@ function SellerOnboardingWizard({ onComplete }) {
   const renderStep4 = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
           Review & Agreements
         </h3>
         
         {/* Summary */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
-          <h4 className="font-medium text-gray-900 dark:text-white mb-2">Account Summary:</h4>
-          <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+        <div className="mb-6 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+          <h4 className="mb-2 font-medium text-gray-900 dark:text-white">Account Summary:</h4>
+          <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
             <p><strong>Type:</strong> {formData.businessType === 'individual' ? 'Individual' : 'Business'}</p>
             <p><strong>Name:</strong> {formData.firstName} {formData.lastName}</p>
             {formData.businessType === 'company' && <p><strong>Business:</strong> {formData.businessName}</p>}
@@ -466,10 +466,10 @@ function SellerOnboardingWizard({ onComplete }) {
   );
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+    <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
       {/* Progress Bar */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Step {currentStep} of 4
           </span>
@@ -477,9 +477,9 @@ function SellerOnboardingWizard({ onComplete }) {
             {Math.round((currentStep / 4) * 100)}% Complete
           </span>
         </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
           <div 
-            className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+            className="h-2 rounded-full bg-purple-600 transition-all duration-300"
             style={{ width: `${(currentStep / 4) * 100}%` }}
           ></div>
         </div>
@@ -492,7 +492,7 @@ function SellerOnboardingWizard({ onComplete }) {
       {currentStep === 4 && renderStep4()}
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between mt-8">
+      <div className="mt-8 flex justify-between">
         <Button
           onClick={prevStep}
           variant="secondary"

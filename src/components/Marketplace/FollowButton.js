@@ -101,10 +101,10 @@ function FollowButton({
         ${fullWidth ? 'w-full' : ''} 
         ${className}
         ${isFollowing 
-          ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-green-500 text-white' 
+          ? 'border-green-500 bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700' 
           : forceWhiteText
             ? '!bg-white/10 !border-white/20 hover:!bg-white/20 !text-white backdrop-blur-sm'
-            : 'bg-white border-purple-500 text-purple-600 hover:bg-purple-50 hover:border-purple-600 dark:bg-gray-800 dark:text-purple-400 dark:border-purple-400 dark:hover:bg-purple-900/20'
+            : 'border-purple-500 bg-white text-purple-600 hover:border-purple-600 hover:bg-purple-50 dark:border-purple-400 dark:bg-gray-800 dark:text-purple-400 dark:hover:bg-purple-900/20'
         }
         transition-all duration-200
       `}

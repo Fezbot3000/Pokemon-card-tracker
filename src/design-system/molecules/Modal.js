@@ -350,12 +350,12 @@ const Modal = ({
   // Regular modal with backdrop and positioning
   return createPortal(
     <div 
-      className={`fixed inset-0 size-full flex items-center ${position === 'right' ? 'justify-end' : 'justify-center'} bg-black/40 backdrop-blur-sm ${getModalZIndex()}`}
+      className={`fixed inset-0 flex size-full items-center ${position === 'right' ? 'justify-end' : 'justify-center'} bg-black/40 backdrop-blur-sm ${getModalZIndex()}`}
       onClick={handleBackdropClick}
     >
       {/* Desktop margin container */}
       <div 
-        className={`size-full sm:p-4 md:p-6 flex ${position === 'right' ? 'justify-end items-stretch' : size === 'contextual' ? 'items-center justify-center' : 'items-stretch justify-center'}`}
+        className={`flex size-full md:p-6 sm:p-4 ${position === 'right' ? 'items-stretch justify-end' : size === 'contextual' ? 'items-center justify-center' : 'items-stretch justify-center'}`}
         onClick={(e) => {
           // Only stop propagation if the click is on modal content,
           // allow clicks on margin container to bubble to backdrop
@@ -371,7 +371,7 @@ const Modal = ({
         ref={modalRef}
         className={`${modalClasses} flex flex-col ${animationClass} modal-container ${size === 'contextual' ? 'modal-contextual' : ''} ${
           position === 'right'
-            ? `w-screen h-screen ${
+            ? `h-screen w-screen ${
                 size === 'modal-width-50' 
                   ? 'sm:w-1/2'
                   : size === 'modal-width-60'
@@ -379,7 +379,7 @@ const Modal = ({
                   : size === 'modal-width-70'
                   ? 'sm:w-[70vw]'
                   : 'sm:w-[70vw]'
-              } sm:h-full sm:rounded-lg max-w-none overflow-hidden rounded-lg ${getModalZIndex()}`
+              } max-w-none overflow-hidden rounded-lg sm:h-full sm:rounded-lg ${getModalZIndex()}`
             : mobileFullWidth ||
               (size === 'custom' ? maxWidth : sizeClasses[size] || (size === 'modal-width-70' ? 'w-[70%]' : size === 'modal-width-60' ? 'w-3/5' : 'w-[55%]'))
         } ${className}`}

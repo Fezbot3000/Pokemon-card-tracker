@@ -495,7 +495,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                               e.target.value
                             )
                           }
-                          className="border-gray-200/20 dark:border-gray-700/10 w-full rounded-lg border bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
+                          className="border-gray-200/20 dark:border-gray-700/10 focus:ring-primary/20 w-full rounded-lg border bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                           placeholder="0.00"
                           step="0.01"
                           min="0.01"
@@ -528,7 +528,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                               e.target.value
                             )
                           }
-                          className="border-gray-200/20 dark:border-gray-700/10 w-full rounded-lg border bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
+                          className="border-gray-200/20 dark:border-gray-700/10 focus:ring-primary/20 w-full rounded-lg border bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                           placeholder="Add a note about this card..."
                           rows="3"
                         />
@@ -558,7 +558,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                               e.target.value
                             )
                           }
-                          className="border-gray-200/20 dark:border-gray-700/10 w-full rounded-lg border bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
+                          className="border-gray-200/20 dark:border-gray-700/10 focus:ring-primary/20 w-full rounded-lg border bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                           placeholder="Enter your location (e.g., Sydney)"
                         />
                       </div>

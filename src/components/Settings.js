@@ -35,7 +35,7 @@ const Settings = ({
     switch (currentTab) {
       case 'general':
         return (
-          <div className="w-full space-y-6 px-4 pt-4 pb-24">
+          <div className="w-full space-y-6 px-4 pb-24 pt-4">
       {/* Appearance Section */}
       <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
         <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Appearance</h2>
@@ -154,7 +154,7 @@ const Settings = ({
 
       case 'account':
         return (
-          <div className="w-full space-y-6 px-4 pt-4 pb-24">
+          <div className="w-full space-y-6 px-4 pb-24 pt-4">
             {/* Subscription Status */}
             <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
               <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Subscription</h2>
@@ -188,7 +188,7 @@ const Settings = ({
 
       case 'marketplace':
         return (
-          <div className="w-full space-y-6 px-4 pt-4 pb-24">
+          <div className="w-full space-y-6 px-4 pb-24 pt-4">
             {/* Marketplace Profile */}
             <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
               <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Marketplace Profile</h2>
@@ -207,7 +207,7 @@ const Settings = ({
 
       case 'sharing':
         return (
-          <div className="w-full space-y-6 px-4 pt-4 pb-24">
+          <div className="w-full space-y-6 px-4 pb-24 pt-4">
             {/* Collection Sharing */}
             <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
               <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Collection Sharing</h2>
@@ -219,7 +219,7 @@ const Settings = ({
 
       default:
         return (
-          <div className="w-full space-y-6 px-4 pt-4 pb-24">
+          <div className="w-full space-y-6 px-4 pb-24 pt-4">
             <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
               <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Settings</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">Select a tab to view settings.</p>

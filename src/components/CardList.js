@@ -1117,7 +1117,7 @@ const CardList = ({
       ) : viewMode === 'grid' ? (
         <div className="flex flex-col">
           <div
-            className={`grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7`}
+            className={`grid grid-cols-2 gap-1 md:grid-cols-5 sm:grid-cols-3 sm:gap-2 lg:grid-cols-6 xl:grid-cols-7`}
           >
             {paginatedCards.map(card => (
               <Card
@@ -1307,7 +1307,7 @@ const CardList = ({
       {selectedCards.size > 0 && (
         <>
           {/* Bottom shadow overlay for better contrast - subtle transparency */}
-          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[3050] h-1/3 bg-gradient-to-t from-white/80 via-white/50 to-transparent dark:from-black/80 dark:via-black/50 dark:to-transparent"></div>
+          <div className="from-white/80 via-white/50 dark:from-black/80 dark:via-black/50 pointer-events-none fixed inset-x-0 bottom-0 z-[3050] h-1/3 bg-gradient-to-t to-transparent dark:to-transparent"></div>
 
           <div className="fixed bottom-6 left-1/2 z-[3100] -translate-x-1/2">
             {/* Selection Count Badge */}
